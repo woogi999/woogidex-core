@@ -1,4 +1,4 @@
-# The woogidex.xyz site is built on this repo. A change on main asks the
+# The dex.woogi.xyz site is built on this repo. A change on main asks the
 # site's Deploy workflow (in woogi999/woogidex-web, private) to rebuild and
 # deploy it. Forks skip this: it only runs in woogi999/woogidex-core.
 #
@@ -11,6 +11,8 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+
+permissions: {}
 
 jobs:
   notify:

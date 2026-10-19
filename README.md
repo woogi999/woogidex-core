@@ -74,6 +74,8 @@ export default defineConfig(woogidexConfig({ react, loadEnv, root: here, core: '
 
 A file the site does not have comes from Core, so the site's `js/features/auth.ts` can import `'../core/app.ts'`. The `rootDirs` option in the site's `tsconfig.json` tells TypeScript the same thing.
 
+The deploy workflow (`.github/workflows/notify-deploy.yml`) only runs in this repo, not in forks. A fork needs no secrets.
+
 ## Status
 
 Still very much a **work in progress**. Things will probably break, things will probably get redesigned, and some systems (looking at you, battle sim) are still being actively fought with.
