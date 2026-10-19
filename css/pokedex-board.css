@@ -1,0 +1,284 @@
+/* ==================== pokedex-board ====================
+   The Pokédex board: the editor's live preview, the Community Hub's copy of
+   it, and the PNG export (js/export/export.ts) are all this one component.
+   Markup: updatePreviewNow() in js/editor/editor-core.ts.
+
+   It lays itself out by its OWN width via container queries, never the
+   window's: a phone shows the narrow layout because the board is narrow, and
+   the export (a 1200px clone) always gets the wide one, whatever screen
+   produced it. No zoom tricks; the board's own padding is the one thing
+   that follows the screen.
+
+   One surface. Inside it nothing gets a border or a card background --
+   sections are separated by whitespace, small headings and hairlines.
+   ==================== */
+
+.pokedex-board {
+    container: board / inline-size;
+    position: relative;
+    width: 100%;
+    min-width: 0;
+    padding: var(--sp-6);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+/* ---- head: name, species, types | number ---- */
+.board-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--sp-4);
+    margin-bottom: var(--sp-5);
+}
+.board-title { min-width: 0; }
+.board-name {
+    font-size: 34px;
+    font-weight: 800;
+    letter-spacing: -0.015em;
+    line-height: 1.1;
+    overflow-wrap: anywhere;
+}
+.board-species { margin-top: 4px; font-size: 15px; font-style: italic; color: var(--text-secondary); }
+.board-types { display: flex; flex-wrap: wrap; gap: 6px; margin-top: var(--sp-3); }
+.board-number {
+    flex: 0 0 auto;
+    font-family: 'Inconsolata', monospace;
+    font-size: 22px;
+    font-weight: 700;
+    font-style: italic;
+    color: var(--text-muted);
+}
+
+/* ---- section heading, shared by every block ---- */
+.board-section-title {
+    margin: 0 0 var(--sp-3);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    display: flex; align-items: center; gap: 8px;
+}
+
+/* ---- main: artwork + profile, abilities, dex entries ---- */
+.board-main {
+    display: grid;
+    grid-template-columns: minmax(0, 40%) minmax(0, 1fr);
+    grid-template-areas:
+        "art facts"
+        "abil abil"
+        "dex dex";
+    gap: var(--sp-5) var(--sp-5);
+    align-items: start;
+}
+.board-artwork-left { grid-area: art; }
+.board-facts { grid-area: facts; min-width: 0; }
+.board-abilities { grid-area: abil; min-width: 0; }
+.board-dex { grid-area: dex; min-width: 0; }
+
+.board-artwork-left {
+    position: relative;
+    aspect-ratio: 1;
+    width: 100%;
+    background: var(--bg-panel);
+    border-radius: var(--card-r);
+    overflow: hidden;
+}
+.board-artwork-left .board-artwork-image {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    padding: 8%;
+    pointer-events: none;
+}
+.board-artwork-left .board-artwork-image img { width: 100%; height: 100%; object-fit: contain; }
+.board-artwork-left .placeholder { font-size: 64px; opacity: .3; color: var(--text-muted); }
+/* shiny / cry buttons, revealed on hover */
+.board-artwork-mode {
+    position: absolute; top: 10px; left: 10px; z-index: 8;
+    display: flex; flex-direction: column; gap: 6px;
+    opacity: 0; pointer-events: none;
+    transition: opacity .16s ease;
+}
+.board-artwork-left:hover .board-artwork-mode,
+.board-artwork-left:focus-within .board-artwork-mode { opacity: 1; pointer-events: auto; }
+.board-artwork-shiny-toggle {
+    width: 32px; height: 32px; padding: 0;
+    display: flex; align-items: center; justify-content: center;
+    appearance: none; -webkit-appearance: none;
+    border: 1px solid var(--border); border-radius: var(--ctl-r);
+    background: var(--bg-card); color: var(--text-secondary);
+    box-shadow: var(--shadow-sm);
+    cursor: pointer; pointer-events: auto;
+}
+.board-artwork-shiny-toggle svg { width: 15px; height: 15px; }
+.board-artwork-shiny-toggle:hover { color: var(--text-primary); background: var(--bg-panel); }
+.board-artwork-shiny-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.board-artwork-shiny-toggle.active { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+
+/* profile: label-over-value pairs */
+.board-facts-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--sp-3) var(--sp-4);
+    margin: 0 0 var(--sp-4);
+}
+.board-data-row { min-width: 0; }
+.board-data-row .label { font-size: 11.5px; font-weight: 600; color: var(--text-muted); }
+.board-data-row .value { margin: 1px 0 0; font-size: 15px; font-weight: 600; color: var(--text-primary); overflow-wrap: anywhere; }
+.board-gender-compact { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; }
+.board-gender-compact > .label { flex: 0 0 100%; font-size: 11.5px; font-weight: 600; color: var(--text-muted); }
+.board-gender-compact .gender-bar { flex: 1 1 120px; height: 8px; margin: 0; border-radius: 999px; }
+.board-gender-compact .gender-label { flex: 0 0 auto; font-size: 12.5px; color: var(--text-secondary); white-space: nowrap; }
+
+/* abilities: a plain divided list */
+.board-ability-list { display: flex; flex-direction: column; }
+.board-ability-item { display: flex; flex-direction: column; gap: 2px; padding: var(--sp-3) 0; border-top: 1px solid var(--border-light); }
+.board-ability-item:first-child { padding-top: 0; border-top: 0; }
+.board-ability-item .ability-name { font-size: 15px; font-weight: 700; color: var(--text-primary); }
+.board-ability-item .ability-desc { font-size: 13px; line-height: 1.45; color: var(--text-secondary); }
+
+/* dex entries: just the text */
+.dex-entries { display: flex; flex-direction: column; gap: var(--sp-3); }
+.dex-entry { font-size: 14px; font-style: italic; line-height: 1.6; color: var(--text-secondary); }
+
+/* ---- lower: base stats, learnset (+ evolution chain), sample sets ---- */
+.board-lower-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "stats" "learn" "sets";
+    gap: var(--sp-5);
+    margin-top: var(--sp-6);
+    padding-top: var(--sp-5);
+    border-top: 1px solid var(--border-light);
+}
+.board-stats-narrow { grid-area: stats; min-width: 0; }
+.board-learnset-slot { grid-area: learn; min-width: 0; display: flex; flex-direction: column; gap: var(--sp-6); }
+.board-learnset-slot:empty { display: none; }
+.board-sets-slot { grid-area: sets; min-width: 0; }
+
+.board-stats-narrow .stat-bar-container {
+    display: grid;
+    grid-template-columns: 34px 32px minmax(0, 1fr);
+    gap: var(--sp-2);
+    margin-bottom: 7px;
+}
+.board-stats-narrow .stat-label { width: auto; font-size: 11.5px; color: var(--text-secondary); }
+.board-stats-narrow .stat-value { width: auto; text-align: right; font-size: 12.5px; }
+.board-stats-narrow .stat-bar-bg { height: 8px; }
+.board-bst-display {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-top: var(--sp-3); padding-top: var(--sp-3);
+    border-top: 1px solid var(--border-light);
+}
+.board-bst-display .label { font-size: 11.5px; font-weight: 600; color: var(--text-muted); }
+.board-bst-display .value { font-family: 'Inconsolata', monospace; font-size: 18px; font-weight: 800; color: var(--text-primary); }
+
+/* learnset: category label, then flat chips */
+.move-category { margin-bottom: var(--sp-4); }
+.move-category:last-child { margin-bottom: 0; }
+.move-category-title {
+    display: flex; align-items: center; gap: 6px;
+    margin-bottom: var(--sp-2);
+    font-size: 12px; font-weight: 700;
+}
+.move-category-title svg { width: 14px; height: 14px; }
+.move-category.physical .move-category-title { color: #a8601a; }
+.move-category.special .move-category-title { color: #3453b5; }
+.move-category.status .move-category-title { color: var(--text-secondary); }
+.move-list { display: flex; flex-wrap: wrap; gap: 4px; }
+.move-tag {
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 12px; font-weight: 600; line-height: 1.4;
+    color: var(--text-primary);
+    background: var(--bg-panel);
+    cursor: pointer;
+    transition: filter .12s ease;
+}
+.move-tag:hover { filter: brightness(.95); }
+.move-tag.physical { color: #8a4a10; background: rgba(204,136,68,.14); }
+.move-tag.special { color: #23419c; background: rgba(68,102,204,.13); }
+.move-tag.status { color: #5c5648; background: rgba(150,140,120,.15); }
+.move-tag.custom { color: var(--text-secondary); }
+.move-tag.low-value { opacity: .45; }
+[data-theme="dark"] .move-category.physical .move-category-title, [data-theme="dark"] .move-tag.physical { color: #e0a56a; }
+[data-theme="dark"] .move-category.special .move-category-title, [data-theme="dark"] .move-tag.special { color: #93acf0; }
+[data-theme="dark"] .move-tag.status { color: #c9c2b2; }
+
+/* custom moves: rows under the chips, divided, not boxed */
+.pokedex-board .board-custom-move-item {
+    display: flex; align-items: flex-start; gap: var(--sp-3);
+    margin: 0; padding: var(--sp-3) 0;
+    background: none; border: 0; border-top: 1px solid var(--border-light); border-radius: 0;
+    cursor: pointer;
+}
+.pokedex-board .board-custom-move-item:hover { background: none; }
+.pokedex-board .board-custom-move-item:hover .cm-name { color: var(--accent); }
+.pokedex-board .board-custom-move-item .cm-type { font-size: 10.5px; padding: 2px 8px; border-radius: 6px; font-weight: 700; color: #fff; flex-shrink: 0; }
+.pokedex-board .board-custom-move-item .cm-name { font-size: 14px; }
+.pokedex-board .board-custom-move-item .cm-stats { font-size: 12px; margin-bottom: 2px; }
+.pokedex-board .board-custom-move-item .cm-desc { font-size: 12.5px; }
+
+/* sample sets */
+.board-set + .board-set { margin-top: var(--sp-4); }
+.board-set-name { margin-bottom: 4px; font-size: 13px; font-weight: 700; }
+.pokedex-board .sample-set-output {
+    margin-top: 0;
+    padding: var(--sp-3) 40px var(--sp-3) var(--sp-3);
+    background: var(--bg-panel);
+    border: 0;
+    border-radius: var(--ctl-r);
+    font-size: 12px;
+}
+
+/* the editor's own BST readout (not on the board) */
+.bst-display {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-top: var(--sp-3); padding-top: var(--sp-3);
+    border-top: 1px solid var(--border-light);
+}
+.bst-display .label { font-size: 12px; font-weight: 600; color: var(--text-secondary); }
+.bst-display .value { font-family: 'Inconsolata', monospace; font-size: 20px; font-weight: 800; color: var(--text-primary); }
+
+/* ---- container breakpoints ---- */
+/* the board can't query its own width for its own padding, so this one
+   follows the screen; the export renders in a desktop-sized frame and keeps
+   the full padding either way */
+@media (max-width: 640px) { .pokedex-board { padding: var(--sp-4); border-radius: 14px; } }
+@container board (max-width: 480px) {
+    .board-name { font-size: 26px; }
+    .board-number { font-size: 16px; }
+    .board-facts-grid { grid-template-columns: minmax(0, 1fr); gap: var(--sp-2); }
+    .board-data-row .value { font-size: 14px; }
+}
+@container board (min-width: 560px) {
+    .board-main {
+        grid-template-columns: minmax(0, 220px) minmax(0, 1fr);
+        grid-template-areas:
+            "art facts"
+            "art abil"
+            "dex dex";
+    }
+}
+@container board (min-width: 760px) {
+    .board-lower-row {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 300px);
+        grid-template-areas: "learn stats" "learn sets";
+        gap: var(--sp-5) var(--sp-6);
+    }
+    .board-sets-slot { align-self: start; }
+}
+@container board (min-width: 900px) {
+    .board-name { font-size: 40px; }
+    .board-main {
+        grid-template-columns: minmax(0, 260px) minmax(0, 1fr) minmax(0, 1fr);
+        grid-template-areas:
+            "art facts dex"
+            "art abil dex";
+        grid-template-rows: auto 1fr;
+        column-gap: var(--sp-6);
+    }
+}

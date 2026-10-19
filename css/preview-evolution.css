@@ -1,0 +1,346 @@
+/* ==================== preview-evolution ====================
+   the preview evolution chain and forme tabs.
+   link order in index.html = cascade order; later files override earlier ones.
+   ==================== */
+
+.preview-forme-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: -4px -4px 14px -4px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-light);
+}
+.preview-forme-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg-panel);
+    cursor: pointer;
+    font-family: inherit;
+    text-align: left;
+    transition: background .15s ease, border-color .15s ease, transform .1s ease;
+}
+.preview-forme-tab:hover:not(:disabled) {
+    border-color: var(--accent);
+    transform: translateY(-1px);
+}
+.preview-forme-tab:disabled {
+    cursor: default;
+}
+.preview-forme-tab.active {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+.preview-forme-tab.active .preview-forme-tab-label,
+.preview-forme-tab.active .preview-forme-tab-name {
+    color: #fff;
+}
+.preview-forme-tab-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    color: var(--text-secondary);
+}
+.preview-forme-tab-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.board-evolution-chain {
+    margin-top: 14px;
+}
+/* the flat single-row chain; still used by the community hub's strip, which
+   only has a stage-ordered snapshot list and no edges to branch on */
+.preview-evo-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 2px;
+}
+
+/* ---- branching graph (editor preview) ----
+   Positions come from buildPreviewEvolutionModel() in js/features/evolution.ts,
+   which computes them rather than measuring the DOM, so the board export
+   renders the same picture. Everything here is absolutely positioned inside
+   .preview-evo-graph; the CSS only styles what JS has already placed. */
+.preview-evo-scroller {
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 4px 2px 6px;
+    scrollbar-width: thin;
+}
+.preview-evo-graph {
+    position: relative;
+    /* width/height are set inline from the computed layout */
+    flex: none;
+}
+.preview-evo-wires {
+    position: absolute;
+    inset: 0;
+    color: var(--accent);
+    pointer-events: none;
+    overflow: visible;
+}
+.preview-evo-wire {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 2.2;
+    stroke-linecap: round;
+}
+/* a Mega/forme stem is not an evolution, so it reads as a different kind of line */
+.preview-evo-wire-forme {
+    stroke: var(--text-muted);
+    stroke-width: 2;
+    stroke-dasharray: 3 4;
+}
+.preview-evo-graph .preview-evo-node {
+    position: absolute;
+    margin: 0;
+}
+/* the method chip sits on the midpoint of its own curve */
+.preview-evo-graph .preview-evo-method {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+    pointer-events: none;
+}
+.preview-evo-node-special {
+    justify-content: center;
+    gap: 2px;
+    padding: 8px 10px;
+}
+.preview-evo-badge {
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: #fff;
+    background: var(--accent);
+    border-radius: 999px;
+    padding: 1px 8px;
+}
+
+.preview-evo-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    width: 128px;
+    padding: 12px 10px 10px;
+    border-radius: 12px;
+    /* a tinted well, not a bordered card: it already sits inside the board */
+    border: 1px solid transparent;
+    background: var(--bg-panel);
+    cursor: pointer;
+    font-family: inherit;
+    transition: background .15s ease, border-color .15s ease, transform .1s ease;
+}
+.preview-evo-node:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--accent) 7%, var(--bg-panel));
+    transform: translateY(-1px);
+}
+.preview-evo-node:disabled,
+.preview-evo-node.not-clickable {
+    cursor: default;
+    opacity: .75;
+}
+.preview-evo-node.current {
+    /* the one you're editing has to stand out where several branches compete */
+    border-color: var(--accent);
+    background: var(--accent-soft);
+}
+/* inside the graph, a node is placed over the wires */
+.preview-evo-graph .preview-evo-node { z-index: 1; box-sizing: border-box; }
+.preview-evo-graph .preview-evo-node.current { z-index: 3; }
+.preview-evo-stage {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    color: var(--text-secondary);
+}
+.preview-evo-sprite-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 72px;
+    height: 72px;
+}
+.preview-evo-node img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+.preview-evo-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-primary);
+    text-align: center;
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+}
+.preview-evo-meta {
+    font-size: 10px;
+    color: var(--text-secondary);
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+}
+.preview-evo-types {
+    display: flex;
+    gap: 4px;
+    margin-top: 2px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+/* type-pill sizing lives in css/controls.css; its 56px min-width puts two
+   pills over a card's width, which wrapped them and squashed the name away */
+.preview-evo-types .type-pill { min-width: 0; padding: 2px 6px; }
+/* when a card is tight, the sprite gives way, never the text */
+.preview-evo-node > .preview-evo-stage,
+.preview-evo-node > .preview-evo-name,
+.preview-evo-node > .preview-evo-meta,
+.preview-evo-node > .preview-evo-types { flex-shrink: 0; }
+.preview-evo-node:not(.compact) > .preview-evo-sprite-wrap { flex-shrink: 1; min-height: 0; }
+.preview-evo-connector {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 0 4px;
+    color: var(--accent);
+    flex-shrink: 0;
+}
+.preview-evo-arrow-icon {
+    display: block;
+}
+.preview-evo-method {
+    font-size: 9.5px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    /* opaque, so the wire it sits on doesn't strike through the text */
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 1px 6px;
+}
+
+
+/* ---- community hub strip ----
+   Same cards, but the data is a flat snapshot list, so the layout is columns
+   of same-stage members rather than the editor's wired graph. */
+.community-evo-row {
+    align-items: center;
+}
+.community-evo-column {
+    display: flex;
+    flex-direction: column;
+    /* siblings of one stage stack, which is what shows the split */
+    gap: 8px;
+    align-items: center;
+}
+
+/* ---- splits ----
+   buildPreviewEvolutionModel() switches any stage with 2+ members to these
+   side-by-side cards and sizes them itself (PREVIEW_EVO_GEOM.compactW/H), so
+   the numbers here only need to fit inside that box. */
+.preview-evo-node.compact {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    text-align: left;
+}
+.preview-evo-node.compact .preview-evo-sprite-wrap {
+    width: 48px;
+    height: 48px;
+    flex: none;
+}
+.preview-evo-body {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
+    min-width: 0;
+    flex: 1;
+}
+.preview-evo-node.compact .preview-evo-name { text-align: left; }
+.preview-evo-node.compact .preview-evo-types { margin-top: 0; justify-content: flex-start; flex-wrap: nowrap; }
+/* how this branch is reached, carried on the card since a split's wires are too crowded for chips */
+.preview-evo-card-method {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    max-width: 100%;
+    font-size: 9.5px;
+    font-weight: 700;
+    color: var(--accent);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.preview-evo-card-method::before {
+    content: "\2192";
+    font-weight: 800;
+    flex: none;
+}
+/* a Mega/forme under a compact card is one slim row */
+.preview-evo-node-special.compact {
+    justify-content: flex-start;
+    padding: 4px 10px;
+}
+.preview-evo-node-special.compact .preview-evo-name { font-size: 12px; }
+
+/* a big split off one parent wraps into a grid; this is the bracket around it */
+.preview-evo-group {
+    fill: var(--accent-glow);
+    fill-opacity: .45;
+    stroke: var(--accent);
+    stroke-opacity: .55;
+    stroke-width: 1.5;
+    stroke-dasharray: 5 5;
+}
+
+/* community strip: same idea with CSS layout, since it has no computed geometry */
+.community-evo-column.split .preview-evo-node:not(.preview-evo-node-special) {
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr);
+    grid-template-areas: "sprite name" "sprite types";
+    align-items: center;
+    column-gap: 10px;
+    row-gap: 3px;
+    width: 196px;
+    padding: 8px 10px;
+    text-align: left;
+}
+.community-evo-column.split .preview-evo-node .preview-evo-stage,
+.community-evo-column.split .preview-evo-node .preview-evo-meta { display: none; }
+.community-evo-column.split .preview-evo-sprite-wrap {
+    grid-area: sprite;
+    width: 48px;
+    height: 48px;
+}
+.community-evo-column.split .preview-evo-name { grid-area: name; text-align: left; align-self: end; }
+.community-evo-column.split .preview-evo-types { grid-area: types; justify-content: flex-start; align-self: start; margin-top: 0; }
+.community-evo-column.split .preview-evo-node-special { width: 196px; }
+.community-evo-column.split.wrap {
+    display: grid;
+    grid-template-columns: repeat(2, auto);
+    gap: 8px;
+    padding: 10px;
+    border: 1.5px dashed color-mix(in srgb, var(--accent) 55%, transparent);
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--accent-glow) 45%, transparent);
+}

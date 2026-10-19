@@ -1,0 +1,160 @@
+/* ==================== custom emojis ====================
+   :name: codes drawn as pictures (js/core/emoji.ts), the ":ta" autocomplete
+   and the picker (js/app/components/EmojiInput.tsx). */
+
+img.emoji {
+    width: 1.375em; height: 1.375em;
+    object-fit: contain;
+    vertical-align: -0.35em;
+    margin: 0 .05em;
+    display: inline-block;
+}
+img.emoji.emoji-jumbo { width: 3em; height: 3em; vertical-align: middle; }
+
+.emoji-input { position: relative; display: flex; flex-direction: column; gap: 6px; }
+.emoji-input textarea { width: 100%; resize: vertical; min-height: 40px; }
+.emoji-input-tools { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
+
+.emoji-autocomplete {
+    position: absolute; left: 0; bottom: calc(100% + 6px); z-index: 40;
+    width: min(320px, 100%);
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--card-r);
+    box-shadow: var(--shadow-md); padding: 6px; display: flex; flex-direction: column;
+}
+.emoji-autocomplete-head { font-size: 11px; color: var(--text-muted); padding: 2px 6px 6px; }
+.emoji-autocomplete button {
+    display: flex; align-items: center; gap: 8px; padding: 5px 8px; border: 0; border-radius: 8px;
+    background: transparent; color: var(--text-primary); font: inherit; font-size: 13px; text-align: left; cursor: pointer;
+}
+.emoji-autocomplete button.active { background: var(--accent-soft); color: var(--accent); }
+
+.emoji-button-wrap { position: relative; }
+.emoji-button {
+    display: inline-flex; align-items: center; justify-content: center; gap: 2px;
+    min-width: 32px; height: 32px; padding: 0 6px; border-radius: 8px; border: 0;
+    background: transparent; color: var(--text-secondary); cursor: pointer;
+}
+.emoji-button:hover { background: var(--bg-panel); color: var(--accent); }
+/* drawn on <body> and placed from its button (EmojiButton), so no card,
+   thread or modal it opens from can clip it; above everything, modals too */
+.emoji-popover { position: fixed; z-index: 20000; }
+.emoji-char { display: inline-block; line-height: 1; font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif; }
+.emoji-picker-tabs-gap { flex: 0 0 1px; align-self: stretch; margin: 4px 2px; background: var(--border); }
+
+.emoji-picker {
+    width: min(340px, calc(100vw - 32px));
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--panel-r);
+    box-shadow: var(--shadow-lg); padding: 10px; display: flex; flex-direction: column; gap: 8px;
+}
+.emoji-picker-search { width: 100%; }
+.emoji-picker-searchrow { display: flex; align-items: center; gap: 6px; }
+.emoji-picker-searchrow .emoji-picker-search { flex: 1; min-width: 0; }
+/* the skin tone chooser: a hand in the current tone, opening a row of six */
+.emoji-tone-button {
+    flex: 0 0 auto; width: 36px; height: 36px; border: 1px solid var(--border); border-radius: 10px;
+    background: var(--bg-card); display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.emoji-tone-button:hover, .emoji-tone-button[aria-expanded="true"] { background: var(--bg-panel); border-color: var(--border-strong); }
+.emoji-tone-row { display: flex; justify-content: space-between; gap: 4px; padding: 4px; border-radius: 10px; background: var(--bg-panel); }
+.emoji-tone-option {
+    width: 38px; height: 34px; border: 0; border-radius: 8px; background: transparent; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+}
+.emoji-tone-option:hover { background: var(--bg-card); }
+.emoji-tone-option.active { background: var(--accent-soft); box-shadow: inset 0 0 0 1px var(--accent); }
+.emoji-picker-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border-light); padding-bottom: 6px; overflow-x: auto; scrollbar-width: none; }
+.emoji-picker-tabs::-webkit-scrollbar { display: none; }
+.emoji-picker-tabs > button { flex: 0 0 auto; }
+.emoji-picker-tabs button {
+    width: 34px; height: 30px; border: 0; border-radius: 8px; background: transparent; color: var(--text-secondary);
+    display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.emoji-picker-tabs button.active { background: var(--accent-soft); color: var(--accent); }
+.emoji-picker-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(38px, 1fr)); gap: 2px;
+    max-height: 240px; overflow-y: auto; overscroll-behavior: contain;
+    /* room for a hovered cell's zoom, and the scrollbar's space kept: in a
+       one-row grid (Recent) the zoom used to overflow, a scrollbar came and
+       narrowed the grid, the cells reflowed out from under the pointer, and
+       the whole row jittered */
+    padding: 3px; scrollbar-gutter: stable;
+}
+.emoji-picker-cell {
+    aspect-ratio: 1; border: 0; border-radius: 8px; background: transparent; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+}
+.emoji-picker-cell:hover { background: var(--bg-panel); transform: scale(1.08); }
+.emoji-picker-cell img.emoji { width: 28px; height: 28px; margin: 0; vertical-align: middle; }
+.emoji-picker-empty { grid-column: 1 / -1; padding: 16px; text-align: center; color: var(--text-muted); font-size: 13px; }
+
+.rich-text p { margin: 0 0 .5em; }
+.rich-text p:last-child { margin-bottom: 0; }
+.rich-text a { color: var(--accent); text-underline-offset: 3px; }
+.rich-text h1, .rich-text h2, .rich-text h3 { color: var(--text-primary); line-height: 1.25; margin: 1em 0 .4em; letter-spacing: -0.01em; }
+.rich-text h1 { font-size: 1.5em; }
+.rich-text h2 { font-size: 1.25em; }
+.rich-text h3 { font-size: 1.08em; }
+.rich-text > :first-child { margin-top: 0; }
+.rich-text ul, .rich-text ol { margin: 0 0 .6em; padding-left: 1.4em; }
+.rich-text li + li { margin-top: .2em; }
+.rich-text blockquote { margin: 0 0 .6em; padding: .1em 0 .1em .9em; border-left: 1px solid var(--border-strong); color: var(--text-secondary); }
+.rich-text code { padding: .1em .35em; border-radius: 5px; background: var(--bg-panel); font-family: 'Inconsolata', monospace; font-size: .92em; }
+.rich-text pre { margin: 0 0 .7em; padding: .7em .9em; border-radius: 8px; background: var(--bg-panel); overflow-x: auto; }
+.rich-text pre code { padding: 0; background: none; white-space: pre; }
+.rich-text hr { border: 0; border-top: 1px solid var(--border); margin: 1em 0; }
+.rich-text del { color: var(--text-muted); }
+/* ||spoiler||: hidden until clicked or tabbed to */
+.rich-text .rt-spoiler { border-radius: 4px; background: var(--text-primary); color: transparent; cursor: pointer; transition: background .15s ease, color .15s ease; }
+.rich-text .rt-spoiler img { visibility: hidden; }
+.rich-text .rt-spoiler:focus, .rich-text .rt-spoiler:focus-within { background: var(--bg-panel); color: inherit; outline: none; }
+.rich-text .rt-spoiler:focus img { visibility: visible; }
+
+/* reaction pickers: one-tap favourites on top, Facebook style */
+.emoji-picker-quick { display: flex; justify-content: space-between; gap: 2px; padding-bottom: 8px; border-bottom: 1px solid var(--border-light); }
+.emoji-picker-quick-cell {
+    width: 40px; height: 40px; border: 0; border-radius: 50%; background: transparent; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: transform .12s ease, background .12s ease;
+}
+.emoji-picker-quick-cell:hover { background: var(--bg-panel); transform: scale(1.15); }
+.emoji-picker-quick-cell .reaction-heart { color: #e0245e; }
+.reduce-motion .emoji-picker-quick-cell:hover { transform: none; }
+/* the comment line's React link: is-on once you've reacted */
+.comment-meta .comment-act .emoji-button.is-on { color: var(--accent); }
+
+/* ---- @mentions: a link to the profile, opened in place (RichText) ---- */
+.rich-text a.rt-mention { color: var(--accent); font-weight: 700; text-decoration: none; }
+.rich-text a.rt-mention:hover { text-decoration: underline; text-underline-offset: 3px; }
+.mention-autocomplete .mention-autocomplete-name { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.mention-autocomplete .mention-autocomplete-user { margin-left: auto; font-size: 12px; color: var(--text-muted); white-space: nowrap; }
+.mention-autocomplete button.active .mention-autocomplete-user { color: inherit; opacity: .75; }
+
+/* ---- the formatting bar (long-form boxes: an event's about text, its results post) ---- */
+.emoji-input.has-toolbar { gap: 0; }
+.emoji-input.has-toolbar textarea { border-top-left-radius: 0; border-top-right-radius: 0; }
+.emoji-input.has-toolbar .emoji-input-tools { margin-top: 6px; }
+.format-bar {
+    display: flex; align-items: center; flex-wrap: wrap; gap: 2px; padding: 4px;
+    border: 1px solid var(--border-strong); border-bottom: 0; border-radius: var(--ctl-r) var(--ctl-r) 0 0; background: var(--bg-panel);
+}
+.format-bar-item { display: inline-flex; align-items: center; gap: 2px; }
+.format-bar-sep { width: 1px; height: 18px; margin: 0 4px; background: var(--border-strong); }
+.format-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 30px; height: 30px; padding: 0 6px;
+    border: 0; border-radius: 6px; background: none; color: var(--text-secondary); font: inherit; font-size: 12px; font-weight: 700; cursor: pointer;
+}
+.format-btn:hover { background: var(--bg-card); color: var(--text-primary); }
+.format-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.format-btn[aria-expanded="true"] { background: var(--bg-card); color: var(--accent); }
+.format-vars { position: relative; margin-left: auto; }
+.format-vars-menu { position: absolute; right: 0; top: calc(100% + 4px); z-index: 45; width: min(300px, 80vw); max-height: 320px; overflow-y: auto; }
+.format-vars-menu button { display: flex; align-items: baseline; gap: 10px; width: 100%; text-align: left; }
+.format-vars-menu code { font-size: 12px; color: var(--accent); white-space: nowrap; }
+.format-vars-menu span { font-size: 12px; color: var(--text-secondary); }
+
+/* ---- one-line emoji boxes (a poll's question and options): a text field with the smiley beside it ---- */
+.emoji-input.is-single-line { flex-direction: row; align-items: center; gap: 4px; flex: 1; min-width: 0; }
+.emoji-input.is-single-line textarea { resize: none; min-height: 36px; height: 36px; field-sizing: content; max-height: 96px; padding-top: 7px; padding-bottom: 7px; line-height: 20px; }
+.emoji-input.is-single-line .emoji-input-tools { flex: 0 0 auto; }
+.emoji-input.is-single-line .emoji-button { width: 32px; height: 32px; }
+.emoji-text img.emoji { width: 1.25em; height: 1.25em; vertical-align: -0.28em; }

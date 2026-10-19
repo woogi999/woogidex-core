@@ -1,0 +1,335 @@
+/* ==================== landing page (/) ====================
+   js/app/pages/LandingPage.tsx. An ordinary page in the shell: the floating
+   logo and a line on the page itself, then the painting as a band that fades
+   in and back out with dithered, gently curved edges (the buttons sit on
+   it), then panels like every other page, all on the tokens so the night
+   theme just works. The logo keeps its own colors in both themes, the way
+   the PNG logo in the header does. */
+
+/* the painting runs edge to edge; everything else is a centred column */
+body[data-page="landing-view"] .app-container { max-width: none; padding: 0; }
+body[data-page="landing-view"] #main-content { padding-top: var(--header-h); }
+/* how far the first panel tucks over the painting band's foot (the band and the content below both read it) */
+.lp { --tuck: 300px; }
+@media (max-width: 640px) { .lp { --tuck: 240px; } }
+/* the page is the header's and footer's white, so the three read as one surface */
+body[data-page="landing-view"] { background: var(--bg-card); }
+.lp-body {
+    position: relative;
+    z-index: 1;
+    max-width: calc(1080px + 2 * var(--sp-6));
+    margin: 0 auto;
+    padding: var(--sp-5) var(--sp-6) 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-5);
+}
+@media (max-width: 900px) { .lp-body { padding: var(--sp-4) var(--sp-4) 0; } }
+
+/* ==================== the logo ====================
+   FloatingLogo.tsx: each letter bobs on its own and boings when poked;
+   Joltik rides the O. */
+.flogo { display: block; width: 100%; height: auto; overflow: visible; }
+.flogo-extrude { fill: #33356f; stroke: #33356f; stroke-width: 15; stroke-linejoin: round; }
+.flogo-outline { fill: #4f5291; stroke: #4f5291; stroke-width: 15; stroke-linejoin: round; }
+.flogo-dots { opacity: 0.6; }
+.flogo-bob, .flogo-letter { transform-box: fill-box; transform-origin: 50% 60%; }
+.flogo-bob {
+    animation: flogo-bob calc(2.6s + var(--i) * 0.29s) ease-in-out calc(var(--i) * -0.83s) infinite alternate;
+}
+.flogo-letter.is-boing { animation: flogo-boing 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
+@keyframes flogo-bob {
+    0% { transform: translateY(5px) rotate(-2.5deg); }
+    100% { transform: translateY(-9px) rotate(2.5deg); }
+}
+@keyframes flogo-boing {
+    0% { transform: scale(1, 1); }
+    30% { transform: scale(1.14, 0.86) translateY(6px); }
+    60% { transform: scale(0.92, 1.12) translateY(-8px); }
+    100% { transform: scale(1, 1); }
+}
+.flogo-rider { pointer-events: none; }
+.flogo { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-user-drag: none; }
+
+/* ==================== hero: the logo on the page ==================== */
+.lp-hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: clamp(56px, 13vh, 150px) var(--sp-4) var(--sp-4);
+    text-align: center;
+}
+.lp-logo { width: min(100%, 560px); margin-bottom: var(--sp-6); line-height: 0; }
+.lp-tagline { font-size: clamp(18px, 1.8vw, 22px); font-weight: 700; line-height: 1.35; color: var(--text-secondary); text-wrap: balance; }
+
+/* ==================== the painting band ====================
+   LandingArt.tsx. The layers are PNGs in public/assets/landing/<day|night>/
+   (2400x1350, all the same size so they line up), cropped to fill the band
+   without stretching; each moves by its own depth --d with the cursor or the
+   phone's tilt (--mx, --my). A mask drawn to the band's size fades it in and
+   out in pixel blocks along a slight curve. Only the painting moves. */
+.lp-art {
+    --mx: 0; --my: 0;
+    position: relative;
+    height: calc(clamp(420px, 64vh, 700px) + var(--tuck));
+    overflow: hidden;
+    /* until the mask is drawn, a plain soft fade */
+    -webkit-mask-image: linear-gradient(transparent, #000 25%, #000 55%, transparent);
+    mask-image: linear-gradient(transparent, #000 25%, #000 55%, transparent);
+    -webkit-mask-size: 100% 100%;
+    mask-size: 100% 100%;
+    background: linear-gradient(#7cc0ec, #bfe4f3 50%, #3fb0b4 51%, #1e8592);
+}
+[data-theme="dark"] .lp-art { background: linear-gradient(#141c48, #2a3a6e 50%, #1a2c4c 51%, #0c1a2e); }
+.lp-layer {
+    position: absolute;
+    /* taller than the band, so the scroll can drift it (--sy) without showing an edge */
+    left: -8%; top: -16%;
+    width: 116%; height: 132%;
+    background-position: 50% 50%;
+    background-size: cover;
+    background-repeat: no-repeat;
+    opacity: 0;
+    /* the cursor or tilt moves near layers more; the scroll moves them all, near ones a little more */
+    transform: translate3d(
+        calc(var(--mx) * var(--d) * -42px),
+        calc(var(--my) * var(--d) * -22px + var(--sy, 0) * var(--sr, 0px) * (0.55 + var(--d) * 0.45)),
+        0);
+    transition: opacity 0.6s ease-out;
+    will-change: transform;
+}
+.lp-art.is-painted .lp-layer { opacity: 1; }
+.lp-art-content {
+    position: absolute;
+    inset: 0 0 var(--tuck);
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 var(--sp-4);
+}
+.lp-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--sp-3); }
+/* the front page's buttons borrow the logo's look, lightly: its pink-to-violet
+   with fine halftone dots, its navy outline and a small navy extrusion. The
+   second one is plain white in the same frame. */
+.lp-cta {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    height: 52px;
+    padding: 0 24px;
+    font: 700 16px/1 'Exo 2', sans-serif;
+    color: #fff;
+    text-shadow: 0 1px 1px rgba(51, 53, 111, 0.45);
+    background:
+        radial-gradient(rgba(255, 220, 252, 0.35) 0.7px, transparent 1px) 0 0 / 4px 4px,
+        linear-gradient(#ee9cf0, #c98af7 55%, #a87cff);
+    border: 2px solid #4f5291;
+    border-radius: 14px;
+    box-shadow: 3px 4px 0 #33356f;
+    cursor: pointer;
+    transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
+}
+.lp-cta svg { width: 19px; height: 19px; }
+.lp-cta:hover { transform: translate(-1px, -2px); box-shadow: 4px 6px 0 #33356f; }
+.lp-cta:active { transform: translate(2px, 3px); box-shadow: 1px 1px 0 #33356f; transition-duration: 0.05s; }
+.lp-cta:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
+.lp-cta-alt { color: #33356f; text-shadow: none; background: #fff; }
+
+/* the arrow at the foot of the first screen: there's more below */
+.lp-scroll {
+    position: fixed;
+    z-index: 3;
+    left: 50%; bottom: calc(var(--bottom-nav-h, 0px) + env(safe-area-inset-bottom, 0px) + 18px);
+    display: grid;
+    place-items: center;
+    width: 60px; height: 60px;
+    margin-left: -30px;
+    color: #fff;
+    background: none;
+    border: 0;
+    border-radius: 50%;
+    cursor: pointer;
+    filter: drop-shadow(0 2px 6px rgba(10, 20, 50, 0.45));
+    animation: lp-nudge 1.6s ease-in-out infinite;
+    transition: opacity 0.3s ease-out;
+}
+.lp-scroll svg { width: 44px; height: 44px; }
+.lp-scroll:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+.lp-scroll.is-gone { animation: none; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 0.3s ease-out, visibility 0s 0.3s; }
+@keyframes lp-nudge {
+    0%, 100% { transform: translateY(0); opacity: 0.85; }
+    50% { transform: translateY(9px); opacity: 1; }
+}
+
+/* the paint the cursor smears on the page (PaintSmudge.tsx): under everything */
+.lp { position: relative; }
+/* multiply over the white page is just the paint itself, so on the light theme
+   only the wet layer (over the dry paint) needs blending; on the dark one, both */
+/* every layer of paint multiplies into the page on the light theme, so the wet blooms, the
+   sheet and the drying pieces (PaintSmudge.tsx) mix with each other the same way. The pieces'
+   holder has no z-index, so it isn't a stacking context and they blend with the page too. */
+.lp-paint { position: absolute; left: 0; top: 0; z-index: 0; pointer-events: none; mix-blend-mode: multiply; }
+.lp-paint-pieces { position: absolute; left: 0; top: 0; pointer-events: none; }
+/* dark: plain paint over the page (screen piled colors up into a milky white) */
+[data-theme="dark"] .lp-paint { mix-blend-mode: normal; }
+.lp > .lp-hero, .lp > .lp-art, .lp > .lp-body, .lp > .lp-foot { position: relative; z-index: 1; }
+/* at the top of the front page the header's logo and bottom line step aside
+   (the big logo is right there), and come back once it's scrolled past.
+   The logo slides out to the left and the search glides over into its spot
+   (moved, not resized, so nothing in the header lays out again). An open search
+   stays put: on narrow screens it's position: fixed, which a transform would trap. */
+.header { --hdr-logo-w: 95px; transition: border-color 0.3s ease-out; }
+.header .logo-button { transition: opacity 0.25s ease-out, transform 0.35s cubic-bezier(0.22, 1, 0.36, 1); }
+.header .global-search { transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1); }
+body[data-page="landing-view"].lp-at-top .header { border-bottom-color: transparent; }
+body[data-page="landing-view"].lp-at-top .header .logo-button { opacity: 0; transform: translateX(-28px); pointer-events: none; }
+/* the logo's width plus the header's 10px gap */
+body[data-page="landing-view"].lp-at-top .header .global-search:not(.open) { transform: translateX(calc(-1 * (var(--hdr-logo-w) + 10px))); }
+@media (max-width: 640px) { .header { --hdr-logo-w: 83px; } }
+html.reduce-motion .header, html.reduce-motion .header .logo-button, html.reduce-motion .header .global-search { transition: none; }
+
+/* only on the front page itself */
+body:not([data-page="landing-view"]) .lp-scroll { display: none; }
+/* the first panel tucks over the band's foot, so the painting runs on behind it */
+.lp-art + .lp-body { margin-top: calc(-1 * var(--tuck)); }
+
+/* ==================== panels ==================== */
+.lp-section { scroll-margin-top: calc(var(--header-h) + var(--sp-4)); }
+.lp-section-head { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--sp-4); margin-bottom: var(--sp-4); }
+.lp-section-title { font-size: 17px; font-weight: 700; }
+.lp-section-sub { margin-top: 2px; font-size: 13px; color: var(--text-secondary); }
+.lp-more { display: inline-flex; align-items: center; gap: 4px; flex: none; font-size: 13px; font-weight: 600; }
+
+.lp-grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: var(--sp-4);
+}
+.lp-grid .community-landing-card { width: 100%; }
+.lp-grid .community-landing-art { position: relative; min-height: 0; aspect-ratio: 1; overflow: hidden; }
+.lp-grid .community-landing-art canvas, .lp-grid .community-landing-art img { position: absolute; inset: var(--sp-3); width: calc(100% - 2 * var(--sp-3)); height: calc(100% - 2 * var(--sp-3)); }
+
+.lp-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--sp-3);
+    padding: var(--sp-6) var(--sp-4);
+    text-align: center;
+    color: var(--text-secondary);
+    background: var(--bg-panel);
+    border-radius: var(--card-r);
+}
+.lp-empty .ui-icon { color: var(--text-muted); }
+.lp-empty p { max-width: 44ch; font-size: 13px; line-height: 1.5; }
+
+/* ---- what you can do: ruled rows, like Settings ---- */
+.lp-steps { list-style: none; margin-top: var(--sp-2); }
+.lp-step {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--sp-4);
+    padding: var(--sp-4) 0;
+}
+.lp-step + .lp-step { border-top: 1px solid var(--border-light); }
+.lp-step:last-child { padding-bottom: 0; }
+.lp-step-icon {
+    display: grid;
+    place-items: center;
+    width: 38px; height: 38px;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: var(--ctl-r);
+}
+.lp-step-text { display: flex; flex-direction: column; gap: 2px; }
+.lp-step-text strong { font-size: 15px; font-weight: 700; }
+.lp-step-text span { max-width: 72ch; font-size: 13px; line-height: 1.55; color: var(--text-secondary); }
+
+/* ---- good to know: notices ---- */
+.lp-notes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-3); }
+.lp-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--sp-3);
+    padding: var(--sp-4);
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text-secondary);
+    background: var(--bg-panel);
+    border-radius: var(--card-r);
+}
+.lp-notice .ui-icon { flex: none; margin-top: 2px; color: var(--accent); }
+
+/* ---- footer: link columns, then a fine-print strip ---- */
+.lp-foot { --g: var(--sp-6); margin-top: var(--sp-7); background: var(--bg-card); border-top: 1px solid var(--border); }
+.lp-foot-inner {
+    max-width: calc(1080px + 2 * var(--sp-6));
+    margin: 0 auto;
+    padding: var(--sp-7) var(--g) var(--sp-6);
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(0, 1fr));
+    gap: var(--sp-6);
+}
+.lp-foot-brand img { display: block; width: 120px; height: auto; }
+.lp-foot-brand p { max-width: 34ch; margin-top: var(--sp-3); font-size: 13px; line-height: 1.55; color: var(--text-secondary); }
+.lp-foot-col h3 { margin-bottom: var(--sp-3); font-size: 12px; font-weight: 700; color: var(--text-muted); }
+.lp-foot-col ul { list-style: none; display: flex; flex-direction: column; gap: var(--sp-2); }
+.lp-foot-col button {
+    padding: 2px 0;
+    font: 600 13px 'Exo 2', sans-serif;
+    color: var(--text-secondary);
+    text-align: left;
+    background: none;
+    border: 0;
+    cursor: pointer;
+    text-underline-offset: 3px;
+}
+.lp-foot-col button:hover { color: var(--text-primary); text-decoration: underline; }
+.lp-foot-col button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.lp-foot-bar {
+    max-width: calc(1080px + 2 * var(--sp-6));
+    margin: 0 auto;
+    padding: var(--sp-4) var(--g) var(--sp-5);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--sp-2) var(--sp-5);
+    font-size: 12px;
+    color: var(--text-muted);
+    /* a rule as wide as the columns above it, not the padding around them */
+    background: linear-gradient(var(--border-light), var(--border-light)) var(--g) 0 / calc(100% - 2 * var(--g)) 1px no-repeat;
+}
+
+/* ==================== arriving ==================== */
+@media (prefers-reduced-motion: no-preference) {
+    html:not(.reduce-motion) .lp-js .lp-reveal { transition: opacity 0.35s ease-out, transform 0.35s ease-out; }
+    html:not(.reduce-motion) .lp-js .lp-reveal:not(.is-in) { opacity: 0; transform: translateY(12px); }
+}
+html.reduce-motion .lp *, html.low-end .lp .flogo-bob { animation: none !important; }
+@media (prefers-reduced-motion: reduce) {
+    .lp * { animation: none !important; }
+}
+
+/* ==================== smaller screens ==================== */
+@media (max-width: 1000px) {
+    .lp-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 760px) {
+    .lp-tagline { font-size: 18px; }
+    .lp-foot { --g: var(--sp-4); }
+    .lp-foot-inner { grid-template-columns: repeat(2, minmax(0, 1fr)); padding-top: var(--sp-6); padding-bottom: var(--sp-5); }
+    .lp-foot-brand { grid-column: 1 / -1; }
+    .lp-notes { grid-template-columns: minmax(0, 1fr); }
+    .lp-step { grid-template-columns: auto minmax(0, 1fr); }
+    .lp-step .btn { grid-column: 2; justify-self: start; }
+}
+@media (max-width: 640px) {
+    .lp-art { height: calc(clamp(360px, 60vh, 540px) + var(--tuck)); }
+    .lp-hero { padding-top: clamp(40px, 9vh, 90px); }
+    .lp-cta { height: 50px; padding: 0 22px; font-size: 15px; }
+    .lp-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-3); }
+    .lp-section-head { flex-direction: column; align-items: flex-start; gap: var(--sp-2); }
+}
