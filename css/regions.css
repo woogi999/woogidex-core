@@ -134,14 +134,11 @@
 .type-emblem-text { line-height: 1; }
 .type-icon-preview { border-style: solid; color: #fff; }
 .type-icon-preview img { width: 70%; height: 70%; }
-/* list layout: a row like the other libraries */
-.collection-grid.collection-list .type-tile .type-emblem { font-size: 13px; box-shadow: none; }
+
 /* list rows: the tag can't sit on a 38px thumbnail, so it follows the name */
-.collection-grid.collection-list .card-art .vanilla-card-tag { display: none; }
+
 .vanilla-card-tag.vanilla-card-tag-inline { position: static; margin-left: 6px; vertical-align: middle; }
 .collection-grid:not(.collection-list) .vanilla-card-tag-inline { display: none; }
-.collection-grid.collection-list .type-tile .card-art .vanilla-card-tag,
-.collection-grid.collection-list .type-tile .card-art .library-tile-corner { display: none; }
 
 .types-empty { margin-top: var(--sp-4); color: var(--text-muted); font-size: 13px; }
 

@@ -19,7 +19,9 @@
         /* no transform on #editor-view itself: it would make the fixed scrim
            below position against the sheet instead of the window. The sheet
            and the scrim move together through js/core/motion.ts (sheetIn,
-           sheetOut); the scrim follows the --scrim property. */
+           sheetOut). The scrim fades with a CSS transition on .scrim-off:
+           a script-driven value on #editor-view restyled the whole sheet
+           every frame. */
         /* the collection behind it dims; clicking it closes the editor */
         #editor-view::before {
             content: "";
@@ -28,8 +30,9 @@
             right: 0;
             z-index: -1;
             background: rgba(17, 17, 20, .32);
-            opacity: var(--scrim, 1);
+            transition: opacity .3s ease-out;
         }
+        #editor-view.scrim-off::before { opacity: 0; transition: opacity .26s ease-in .04s; }
         .no-overlay-blur #editor-view::before { background: transparent; }
         /* the page behind doesn't scroll while the sheet is open */
         body.editor-sheet-open { overflow: hidden; }

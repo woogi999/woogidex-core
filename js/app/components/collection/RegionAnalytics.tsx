@@ -422,7 +422,7 @@ function AnalyticsBody({ region, tab, setTab }: { region: Region; tab: Analytics
 
     const head = (
         <div className="an-head">
-            <div><h2>{region.name} analytics</h2><p>What your region looks like, from the basics to the numbers competitive players check.</p></div>
+            <div><h2>{region.name} analytics</h2></div>
             <div className="an-tabs" role="tablist" aria-label="Analytics sections">
                 {TABS.map(([key, label]) => (
                     <button key={key} type="button" role="tab" aria-selected={tab === key} className={tab === key ? 'active' : ''} onClick={() => setTab(key)}>{label}</button>

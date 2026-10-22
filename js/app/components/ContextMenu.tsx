@@ -133,7 +133,7 @@ function Menu({ spec }: { spec: Open }) {
     const run = (a: MenuAction) => { closeContextMenu(true); a.run(); };
 
     return (
-        <div ref={box} className="ctx-menu" role="menu" data-lenis-prevent aria-label={spec.title || 'Actions'} onKeyDown={onKey}
+        <div ref={box} className="ctx-menu" role="menu" aria-label={spec.title || 'Actions'} onKeyDown={onKey}
             onContextMenu={e => e.preventDefault()}>
             {spec.title && (
                 <div className="ctx-head">

@@ -35,7 +35,7 @@ import * as entityArt from '../editor/entity-art.ts';
 import * as moveInheritance from '../features/move-inheritance.ts';
 import { maybeShowOriginNotice } from './dev-notice.ts';
 import { initArtShield } from './art-shield.ts';
-import { cancelSheetOut, initSmoothScroll, sheetIn, sheetOut, slideIn } from './motion.ts';
+import { cancelSheetOut, sheetIn, sheetOut, slideIn } from './motion.ts';
 import { ext } from './extend.ts';
 // whatever this build adds to the app (js/core/extend.ts): vite.shared.js
 // points the alias at js/host/standalone.ts, or at a host's own module
@@ -500,7 +500,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         .catch(e => { log.error('BOOT', 'Could not open the first page', e); api.showCollection?.(); });
     api.initContentProtection?.();
     initArtShield();
-    initSmoothScroll();
     api.updateEditorStats();
     done({ fakemons: state.fakemonDB.length, sdLoaded: state.sdLoaded });
     log.info('BOOT', 'Application ready', { fakemons: state.fakemonDB.length, sdLoaded: state.sdLoaded });

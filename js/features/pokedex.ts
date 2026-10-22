@@ -621,9 +621,12 @@ const POKEAPI_CACHE = { cacheName: 'woogidex-pokeapi-v1', maxAgeMs: 30 * 8640000
         }
 
         const COLLECTION_SORT_KEY = 'woogidex.collection.sort.v2';
+        // one base stat each, as Showdown's dex search sorts
+        const STAT_SORTS = ['hp', 'atk', 'def', 'spa', 'spd', 'spe'];
         // the Fakémon tab sorts by more than the libraries can
         const SORT_OPTIONS = {
-            fakemon: [['created', 'Date Added'], ['name', 'Name'], ['number', 'Pokédex Number'], ['bst', 'BST'], ['updated', 'Last Updated']],
+            fakemon: [['created', 'Date Added'], ['name', 'Name'], ['number', 'Pokédex Number'], ['bst', 'BST'], ['updated', 'Last Updated'],
+                ['hp', 'HP'], ['atk', 'Attack'], ['def', 'Defense'], ['spa', 'Sp. Atk'], ['spd', 'Sp. Def'], ['spe', 'Speed']],
             library: [['name', 'Name'], ['created', 'Date Added'], ['updated', 'Last Updated']]
         };
 
@@ -633,7 +636,7 @@ const POKEAPI_CACHE = { cacheName: 'woogidex-pokeapi-v1', maxAgeMs: 30 * 8640000
                 const saved = JSON.parse(localStorage.getItem(COLLECTION_SORT_KEY) || 'null');
                 if (!saved) return fallback;
                 return {
-                    by: ['created','name','number','bst','updated'].includes(saved.by) ? saved.by : fallback.by,
+                    by: ['created','name','number','bst','updated', ...STAT_SORTS].includes(saved.by) ? saved.by : fallback.by,
                     order: saved.order === 'asc' ? 'asc' : 'desc'
                 };
             } catch { return fallback; }
@@ -672,6 +675,7 @@ const POKEAPI_CACHE = { cacheName: 'woogidex-pokeapi-v1', maxAgeMs: 30 * 8640000
                 if (sortBy === 'name') result = String(a.name || '').localeCompare(String(b.name || ''));
                 else if (sortBy === 'number') result = number(a) - number(b);
                 else if (sortBy === 'bst') result = getFakemonBST(a) - getFakemonBST(b);
+                else if (STAT_SORTS.includes(sortBy)) result = (a.stats?.[sortBy] || 0) - (b.stats?.[sortBy] || 0);
                 else if (sortBy === 'updated') result = (a.updatedAt || a.createdAt || 0) - (b.updatedAt || b.createdAt || 0);
                 else result = (a.createdAt || 0) - (b.createdAt || 0);
                 if (result === 0) result = String(a.name || '').localeCompare(String(b.name || ''));

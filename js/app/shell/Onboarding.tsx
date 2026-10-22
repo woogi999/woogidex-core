@@ -120,11 +120,14 @@ function TipCard({ steps, index, onStep, onDone }: { steps: TourStep[]; index: n
             frame = requestAnimationFrame(() => {
                 setHidden(blocked());
                 const target = findTarget(step);
-                setRect(target ? target.getBoundingClientRect() : null);
+                const r = target ? target.getBoundingClientRect() : null;
+                // a new rect only when it moved: each one drew the card again
+                setRect(old => old && r && old.top === r.top && old.left === r.left && old.width === r.width && old.height === r.height ? old : r);
             });
         };
         measure();
-        const timer = setInterval(measure, 400);
+        // a slow check for a target that moves with no scroll or resize
+        const timer = setInterval(measure, 1000);
         window.addEventListener('scroll', measure, { passive: true, capture: true });
         window.addEventListener('resize', measure);
         return () => {

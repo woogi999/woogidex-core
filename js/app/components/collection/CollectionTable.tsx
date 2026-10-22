@@ -20,16 +20,20 @@ import type { CollectionTab, Fakemon, Folder, LibraryKind } from '../../types.ts
 
 // ---- the frame ----
 
-/** The column heads a tab's table has. `sort` is the collection sort key a head sorts by. */
-export type Column = { label: string; cls: string; sort?: string };
+/**
+ * The column heads a tab's table has. `sort` is the collection sort key a head
+ * sorts by. A number column (`high`) sorts high to low on its first click, as
+ * Showdown's does.
+ */
+export type Column = { label: string; cls: string; sort?: string; high?: boolean };
 
 const STATS: Array<[string, string]> = [['hp', 'HP'], ['atk', 'Atk'], ['def', 'Def'], ['spa', 'SpA'], ['spd', 'SpD'], ['spe', 'Spe']];
 
 export const COLUMNS: Record<CollectionTab, Column[]> = {
     fakemon: [
         { label: '', cls: 'col-icon' }, { label: '#', cls: 'col-num', sort: 'number' }, { label: 'Name', cls: 'col-name', sort: 'name' },
-        { label: 'Types', cls: 'col-types' }, { label: 'Abilities', cls: 'col-abilities' }, { label: 'Hidden', cls: 'col-abilities col-hidden' },
-        ...STATS.map(([, label]) => ({ label, cls: 'col-stat' })), { label: 'BST', cls: 'col-stat col-bst', sort: 'bst' }
+        { label: 'Types', cls: 'col-types' }, { label: 'Abilities', cls: 'col-abilities' },
+        ...STATS.map(([key, label]) => ({ label, cls: 'col-stat', sort: key, high: true })), { label: 'BST', cls: 'col-stat col-bst', sort: 'bst', high: true }
     ],
     moves: [
         { label: '', cls: 'col-icon' }, { label: 'Name', cls: 'col-name', sort: 'name' }, { label: 'Type', cls: 'col-types' },
@@ -54,7 +58,8 @@ function Head({ col }: { col: Column }) {
     return (
         <th className={col.cls} scope="col" aria-sort={on ? (sort.order === 'asc' ? 'ascending' : 'descending') : undefined}>
             {sortable
-                ? <button type="button" className={`table-sort${on ? ' active' : ''}`} onClick={() => api.changeCollectionSort(col.sort, on && sort.order === 'asc' ? 'desc' : 'asc')}>
+                ? <button type="button" className={`table-sort${on ? ' active' : ''}`}
+                    onClick={() => api.changeCollectionSort(col.sort, on ? (sort.order === 'asc' ? 'desc' : 'asc') : col.high ? 'desc' : 'asc')}>
                     {col.label}{on && <Icon name={sort.order === 'asc' ? 'arrow-up' : 'arrow-down'} size={11} />}
                 </button>
                 : col.label}
@@ -81,8 +86,8 @@ const Num = ({ label, value, cls = 'col-stat' }: { label: string; value: ReactNo
     <td className={cls}><em>{label}</em>{value}</td>
 );
 
-export function IconCell({ children }: { children: ReactNode }) {
-    return <td className="col-icon"><span className="card-art dex-art">{children}</span></td>;
+export function IconCell({ children, plain }: { children: ReactNode; plain?: boolean }) {
+    return <td className="col-icon"><span className={`card-art dex-art${plain ? ' dex-art-plain' : ''}`}>{children}</span></td>;
 }
 
 /** The name, then what it is: its status, "Main games" or "Edited", and a pin. */
@@ -107,15 +112,30 @@ const rowClass = (pinned?: boolean, extra = '') => `dex-row${pinned ? ' pinned' 
 
 // ---- Fakémon and main-game Pokémon ----
 
-/** Regular abilities, then the hidden one: with 2 or 3 the last is hidden, with 4 the third (the fourth is an event ability). */
-function splitAbilities(names: string[]): [string, string] {
-    if (names.length < 2) return [names.join(''), ''];
-    const hidden = names.length >= 4 ? 2 : names.length - 1;
-    return [names.filter((_, i) => i !== hidden && i < 3).join(' / '), names[hidden]];
+/**
+ * The abilities as Showdown lists them: one a line in one column, the hidden
+ * one in italics. With 2 or 3 the last is hidden, with 4 the third (the
+ * fourth is an event ability).
+ */
+function Abilities({ names, hiddenAt }: { names: string[]; hiddenAt?: number }) {
+    const hidden = hiddenAt ?? (names.length < 2 ? -1 : names.length >= 4 ? 2 : names.length - 1);
+    return (
+        <td className="col-abilities">
+            {names.slice(0, 3).map((n, i) => <span key={i} className={`dex-ability${i === hidden ? ' is-hidden' : ''}`} title={i === hidden ? `${n} (hidden)` : n}>{n}</span>)}
+        </td>
+    );
+}
+
+/**
+ * A main-game Pokémon's icon from Showdown's icon sheet: 12 icons of 40 by 30
+ * a row, found by its Pokédex number. A form shows its base species' icon.
+ */
+function ShowdownIcon({ num, name }: { num: number; name: string }) {
+    if (!Number.isFinite(num) || num <= 0) return null;
+    return <span className="dex-sd-icon" role="img" aria-label={name} style={{ backgroundPosition: `${-(num % 12) * 40}px ${-Math.floor(num / 12) * 30}px` }} />;
 }
 
 export function FakemonRow({ f, inFolder }: { f: Fakemon; inFolder: boolean }) {
-    const [abilities, hidden] = splitAbilities((f.abilities || []).map(a => a?.name).filter(Boolean));
     const menu = cardMenu(card => fakemonMenu(f, inFolder, card), () => api.previewFakemon(f.id));
     return (
         <tr className={rowClass(f.pinned, isCut(f.id) ? ' is-cut' : '')} aria-label={f.name} {...fakemonDrag(f.id)} {...menu} data-entry-kind="fakemon" data-entry-id={f.id}>
@@ -123,8 +143,7 @@ export function FakemonRow({ f, inFolder }: { f: Fakemon; inFolder: boolean }) {
             <td className="col-num">{f.number || '—'}</td>
             <NameCell name={f.name} status={<StatusBadge status={statusOf(f)} />} pinned={f.pinned} />
             <td className="col-types"><span className="card-types"><TypeBadge type={f.type1} /><TypeBadge type={f.type2} /></span></td>
-            <td className="col-abilities">{abilities}</td>
-            <td className="col-abilities col-hidden">{hidden}</td>
+            <Abilities names={(f.abilities || []).map(a => a?.name).filter(Boolean) as string[]} />
             {STATS.map(([k, label]) => <Num key={k} label={label} value={(f.stats as any)?.[k] ?? '—'} />)}
             <Num label="BST" value={api.getFakemonBST(f)} cls="col-stat col-bst" />
         </tr>
@@ -133,18 +152,17 @@ export function FakemonRow({ f, inFolder }: { f: Fakemon; inFolder: boolean }) {
 
 export function VanillaPokemonRow({ p }: { p: any }) {
     const pinned = api.isVanillaPinned('pokemon', p.id);
-    const { art, number, bst } = vanillaPokemonParts(p);
+    const { number, bst } = vanillaPokemonParts(p);
     const ab = p.abilities || {};
     const open = () => api.previewVanillaPokemonInRegion(p.id);
     const menu = cardMenu(card => vanillaMenu('pokemon', p.id, p.name, card, { label: 'Preview', icon: 'eye', run: open }), open);
     return (
         <tr className={rowClass(pinned, ' is-vanilla')} aria-label={p.name} {...menu}>
-            <IconCell>{art}</IconCell>
+            <IconCell plain><ShowdownIcon num={Number(p.num)} name={p.name} /></IconCell>
             <td className="col-num">{number}</td>
             <NameCell name={p.name} tag="Main games" pinned={pinned} />
             <td className="col-types"><span className="card-types">{(p.types || []).map((t: string) => <TypeBadge key={t} type={t} />)}</span></td>
-            <td className="col-abilities">{[ab[0], ab[1]].filter(Boolean).join(' / ')}</td>
-            <td className="col-abilities col-hidden">{ab.H || ''}</td>
+            <Abilities names={[ab[0], ab[1], ab.H].filter(Boolean)} hiddenAt={ab.H ? [ab[0], ab[1]].filter(Boolean).length : -1} />
             {STATS.map(([k, label]) => <Num key={k} label={label} value={p.stats?.[k] ?? '—'} />)}
             <Num label="BST" value={bst} cls="col-stat col-bst" />
         </tr>

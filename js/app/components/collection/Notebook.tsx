@@ -9,6 +9,7 @@ import { Icon } from '../Icon.tsx';
 import { allTags, isUnfinished } from '../../../features/notebook.ts';
 import { FakemonCard } from './cards.tsx';
 import { DexTable, FakemonRow } from './CollectionTable.tsx';
+import { useChunks } from '../../hooks.ts';
 import type { Fakemon } from '../../types.ts';
 
 const SHELF_KEY = 'woogidex.collection.shelf.closed';
@@ -24,6 +25,8 @@ export function unfinishedInView(): Fakemon[] {
 export function UnfinishedShelf({ table = false }: { table?: boolean }) {
     const list = unfinishedInView();
     const [closed, setClosed] = useState(() => { try { return localStorage.getItem(SHELF_KEY) === '1'; } catch { return false; } });
+    // the strip shows a handful at a time: the rest draw while the page is idle
+    const shown = useChunks(Math.min(list.length, SHELF_MAX), table ? 'table' : 'grid', 8, 12);
     if (!list.length) return null;
     const toggle = () => {
         setClosed(c => { try { localStorage.setItem(SHELF_KEY, c ? '0' : '1'); } catch { /* a private window keeps it open */ } return !c; });
@@ -39,10 +42,10 @@ export function UnfinishedShelf({ table = false }: { table?: boolean }) {
                 {list.length > SHELF_MAX && <button type="button" className="link-btn" onClick={() => api.setCollectionSearch('is:unfinished')}>See all</button>}
             </header>
             {!closed && (table
-                ? <DexTable kind="fakemon" id="">{list.slice(0, SHELF_MAX).map(f => <FakemonRow key={f.id} f={f} inFolder={!!f.folderId} />)}</DexTable>
+                ? <DexTable kind="fakemon" id="">{list.slice(0, shown).map(f => <FakemonRow key={f.id} f={f} inFolder={!!f.folderId} />)}</DexTable>
                 : (
                     <div className="collection-grid shelf-strip">
-                        {list.slice(0, SHELF_MAX).map(f => <FakemonCard key={f.id} f={f} inFolder={!!f.folderId} />)}
+                        {list.slice(0, shown).map(f => <FakemonCard key={f.id} f={f} inFolder={!!f.folderId} />)}
                     </div>
                 ))}
         </section>

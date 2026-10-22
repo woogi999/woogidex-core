@@ -219,11 +219,8 @@ body[data-page="not-found-view"] #main-content { padding-top: 0; }
    the page must not grow a sideways scrollbar while one is still off to the side */
 html { overflow-x: clip; }
 
-/* Lenis (js/core/motion.ts) drives the page scroll on wheel */
-html.lenis, html.lenis body { height: auto; }
-.lenis.lenis-smooth { scroll-behavior: auto !important; }
-.lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
-.lenis.lenis-stopped { overflow: clip; }
+/* a dialog or the editor sheet holds the page behind it still */
+html:has(> body.modal-open), html:has(> body.editor-sheet-open) { overflow: clip; }
 
 /* reduced motion: state changes still fade, nothing moves */
 .reduce-motion :where(*):active { transform: none !important; }

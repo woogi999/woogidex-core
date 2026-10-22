@@ -1,18 +1,35 @@
 // The site's motion, in one place. GSAP runs the sequences that CSS cannot
-// (staggers, counts, exits before something is removed); Lenis smooths the
-// page scroll. CSS keeps the simple state
+// (staggers, counts, exits before something is removed). The page scroll is
+// the browser's own: a scroll run from script repainted the whole page each
+// frame and made it stutter on slower devices. CSS keeps the simple state
 // changes (hover, focus, press) with the tokens in css/tokens.css.
 //
 // The thesis: motion explains where things come from and go to. It is quick
 // feedback, and nothing waits on an animation.
 //
 // Reduced motion (the setting or the system preference) keeps fades and
-// drops movement. .low-end drops the smooth scroll and the staggers.
+// drops movement. .low-end drops the staggers.
 
 import { gsap } from 'gsap';
-import Lenis from 'lenis';
 
 const EASE = 'expo.out';
+
+// The entrances of new content (slideIn, staggerIn, sheetIn) use the
+// browser's own Web Animations, not GSAP: they start inside React's commit,
+// and GSAP first reads the computed transform, which forced a full style
+// pass of the new content (about 180 ms on a slow phone). These need no
+// read and run on the compositor. The curves match GSAP's eases.
+const OUT3 = 'cubic-bezier(.215, .61, .355, 1)'; // power3.out
+const OUT4 = 'cubic-bezier(.165, .84, .44, 1)'; // power4.out
+const OUT_EXPO = 'cubic-bezier(.16, 1, .3, 1)'; // expo.out
+const entering = new WeakMap<Element, Animation>();
+
+/** Plays one entrance on `el`, stopping the one before it. */
+function enter(el: Element, frames: Keyframe[], options: KeyframeAnimationOptions) {
+    entering.get(el)?.cancel();
+    const run = (el as HTMLElement).animate?.(frames, options);
+    if (run) entering.set(el, run);
+}
 
 // A click that blocks the page for a moment (React drawing a new page) must
 // not eat the start of the animation it began: a gap of more than 50 ms
@@ -26,35 +43,6 @@ export function reducedMotion(): boolean {
 }
 const lowEnd = () => document.documentElement.classList.contains('low-end');
 
-// ==================== smooth scrolling ====================
-
-let lenis: Lenis | null = null;
-
-/**
- * Smooth wheel scrolling for the page. Touch keeps the platform's own scroll.
- * Panels that scroll on their own (the editor sheet, dialogs, menus) keep
- * native scrolling: Lenis leaves nested scroll areas alone.
- */
-export function initSmoothScroll() {
-    if (lenis || reducedMotion() || lowEnd()) return;
-    lenis = new Lenis({
-        lerp: 0.22,
-        wheelMultiplier: 1,
-        allowNestedScroll: true,
-        prevent: node => !!node.closest?.('.modal-overlay, #editor-view, .export-as-menu, [data-lenis-prevent]')
-    });
-    gsap.ticker.add(time => lenis?.raf(time * 1000));
-    // a dialog or the editor sheet locks the page behind it
-    const sync = () => {
-        const locked = document.body.classList.contains('modal-open') || document.body.classList.contains('editor-sheet-open');
-        if (locked) lenis?.stop(); else lenis?.start();
-    };
-    new MutationObserver(sync).observe(document.body, { attributes: true, attributeFilter: ['class'] });
-    // the setting can turn motion off while the page is open
-    new MutationObserver(() => { if (reducedMotion()) { lenis?.destroy(); lenis = null; } })
-        .observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-}
-
 // ==================== moving between views ====================
 
 /**
@@ -65,18 +53,17 @@ export function initSmoothScroll() {
  */
 export function slideIn(el: Element | null | undefined, dir: number, axis: 'x' | 'y' = 'x') {
     if (!el) return;
-    gsap.killTweensOf(el);
     if (reducedMotion()) {
-        gsap.fromTo(el, { opacity: 0 }, { opacity: 1, duration: 0.18, ease: 'none', clearProps: 'opacity' });
+        enter(el, [{ opacity: 0 }, { opacity: 1 }], { duration: 180 });
         return;
     }
     const d = Math.sign(dir);
-    // far enough to read as a swipe, not a nudge: a tenth of a wide panel,
-    // with a floor for narrow ones and a cap for full-screen pages
-    const box = (el as HTMLElement).getBoundingClientRect?.();
-    const reach = axis === 'x' ? Math.min(160, Math.max(96, (box?.width || 0) * 0.12)) : 56;
-    const from = d === 0 ? { y: 16 } : axis === 'x' ? { x: d * reach } : { y: d * reach };
-    gsap.fromTo(el, { ...from, opacity: 0 }, { x: 0, y: 0, opacity: 1, duration: 0.32, ease: 'power3.out', clearProps: 'transform,opacity' });
+    // far enough to read as a swipe, not a nudge: a share of the window, with
+    // a floor and a cap. The window, not the panel: measuring the panel forced
+    // a layout of its new content before the first frame.
+    const reach = axis === 'x' ? Math.min(160, Math.max(96, window.innerWidth * 0.1)) : 56;
+    const from = d === 0 ? 'translateY(16px)' : axis === 'x' ? `translateX(${d * reach}px)` : `translateY(${d * reach}px)`;
+    enter(el, [{ transform: from, opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 320, easing: OUT3 });
 }
 
 /** Where `next` sits against `prev` in an ordered list: 1 after, -1 before, 0 same or unknown. */
@@ -177,7 +164,10 @@ export function fadeSwap(el: Element | null | undefined, change: () => void) {
 export function staggerIn(items: Element[]) {
     if (!items.length || reducedMotion() || lowEnd()) return;
     const first = items.slice(0, 24);
-    gsap.fromTo(first, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.45, ease: EASE, stagger: { amount: Math.min(0.3, first.length * 0.02) }, clearProps: 'opacity,transform' });
+    const gap = Math.min(0.3, first.length * 0.02) / Math.max(1, first.length - 1) * 1000;
+    // "backwards" holds each card at its start until its turn comes
+    first.forEach((el, i) => enter(el, [{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }],
+        { duration: 450, delay: i * gap, easing: OUT_EXPO, fill: 'backwards' }));
 }
 
 // ==================== exits ====================
@@ -194,21 +184,22 @@ const leaving = new WeakMap<Element, gsap.core.Timeline>();
 
 /**
  * The editor sheet slides in from the right edge while the page behind dims,
- * and leaves the same way. The dim is #editor-view::before, driven through
- * the --scrim custom property (css/editor.css).
+ * and leaves the same way. The dim is #editor-view::before: a CSS transition
+ * on the .scrim-off class fades it (css/editor.css).
  */
 export function sheetIn(view: HTMLElement) {
     const sheet = view.querySelector('.editor-sheet');
     cancelSheetOut(view);
     if (!sheet) return;
+    // start dark-free, then let the transition fade the dim in: two frames,
+    // so the browser draws the start before the class goes
+    view.classList.add('scrim-off');
+    requestAnimationFrame(() => requestAnimationFrame(() => view.classList.remove('scrim-off')));
     if (reducedMotion()) {
-        gsap.fromTo(view, { '--scrim': 0 }, { '--scrim': 1, duration: 0.18 });
-        gsap.fromTo(sheet, { opacity: 0 }, { opacity: 1, duration: 0.18, clearProps: 'opacity' });
+        enter(sheet, [{ opacity: 0 }, { opacity: 1 }], { duration: 180 });
         return;
     }
-    gsap.timeline()
-        .fromTo(view, { '--scrim': 0 }, { '--scrim': 1, duration: 0.3, ease: 'power1.out' }, 0)
-        .fromTo(sheet, { xPercent: 100 }, { xPercent: 0, duration: 0.5, ease: 'power4.out', clearProps: 'transform' }, 0);
+    enter(sheet, [{ transform: 'translateX(100%)' }, { transform: 'none' }], { duration: 500, easing: OUT4 });
 }
 
 /**
@@ -217,7 +208,8 @@ export function sheetIn(view: HTMLElement) {
  * to the new one, held at the right edge.
  */
 export function sheetResize(view: HTMLElement | null, change: () => void) {
-    if (!view || reducedMotion()) { change(); return; }
+    // a width tween runs layout every frame: a low-end device just switches
+    if (!view || reducedMotion() || lowEnd()) { change(); return; }
     const from = view.getBoundingClientRect().width;
     change();
     const to = view.getBoundingClientRect().width;
@@ -230,12 +222,13 @@ export function sheetResize(view: HTMLElement | null, change: () => void) {
 export function sheetOut(view: HTMLElement, hide: () => void) {
     const sheet = view.querySelector('.editor-sheet');
     if (!sheet || reducedMotion()) { hide(); return; }
+    entering.get(sheet)?.cancel();
     leaving.get(view)?.kill();
     const tl = gsap.timeline({
-        onComplete: () => { hide(); gsap.set(sheet, { clearProps: 'transform' }); gsap.set(view, { '--scrim': 1 }); leaving.delete(view); }
+        onComplete: () => { hide(); gsap.set(sheet, { clearProps: 'transform' }); view.classList.remove('scrim-off'); leaving.delete(view); }
     })
-        .to(sheet, { xPercent: 100, duration: 0.34, ease: 'power3.in' }, 0)
-        .to(view, { '--scrim': 0, duration: 0.26, ease: 'power1.in' }, 0.04);
+        .to(sheet, { xPercent: 100, duration: 0.34, ease: 'power3.in' }, 0);
+    view.classList.add('scrim-off');
     leaving.set(view, tl);
 }
 
@@ -248,7 +241,7 @@ export function cancelSheetOut(view: HTMLElement | null) {
     leaving.delete(view);
     const sheet = view.querySelector('.editor-sheet');
     if (sheet) gsap.set(sheet, { clearProps: 'transform' });
-    gsap.set(view, { '--scrim': 1 });
+    view.classList.remove('scrim-off');
 }
 
 // ==================== dragging a card ====================

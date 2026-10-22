@@ -28,8 +28,16 @@ export function Presence({ show, children, className = '', inline = false }: {
             // the first paint shows things as they are: no entrance on page load
             if (first.current) { first.current = false; return; }
             gsap.killTweensOf(el);
-            if (reducedMotion()) gsap.fromTo(el, { opacity: 0 }, { opacity: 1, duration: 0.16, clearProps: 'opacity' });
-            else gsap.fromTo(el, { [size]: 0, opacity: 0, overflow: 'hidden' }, { [size]: 'auto', opacity: 1, duration: 0.28, ease: 'power3.out', clearProps: `${size},opacity,overflow` });
+            // the start, written without a read; the tween begins next frame,
+            // when the layout is done. Measuring 'auto' now forced a layout of
+            // everything React just drew (the whole listing on a tab change).
+            el.style.opacity = '0';
+            if (!reducedMotion()) { el.style.overflow = 'hidden'; el.style[size] = '0px'; }
+            const frame = requestAnimationFrame(() => {
+                if (reducedMotion()) gsap.fromTo(el, { opacity: 0 }, { opacity: 1, duration: 0.16, clearProps: 'opacity' });
+                else gsap.fromTo(el, { [size]: 0, opacity: 0, overflow: 'hidden' }, { [size]: 'auto', opacity: 1, duration: 0.28, ease: 'power3.out', clearProps: `${size},opacity,overflow` });
+            });
+            return () => cancelAnimationFrame(frame);
         } else {
             first.current = false;
             gsap.killTweensOf(el);

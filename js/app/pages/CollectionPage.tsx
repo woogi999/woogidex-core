@@ -19,7 +19,7 @@ import { TypeCards, TypesAfter } from '../components/collection/TypesTab.tsx';
 import { RegionDetails } from '../components/collection/RegionDetails.tsx';
 import { RegionAnalytics } from '../components/collection/RegionAnalytics.tsx';
 import { useStore } from '../store.ts';
-import { useSlide } from '../hooks.ts';
+import { useChunks, useSlide } from '../hooks.ts';
 import type { CollectionTab, LibraryKind } from '../types.ts';
 import { TagBar, UnfinishedShelf } from '../components/collection/Notebook.tsx';
 import {
@@ -362,6 +362,10 @@ function Grid({ layout }: { layout: Layout }) {
     // and a layout change fades it (Toolbar)
     const grid = useRef<HTMLDivElement>(null);
     const listing = `${state.currentFolderId}|${search ? 's' : ''}`;
+    // a big listing draws its first screen, then the rest while the page is idle
+    const shown = useChunks(entries.length, `${kind}|${layout}|${listing}|${search}`);
+    const own = entries.slice(0, shown);
+    const allShown = shown >= entries.length;
     useLayoutEffect(() => {
         const items = grid.current?.querySelector('#collection-grid tbody') || grid.current?.querySelector('#collection-grid');
         if (items) staggerIn(Array.from(items.children));
@@ -389,12 +393,12 @@ function Grid({ layout }: { layout: Layout }) {
                     {!search && <AddRow kind={kind} />}
                     {folders.map(({ folder, count }: any) => <FolderRow key={folder.id} folder={folder} count={count} kind={kind} />)}
                     {kind === 'fakemon'
-                        ? entries.map((f: any) => <FakemonRow key={f.id} f={f} inFolder={inFolder(f)} />)
-                        : entries.map((item: any) => <LibraryRow key={item.id} kind={kind as LibraryKind} item={item} inFolder={inFolder(item)} />)}
+                        ? own.map((f: any) => <FakemonRow key={f.id} f={f} inFolder={inFolder(f)} />)
+                        : own.map((item: any) => <LibraryRow key={item.id} kind={kind as LibraryKind} item={item} inFolder={inFolder(item)} />)}
                     {/* the main-game entries a region brings over, after its own */}
-                    {vanillaPokemon.map(p => <VanillaPokemonRow key={p.id} p={p} />)}
-                    {vanillaLibrary && vanillaLibrary.shown.map(([id, v]: [string, any]) => <VanillaLibraryRow key={id} kind={kind as LibraryKind} id={id} v={v} />)}
-                    {more && <MoreRow kind={kind} total={vanillaLibrary.total} onClick={() => api.showAllRegionVanilla(kind)} />}
+                    {allShown && vanillaPokemon.map(p => <VanillaPokemonRow key={p.id} p={p} />)}
+                    {allShown && vanillaLibrary && vanillaLibrary.shown.map(([id, v]: [string, any]) => <VanillaLibraryRow key={id} kind={kind as LibraryKind} id={id} v={v} />)}
+                    {allShown && more && <MoreRow kind={kind} total={vanillaLibrary.total} onClick={() => api.showAllRegionVanilla(kind)} />}
                 </DexTable>
             </div>
         );
@@ -406,12 +410,12 @@ function Grid({ layout }: { layout: Layout }) {
                 {!search && <AddCard kind={kind} />}
                 {folders.map(({ folder, count }: any) => <FolderCard key={folder.id} folder={folder} count={count} kind={kind} />)}
                 {kind === 'fakemon'
-                    ? entries.map((f: any) => <FakemonCard key={f.id} f={f} inFolder={inFolder(f)} />)
-                    : entries.map((item: any) => <LibraryCard key={item.id} kind={kind as LibraryKind} item={item} inFolder={inFolder(item)} />)}
+                    ? own.map((f: any) => <FakemonCard key={f.id} f={f} inFolder={inFolder(f)} />)
+                    : own.map((item: any) => <LibraryCard key={item.id} kind={kind as LibraryKind} item={item} inFolder={inFolder(item)} />)}
                 {/* the main-game entries a region brings over, after its own */}
-                {vanillaPokemon.map(p => <VanillaPokemonCard key={p.id} p={p} />)}
-                {vanillaLibrary && vanillaLibrary.shown.map(([id, v]: [string, any]) => <VanillaLibraryCard key={id} kind={kind as LibraryKind} id={id} v={v} />)}
-                {more && <ShowAllVanilla kind={kind} total={vanillaLibrary.total} />}
+                {allShown && vanillaPokemon.map(p => <VanillaPokemonCard key={p.id} p={p} />)}
+                {allShown && vanillaLibrary && vanillaLibrary.shown.map(([id, v]: [string, any]) => <VanillaLibraryCard key={id} kind={kind as LibraryKind} id={id} v={v} />)}
+                {allShown && more && <ShowAllVanilla kind={kind} total={vanillaLibrary.total} />}
             </div>
         </div>
     );

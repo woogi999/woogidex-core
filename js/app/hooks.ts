@@ -1,6 +1,6 @@
 // Hooks shared by the React pages.
 
-import { useLayoutEffect, useRef, useSyncExternalStore } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { currentRoute, onRouteChange, type Route } from '../core/router.ts';
 import { directionIn, slideIn } from '../core/motion.ts';
 
@@ -42,4 +42,24 @@ export function useSlide<T extends string | number>(current: T, order: readonly 
         last.current = current;
     }, [current]);
     return ref;
+}
+
+/**
+ * How many of `total` entries to draw now. A new `key` (another tab, folder,
+ * layout or search) starts at `first`, enough to fill a screen. Then each idle
+ * moment adds `step` more until all are drawn. A big collection then paints
+ * its first screen at once, not after every card is made.
+ */
+export function useChunks(total: number, key: string, first = 24, step = 48): number {
+    const [at, setAt] = useState({ key, n: first });
+    const n = at.key === key ? at.n : first;
+    useEffect(() => {
+        if (n >= total) return;
+        const next = () => setAt({ key, n: n + step });
+        const idle = (window as any).requestIdleCallback;
+        if (idle) { const id = idle(next, { timeout: 200 }); return () => (window as any).cancelIdleCallback(id); }
+        const id = setTimeout(next, 30);
+        return () => clearTimeout(id);
+    }, [n, total, key]);
+    return Math.min(n, total);
 }

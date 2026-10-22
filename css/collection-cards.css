@@ -1,5 +1,5 @@
 /* ==================== collection-cards ====================
-   collection and community cards, grid and list layouts, and the search /
+   collection and community cards, the grid and table layouts, and the search /
    sort toolbar above them.
    link order in index.html = cascade order; later files override earlier ones.
 
@@ -100,15 +100,6 @@
 }
 .collection-add-card:hover .collection-add-icon { background: var(--bg-card); }
 .collection-add-icon svg { width: 24px; height: 24px; }
-/* custom moves / abilities / items: icon and label on one line */
-
-/* list layout: a row like the others */
-.collection-grid.collection-list .collection-add-card {
-    border: 0; border-bottom: 1px solid var(--border-light); border-radius: 0;
-}
-.collection-grid.collection-list .collection-card.collection-add-card .collection-add-icon { width: 30px; height: 30px; }
-.collection-grid.collection-list .collection-card.collection-add-card .collection-add-icon svg { width: 16px; height: 16px; }
-
 /* custom moves / abilities / items: the Fakémon card frame, with an emblem
    (or an item's artwork) where the Fakémon art goes -- same width and height
    as a Fakémon card, so the libraries line up the same way */
@@ -131,7 +122,7 @@
     image-rendering: pixelated;
     transform: scale(var(--item-icon-scale, 2.6));
 }
-.collection-grid.collection-list .library-emblem .item-icon-sheet { --item-icon-scale: 1.4; }
+
 @media (max-width: 640px) { .collection-grid:not(.collection-list) .library-emblem .item-icon-sheet { --item-icon-scale: 1.6; } }
 .collection-card .card-art .library-tile-corner {
     font-family: 'Exo 2', sans-serif; font-style: normal;
@@ -154,11 +145,6 @@
     color: var(--text-secondary);
     font-size: 10.5px; font-weight: 700;
 }
-/* list layout: one line, the description fills the middle */
-.collection-grid.collection-list .library-emblem { width: 100%; box-shadow: none; }
-.collection-grid.collection-list .library-tile .card-art .library-tile-corner { display: none; }
-.collection-grid.collection-list .library-tile .card-meta-row { order: 3; flex: 1 1 auto; min-width: 0; margin-left: var(--sp-3); }
-
 /* ==================== card actions ====================
    a card has no buttons of its own: a click (or right-click, Enter, the menu
    key) opens its menu (js/app/components/ContextMenu.tsx). */
@@ -170,43 +156,9 @@
     width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center;
     border-radius: 50%; background: var(--accent); color: #fff; box-shadow: var(--shadow-sm); pointer-events: none;
 }
-.collection-grid.collection-list .card-pin-mark { position: static; order: 8; margin-left: auto; flex: 0 0 auto; }
+
 /* the number sits in the bottom corner, out from under the pin mark */
 .collection-grid:not(.collection-list) .card-art .card-number { top: auto; bottom: 8px; right: auto; left: 10px; }
-
-/* ==================== list layout ====================
-   one divided table instead of a stack of cards */
-.collection-grid.collection-list {
-    display: flex; flex-direction: column; gap: 0;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--card-r);
-    overflow: hidden;
-}
-.collection-grid.collection-list .collection-card {
-    flex-direction: row; align-items: center; gap: var(--sp-3);
-    padding: var(--sp-2) var(--sp-4);
-    border: 0; border-bottom: 1px solid var(--border-light); border-radius: 0;
-}
-.collection-grid.collection-list .collection-card:last-child { border-bottom: 0; }
-.collection-grid.collection-list .collection-card:hover { transform: none; box-shadow: none; background: var(--bg-panel); }
-.collection-grid.collection-list .card-art { width: 38px; height: 38px; flex: 0 0 38px; padding: 2px; aspect-ratio: auto; border-radius: 8px; order: 0; }
-.collection-grid.collection-list .card-number { position: static; font-family: 'Inconsolata', monospace; font-size: 11px; color: var(--text-muted); flex: 0 0 48px; order: 1; }
-.collection-grid.collection-list .card-name { font-weight: 700; font-size: 14px; flex: 0 1 260px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; order: 2; }
-.collection-grid.collection-list .card-types { display: flex; gap: var(--sp-1); margin-left: auto; flex: none; order: 3; }
-.collection-grid.collection-list .card-bst { flex: none; min-width: 70px; text-align: right; font-family: 'Inconsolata', monospace; font-size: 11px; font-weight: 700; color: var(--text-secondary); white-space: nowrap; order: 4; }
-.collection-grid.collection-list .card-body { display: contents; }
-.collection-grid.collection-list .card-actions { position: static; order: 9; flex: none; margin-left: 10px; }
-/* community cards reuse this frame with their own extras */
-.collection-grid.collection-list .community-card { padding-right: 14px; }
-.collection-grid.collection-list .community-card-evo-badge { order: 3; margin-left: auto; white-space: nowrap; }
-.collection-grid.collection-list .card-types + .community-card-evo-badge { margin-left: 10px; }
-.collection-grid.collection-list .community-card .card-types { order: 3; margin-left: auto; flex: none; }
-.collection-grid.collection-list .community-card-stats { order: 4; flex: none; margin: 0 10px; }
-.collection-grid.collection-list .community-card-author { order: 5; flex: 0 0 auto; max-width: 160px; }
-.collection-grid.collection-list .community-card-author .community-author-link { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.collection-grid.collection-list .community-unpublish-btn { order: 9; position: static; margin-left: 6px; }
-@media (max-width: 720px) { .collection-grid.collection-list .community-card-author { display: none; } }
 
 /* ==================== toolbar ====================
    one row under the page header: the tabs on the left, then search, sort,
@@ -277,7 +229,7 @@
    on every change. "auto" remembers each card's real size once it has been
    seen, so the scrollbar doesn't jump. */
 .collection-grid > .collection-card { content-visibility: auto; contain-intrinsic-size: auto 260px; }
-.collection-grid.collection-list > .collection-card { contain-intrinsic-size: auto 72px; }
+
 /* where artwork goes while its small copy is being made (js/app/components/ThumbImg.tsx) */
 .thumb-pending { display: block; width: 100%; height: 100%; min-width: 16px; min-height: 16px; border-radius: 8px; background: var(--bg-panel); }
 /* ...but that also clips what hangs out of a card: never while its menus are open */
@@ -286,8 +238,6 @@
 .collection-grid > .collection-card:focus-within { content-visibility: visible; }
 .collection-card .card-art img.card-icon-art { image-rendering: pixelated; }
 .collection-sort .btn { flex: 0 0 var(--ctl-h); width: var(--ctl-h); padding: 0; }
-.collection-grid.collection-list .card-art .card-pin-mark { position: absolute; top: -3px; right: -3px; width: 16px; height: 16px; }
-.collection-grid.collection-list .card-pin-mark svg { width: 10px; height: 10px; }
 
 /* ---- dragging a card (js/core/motion.ts: cardDragStart, cardDropInto) ---- */
 /* the chip that follows the pointer; it is drawn off screen for the snapshot */
@@ -319,9 +269,8 @@ body.card-dragging .region-row { transition: background-color var(--dur-fast) ea
    (content-visibility); its picture is made when it comes near too
    (ThumbImg), and fades in when it arrives */
 .collection-grid > .collection-card { content-visibility: auto; contain-intrinsic-size: auto 280px; }
-.collection-grid.collection-list > .collection-card { contain-intrinsic-size: auto 64px; }
-.collection-card .card-art > img { animation: fade-only var(--dur-slow) ease both; }
 
+.collection-card .card-art > img { animation: fade-only var(--dur-slow) ease both; }
 
 /* ==================== the notepad side of My Collection ====================
    js/app/components/collection/Notebook.tsx and notes/NotesField.tsx */
@@ -389,9 +338,10 @@ body.card-dragging .region-row { transition: background-color var(--dur-fast) ea
 .table-sort:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
 
 .dex-row { cursor: pointer; }
-.dex-row td { height: 42px; padding: 3px 6px; border-bottom: 1px solid var(--border-light); white-space: nowrap; vertical-align: middle; transition: background-color var(--dur-fast) ease; }
+.dex-row td { height: 42px; padding: 3px 6px; border-bottom: 1px solid var(--border-light); white-space: nowrap; vertical-align: middle; }
 .dex-row:last-child td { border-bottom: 0; }
-.dex-row:hover td { background: var(--accent-soft); }
+/* one background for the row, no fade: a fade on every cell repainted the table as the pointer moved */
+.dex-row:hover { background: var(--accent-soft); }
 .dex-row:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .dex-row[draggable="true"] { cursor: grab; }
 .dex-row.pinned td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
@@ -419,8 +369,15 @@ body.card-dragging .region-row { transition: background-color var(--dur-fast) ea
 
 .dex-table .card-types { display: flex; gap: 3px; }
 .dex-table .type-badge { font-size: 10px; padding: 2px 7px; }
-.dex-table .col-abilities { max-width: 180px; overflow: hidden; text-overflow: ellipsis; font-size: 12px; color: var(--text-secondary); }
-.dex-table td.col-hidden { font-style: italic; color: var(--text-muted); }
+.dex-table .col-abilities { max-width: 160px; font-size: 11.5px; line-height: 1.2; color: var(--text-secondary); }
+/* Showdown's way: one ability a line, the hidden one in italics */
+.dex-ability { display: block; overflow: hidden; text-overflow: ellipsis; }
+.dex-ability.is-hidden { font-style: italic; color: var(--text-muted); }
+/* an icon drawn for small sizes keeps its pixels */
+.dex-art img.card-icon-art { image-rendering: pixelated; }
+/* a main-game Pokémon's icon from Showdown's sheet (40 by 30 each) */
+.dex-sd-icon { width: 40px; height: 30px; flex: none; background: url('https://play.pokemonshowdown.com/sprites/pokemonicons-sheet.png') no-repeat; image-rendering: pixelated; }
+.dex-art.dex-art-plain { background: transparent; overflow: visible; }
 .dex-table .col-cat { width: 1%; }
 .dex-cat { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; color: var(--text-secondary); }
 
@@ -439,8 +396,9 @@ body.card-dragging .region-row { transition: background-color var(--dur-fast) ea
 .dex-add { color: var(--text-secondary); }
 .dex-add:hover { color: var(--accent); }
 .dex-add .dex-name-text { font-weight: 600; margin-right: 10px; }
-body.card-dragging .dex-folder td { background: color-mix(in srgb, var(--accent) 6%, transparent); }
-.dex-folder.drag-over td { background: var(--accent-soft); box-shadow: inset 0 1px 0 var(--accent), inset 0 -1px 0 var(--accent); }
+body.card-dragging .dex-folder { background: color-mix(in srgb, var(--accent) 6%, transparent); }
+.dex-folder.drag-over { background: var(--accent-soft); }
+.dex-folder.drag-over td { box-shadow: inset 0 1px 0 var(--accent), inset 0 -1px 0 var(--accent); }
 
 @media (max-width: 900px) { .dex-table .col-abilities, .dex-table .col-num { display: none; } }
 @media (max-width: 640px) {
