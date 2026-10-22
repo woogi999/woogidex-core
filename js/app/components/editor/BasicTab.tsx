@@ -1,13 +1,12 @@
-// The editor's Basic Info tab: name, species, typing, number, artwork, cry,
-// Pokédex entries, size, colour, egg groups and gender. Every field reads and
-// writes the form in js/editor/draft.ts.
+// The editor's Basic Info tab: name, species, typing, number, Pokédex entries,
+// size, colour, egg groups and gender. The artwork and the cry have their own
+// tab (ArtworkSection.tsx). Every field reads and writes the form in
+// js/editor/draft.ts.
 
-import { useRef, useState } from 'react';
-import { api, state } from '../../../core/app.ts';
+import { api } from '../../../core/app.ts';
 import {
     EGG_GROUPS, cleanMeasurement, editForm, form, setHeightUnit, setWeightUnit
 } from '../../../editor/draft.ts';
-import { Icon } from '../Icon.tsx';
 import { ColorSwatchPicker, RollButton, RowHeading, TypeDropdown, TypePill } from './fields.tsx';
 import { CommitInput } from '../CommitInput.tsx';
 import { NAME_MAX } from '../../../core/data.ts';
@@ -39,54 +38,6 @@ function TypeEffectiveness() {
             {group('Resists', groups.resist, 'resist')}
             {group('Immune to', groups.immune, 'immune')}
             {none && <div className="type-effectiveness-empty">No special matchups.</div>}
-        </div>
-    );
-}
-
-/** Normal and shiny artwork: click or drop an image, switch between the two. */
-function ArtworkField() {
-    const input = useRef<HTMLInputElement>(null);
-    const [over, setOver] = useState(false);
-    const mode = state.artworkMode === 'shiny' ? 'shiny' : 'normal';
-    const artwork = mode === 'shiny' ? state.shinyArtworkData : state.artworkData;
-    return (
-        <div className={`artwork-upload-combined${over ? ' artwork-drag-over' : ''}`} title="Click or drag an image here to upload artwork"
-            onClick={e => { if (!(e.target as Element).closest('button')) input.current?.click(); }}
-            onDragOver={e => { e.preventDefault(); e.stopPropagation(); e.dataTransfer.dropEffect = 'copy'; setOver(true); }}
-            onDragLeave={e => { e.preventDefault(); if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setOver(false); }}
-            onDrop={e => { e.preventDefault(); e.stopPropagation(); setOver(false); api.processArtworkFile(e.dataTransfer.files?.[0]); }}>
-            <div className="artwork-mode-tabs" role="tablist" aria-label="Artwork type">
-                {(['normal', 'shiny'] as const).map(m => (
-                    <button key={m} type="button" role="tab" aria-selected={mode === m} className={`artwork-mode-tab${mode === m ? ' active' : ''}`}
-                        onClick={e => { e.stopPropagation(); api.setArtworkMode(m); }}>
-                        <Icon name={m === 'shiny' ? 'sparkles' : 'image'} /><span>{m === 'shiny' ? 'Shiny' : 'Normal'}</span>
-                    </button>
-                ))}
-            </div>
-            <div className="artwork-preview" id="artwork-preview">
-                {artwork
-                    ? <img src={artwork} alt={mode === 'shiny' ? 'Shiny artwork' : 'Artwork'} />
-                    : mode === 'shiny' ? <span className="placeholder">Shiny</span> : <img className="no-art-placeholder" src="assets/no_art_placeholder.png" alt="No artwork" />}
-            </div>
-            <input ref={input} type="file" id="artwork-upload" accept="image/*" onChange={e => { api.processArtworkFile(e.target.files?.[0]); e.target.value = ''; }} />
-            <div className="artwork-upload-overlay"><Icon name="upload" size={16} /><span>{mode === 'shiny' ? 'Click or drag shiny artwork here' : 'Click or drag artwork here'}</span></div>
-            {artwork && <button type="button" className="artwork-remove-btn" onClick={e => api.removeCurrentArtwork(e)}>Remove artwork</button>}
-        </div>
-    );
-}
-
-function CryField() {
-    const input = useRef<HTMLInputElement>(null);
-    return (
-        <div className="cry-upload-zone" title="Click to upload a Pokemon cry (max 2 MB)"
-            onClick={e => { if (!(e.target as Element).closest('button')) input.current?.click(); }}>
-            <input ref={input} type="file" id="cry-upload" accept="audio/*" onChange={e => { api.processPokemonCryFile(e.target.files?.[0]); e.target.value = ''; }} />
-            <div className="cry-upload-content">
-                <Icon name="volume-2" size={18} />
-                <span>{state.cryData ? 'Pokemon cry uploaded - click to replace' : 'Click to upload a Pokemon cry'}</span>
-                <small>Audio only · Max 2 MB</small>
-            </div>
-            {state.cryData && <button type="button" className="artwork-remove-btn cry-remove-btn" onClick={e => api.removePokemonCry(e)}>Remove cry</button>}
         </div>
     );
 }
@@ -183,19 +134,6 @@ export function BasicTab() {
             <div className="form-group">
                 <label htmlFor="fakemon-number">Pokedex Number</label>
                 <input type="text" id="fakemon-number" placeholder="e.g., #001" value={form.number} onChange={e => editForm({ number: e.target.value })} />
-            </div>
-            <div className="form-group">
-                <label>Artwork</label>
-                <ArtworkField />
-            </div>
-            <div className="form-group">
-                <label htmlFor="art-credit-input">Art Credit (Optional)</label>
-                <CommitInput type="text" id="art-credit-input" placeholder="e.g., Art by @username" value={state.artCredit || ''} onCommit={v => api.setArtCredit(v)} />
-                <small className="field-hint">Shown as a small credit button next to the artwork on the pokedex board. Artwork must be drawn by a person; AI-generated images are not allowed on Woogidex.</small>
-            </div>
-            <div className="form-group">
-                <label>Pokemon Cry</label>
-                <CryField />
             </div>
             <div className="form-group">
                 <label htmlFor="dex-entry1">Pokedex Entry 1</label>

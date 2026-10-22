@@ -93,7 +93,12 @@ function StatTemplate() {
 function BulkComparison() {
     const data = api.bulkComparison();
     if (!data) {
-        return <div className="bulk-comparison"><div className="bulk-comparison-title">Bulk Comparison</div><p className="bulk-loading">Loading Pokemon data...</p></div>;
+        return (
+            <div className="bulk-comparison" aria-busy="true" aria-label="Loading Pokemon data">
+                <div className="bulk-comparison-title">Bulk Comparison</div>
+                <div className="bulk-skel">{[0, 1].map(i => <div key={i} className="bulk-skel-card"><span className="skel skel-text" /><span className="skel bulk-skel-num" /><span className="skel skel-circle bulk-skel-sprite" /><span className="skel skel-text" /></div>)}</div>
+            </div>
+        );
     }
     const card = (kind: 'physical' | 'special', match: any, stat: number, bulk: number) => {
         const sprite = match ? (match.isOwnFakemon && match.artwork ? match.artwork : api.getSpriteUrl(match.id, match)) : '';

@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { api } from '../../core/app.ts';
 import { registerDialog, type DialogProps } from '../dialogs.tsx';
 import { Modal } from '../components/Modal.tsx';
+import { SkeletonRows } from '../components/Skeleton.tsx';
 
 function SampleSetAddDialog({ close }: DialogProps) {
     const [ideas, setIdeas] = useState<any[] | null>(null);
@@ -23,7 +24,7 @@ function SampleSetAddDialog({ close }: DialogProps) {
                 <div className="sample-set-ideas-title">Sample Set Ideas</div>
                 <p className="sample-set-ideas-help">Based from this Fakemon's data. It's kinda stupid right now but hey, it's better than nothing!</p>
                 {ideas === null
-                    ? <div className="sample-set-empty-message">Loading sample sets…</div>
+                    ? <SkeletonRows count={3} label="Loading sample sets" />
                     : !ideas.length
                         ? <div className="sample-set-empty-message">oh nah no sample sets for u unc</div>
                         : ideas.map((set, i) => (

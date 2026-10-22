@@ -14,6 +14,32 @@ let tierDataCache: Record<string, any> = {};
 let tierDataPromise: Record<string, any> = {};
 let analysisTimer: any = null;
 let analysisBusy = false;
+// each run gets a number; a newer run (the inputs changed) makes the older one stop
+let runSeq = 0;
+class Cancelled extends Error {}
+
+/**
+ * Hands the main thread back for a moment, so a long analysis never freezes
+ * the page: it can paint, scroll and take clicks between chunks.
+ */
+function yieldToMain(): Promise<void> {
+  const s=(globalThis as any).scheduler;
+  return s?.yield ? s.yield() : new Promise(r=>setTimeout(r,0));
+}
+/** Array.map in slices of about 8 ms, with a breath between them. Stops if `run` is no longer the newest. */
+async function mapYielding<T,R>(list: T[], fn: (x: T) => R, run: number): Promise<R[]> {
+  const out: R[]=[];
+  let t=performance.now();
+  for(const x of list){
+    out.push(fn(x));
+    if(performance.now()-t>8){
+      await yieldToMain();
+      if(run!==runSeq)throw new Cancelled();
+      t=performance.now();
+    }
+  }
+  return out;
+}
 let lastAnalysisKey = '';
 
 /** A matchup card's sprite, and the image to fall back to when the animated one is missing. */
@@ -1698,7 +1724,7 @@ function tierComparablePool(pool, tierUsage, assignedTier, officialTiers, cfg){
   return {pool:comparable,usage};
 }
 
-function buildMatchupProfile(target,pool,usage,targetProfile,generation=9){
+async function buildMatchupProfile(target,pool,usage,targetProfile,generation=9,run=runSeq){
   // A defensive role must not be judged by the same one-hit damage race as a
   // sweeper. CAP's PT/ST ratings give us an independent read on whether the
   // stat architecture is actually built to absorb hits.
@@ -1717,7 +1743,7 @@ function buildMatchupProfile(target,pool,usage,targetProfile,generation=9){
       (targetRecovery>=1 || targetDefensiveTools>=2 || Number(targetTf?.bulk||0)>=245 || Number(targetTf?.defensiveSetupCount||0)>=1)) ||
     (Number(targetCap?.PT)>=180 && Number(targetCap?.ST)>=130);
 
-  const rows=pool.filter(p=>p?.stats&&usageOf(p.name,usage)>0).map(p=>{
+  const rows=await mapYielding(pool.filter(p=>p?.stats&&usageOf(p.name,usage)>0),(p: any)=>{
     const u=usageOf(p.name,usage);
     const details=matchupDetails(target,p,generation);
     const enemy=details.reverse;
@@ -1854,7 +1880,7 @@ function buildMatchupProfile(target,pool,usage,targetProfile,generation=9){
         myHits:details.myHits,enemyHits:details.enemyHits
       }
     };
-  });
+  },run);
   rows.sort((a,b)=>b.usage-a.usage);
   const total=rows.reduce((s,x)=>s+x.usage,0);
   const weightedRaw=total?rows.reduce((s,x)=>s+x.score*x.usage,0)/total:50;
@@ -2191,6 +2217,7 @@ function ensurePanel(){
   // the Analysis tab can see the same key and incorrectly decide there is nothing to do.
   lastAnalysisKey='';
   analysisBusy=false;
+  runSeq++;
   clearTimeout(analysisTimer);
   cfgState={...DEFAULT_CFG};
   setView({status:{kind:'busy',text:state.sdLoaded?'Preparing analysis…':'Loading data…'},result:null as any,error:''});
@@ -2200,7 +2227,6 @@ async function runFakemonAnalysis(){
   // Coverage/role scoring reads vanilla learnsets, which load lazily, and the
   // rest of the Showdown data, which boot may still be holding for an idle moment.
   await Promise.all([api.fetchShowdownData?.(), api.ensureLearnsets?.()]);
-  if(analysisBusy)return;
   if(!state.sdLoaded||!Object.keys(state.sdPokedex||{}).length){setView({status:{kind:'busy',text:'Loading data…'}});return;}
   const cfg=getCfg();
   const selectedFormat = cfg.natdex
@@ -2209,14 +2235,20 @@ async function runFakemonAnalysis(){
   const key=JSON.stringify([cfg.pool,cfg.gen,cfg.natdex,cfg.folder,cfg.region,cfg.comparePokemon,getTarget().stats,getTarget().types,state.abilities?.map(a=>a.name),state.learnset?.map(m=>m.name)]);
   if(key===lastAnalysisKey && (view.result||view.error))return;
   lastAnalysisKey=key;analysisBusy=true;
-  const busy=text=>setView({status:{kind:'busy',text}});
+  // a run already going is now out of date: it stops at its next breath
+  const run=++runSeq;
+  const busy=async text=>{
+    setView({status:{kind:'busy',text}});
+    await yieldToMain();
+    if(run!==runSeq)throw new Cancelled();
+  };
   setView({result:null as any,error:''});
   busy('Preparing comparison…');
   try{
     // Only fetch the small usage dataset. The previous implementation fetched the enormous
     // competitive set database and then repeatedly walked every learnset, which could freeze the UI.
     const formats=getTierFormats(cfg);
-    busy('Loading usage statistics…');
+    await busy('Loading usage statistics…');
     const [ouUsage,uuUsage,ruUsage,nuUsage,puUsage,zuUsage,ubersUsage]=await Promise.all([
       loadUsage(formats.ou),loadUsage(formats.uu),loadUsage(formats.ru),
       loadUsage(formats.nu),loadUsage(formats.pu),
@@ -2225,15 +2257,16 @@ async function runFakemonAnalysis(){
     ]);
     const tierUsage={ou:ouUsage,uu:uuUsage,ru:ruUsage,nu:nuUsage,pu:puUsage,zu:zuUsage,ubers:ubersUsage};
     const officialTiers=await loadOfficialTierData(cfg);
+    if(run!==runSeq)throw new Cancelled();
     const usage=ouUsage;
     const pool=poolFor(cfg).filter(p=>p?.stats);
     if(!pool.length)throw new Error('The selected comparison pool is empty.');
     const t=getTarget();
     const target=fakeDex({id:'current',name:t.name,type1:t.types[0],type2:t.types[1],stats:t.stats,abilities:t.abilities,learnset:t.learnset});
-    busy('Calculating stat percentiles…');
+    await busy('Calculating stat percentiles…');
     const tf=detailedProfile(target);
     const statPct=Object.fromEntries(STAT_KEYS.map(k=>[k,percentile(pool.map(p=>Number(p.stats?.[k])||0),Number(t.stats[k])||0)]));
-    const cheap=pool.map(p=>({p,f:cheapProfile(p)}));
+    const cheap=await mapYielding(pool,p=>({p,f:cheapProfile(p)}),run);
     const bulkPct=percentile(cheap.map(x=>x.f.bulk),tf.bulk);
     const speedPct=percentile(cheap.map(x=>x.f.speed),tf.speed);
     const offPct=percentile(cheap.map(x=>x.f.offensive),tf.offensive);
@@ -2243,7 +2276,7 @@ async function runFakemonAnalysis(){
     const bstPct=percentile(bstValues,targetBst);
     const metagameEntries=pool.filter(p=>usageOf(p.name,usage)>0).map(p=>({p,weight:usageOf(p.name,usage)}));
     const metagameStatPct=Object.fromEntries(STAT_KEYS.map(k=>[k,weightedPercentile(metagameEntries.map(x=>({value:Number(x.p.stats?.[k])||0,weight:x.weight})),Number(t.stats[k])||0)]));
-    const metagameCheap=metagameEntries.map(x=>({p:x.p,f:cheapProfile(x.p),weight:x.weight}));
+    const metagameCheap=await mapYielding(metagameEntries,x=>({p:x.p,f:cheapProfile(x.p),weight:x.weight}),run);
     const metagameBulkPct=weightedPercentile(metagameCheap.map(x=>({value:x.f.bulk,weight:x.weight})),tf.bulk);
     const metagameSpeedPct=weightedPercentile(metagameCheap.map(x=>({value:x.f.speed,weight:x.weight})),tf.speed);
     const metagameOffPct=weightedPercentile(metagameCheap.map(x=>({value:x.f.offensive,weight:x.weight})),tf.offensive);
@@ -2297,13 +2330,13 @@ async function runFakemonAnalysis(){
     // ability should weigh as much as a mon's whole typing profile does.
     const abilityAdjustedBase=clamp(base + (abilityInfo.score>=3?24:abilityInfo.score===2?18:abilityInfo.score===1?6:abilityInfo.score===-1?-30:0));
     const intrinsic=intrinsicPowerProfile(tf,abilityInfo);
-    busy('Testing matchups across the selected metagame…');
+    await busy('Testing matchups across the selected metagame…');
     // First pass uses the selected environment to estimate the tier. Once that
     // tier is known, the displayed matchup set is rebuilt from comparable-tier
     // Pokémon so the cards answer the useful question: "how does this stack up
     // against the mons it would actually be sharing a tier with?"
-    const broadMatchup=buildMatchupProfile(target,pool,usage,tf,cfg.gen);
-    const closest=cheap.map(x=>({p:x.p,score:similarity(target,x.p,tf,x.f,0)})).sort((a,b)=>b.score-a.score).slice(0,8);
+    const broadMatchup=await buildMatchupProfile(target,pool,usage,tf,cfg.gen,run);
+    const closest=(await mapYielding(cheap,x=>({p:x.p,score:similarity(target,x.p,tf,x.f,0)}),run)).sort((a,b)=>b.score-a.score).slice(0,8);
     const targetForTier={...tf,bulkPct,stats:t.stats,name:t.name,primaryRole:choosePrimaryRole(tf)};
     const tier=estimateTier(abilityAdjustedBase,closest,tierUsage,officialTiers,targetForTier,cfg,broadMatchup,roleScore,tf,metagameFit,intrinsic,abilityInfo);
     const comparable=tierComparablePool(pool,tierUsage,tier.tier,officialTiers,cfg);
@@ -2315,37 +2348,18 @@ async function runFakemonAnalysis(){
     // the population underneath the weights.
     const matchupPool=comparable.pool;
     const matchupUsage=comparable.usage;
-    const matchup: Record<string, any>=buildMatchupProfile(target,matchupPool,matchupUsage,tf,cfg.gen);
+    await busy('Comparing it with its own tier…');
+    const matchup: Record<string, any>=await buildMatchupProfile(target,matchupPool,matchupUsage,tf,cfg.gen,run);
     matchup.comparableTier=tier.tier;
     matchup.comparablePoolSize=comparable.pool.length;
     matchup.usingComparableTier=comparable.pool.length>=6;
-    // TEMP DEBUG: exposes the last computed matchup profile to the console so
-    // individual matchup rows (score, offense/reverse best move, damage %) can
-    // be inspected directly. Safe to remove once the issue is found.
+    // the last run's numbers, for the console's log("analysis") and log("matchup")
+    // (js/core/log.ts). References only: deep copies here froze the page.
     window.__lastMatchup=matchup;
-    window.__lastAnalysis={
-      timestamp:new Date().toISOString(),
-      config:JSON.parse(JSON.stringify(cfg)),
-      selectedFormat,
-      target:JSON.parse(JSON.stringify(t)),
-      targetProfile:JSON.parse(JSON.stringify(tf)),
-      statPct:JSON.parse(JSON.stringify(statPct)),
-      metagameStatPct:JSON.parse(JSON.stringify(metagameStatPct)),
-      statCombination,metagameStatCombination,bulkPct,speedPct,offPct,typePct,bstPct,
-      metagameBulkPct,metagameSpeedPct,metagameOffPct,metagameTypePct,
-      primaryRole,secondaryRole,roleFit,offensiveSynergy,defensiveSynergy,coherence,roleScore,
-      metagameFit,base,abilityInfo:JSON.parse(JSON.stringify(abilityInfo)),
-      intrinsic:JSON.parse(JSON.stringify(intrinsic)),
-      tier:JSON.parse(JSON.stringify(tier)),
-      matchup:window.__lastMatchup,
-      usageFormats:Object.fromEntries(Object.entries<any>(tierUsage).map(([k,v])=>[k,Object.keys(v||{}).length])),
-      poolSize:pool.length,metagameEntries:metagameEntries.length,
-      comparablePoolSize:comparable.pool.length,usingComparableTier:comparable.pool.length>=6
-    };
-    log.debug('ANALYSIS','Published analysis debug snapshot',{
-      format:selectedFormat,role:primaryRole,score:tier.score,matchup:matchup.weightedScore,
-      rows:matchup.rows.length, snapshot:'window.__lastAnalysis'
-    });
+    window.__lastAnalysis={timestamp:new Date().toISOString(),config:cfg,selectedFormat,target:t,targetProfile:tf,statPct,metagameStatPct,
+      statCombination,metagameStatCombination,bulkPct,speedPct,offPct,typePct,bstPct,primaryRole,secondaryRole,roleScore,
+      metagameFit,base,abilityInfo,intrinsic,tier,matchup,poolSize:pool.length,metagameEntries:metagameEntries.length,
+      comparablePoolSize:comparable.pool.length,usingComparableTier:comparable.pool.length>=6};
     const strengths: any[]=[],weaknesses: any[]=[];
     // Which offensive stat this mon actually attacks with. A pure physical
     // attacker getting "Special Attack is Nth percentile" as a strength/
@@ -2415,7 +2429,7 @@ async function runFakemonAnalysis(){
     setView({
       status:{kind:'ok',text:`Analysis updated · ${pool.length} comparison Pokémon · ${metagameEntries.length} usage-weighted in ${selectedFormat} · ${loadedUsageCount} usage records loaded`},
       result:{
-        tier:tier.tier,score:Math.round(tier.score),reliability:Math.round(tier.reliability),
+        name:t.name||'This Fakémon',tier:tier.tier,score:Math.round(tier.score),reliability:Math.round(tier.reliability),
         summary:makeCasualSummary(t,tf,tier,matchup,selectedFormat,statCombination,roleScore,typePct,intrinsic.cap,summarySeedFromTarget(t)),
         strengths,weaknesses,types:(t.types||[]).filter(Boolean),
         typePct:ordinal(typePct),typing:{weak:tf.typing.weak,resist:tf.typing.resist,immune:tf.typing.immune},
@@ -2434,14 +2448,24 @@ async function runFakemonAnalysis(){
         cap:{BSR:Math.round(intrinsic.cap.BSR),category:intrinsic.cap.category,PT:Math.round(intrinsic.cap.PT),ST:Math.round(intrinsic.cap.ST),PS:Math.round(intrinsic.cap.PS),SS:Math.round(intrinsic.cap.SS),ODB:intrinsic.cap.ODB.toFixed(1),PSB:intrinsic.cap.PSB.toFixed(1)},
         kitScore:Math.round(intrinsic.score),matchupScore:Math.round(matchup.weightedScore||50),
         usingComparableTier:!!matchup.usingComparableTier,
+        // raw numbers for the charts on the Analysis tab (components/charts.tsx)
+        charts:{
+          stats:STAT_KEYS.map(k=>Number(t.stats[k])||0),
+          poolAvg:STAT_KEYS.map(k=>pool.reduce((n,p)=>n+(Number(p.stats?.[k])||0),0)/pool.length),
+          pct:{bulk:bulkPct,offense:offPct,speed:speedPct,bst:bstPct,typing:typePct},
+          meta:{bulk:metagameBulkPct,offense:metagameOffPct,speed:metagameSpeedPct,typing:metagameTypePct},
+          score:tier.score,reliability:tier.reliability,matchups:matchup.weightedScore,statCombination,roleScore,kit:intrinsic.score
+        },
         good:(matchup.good||[]).map(matchupRow),bad:(matchup.bad||[]).map(matchupRow)
       },
       error:''
     });
   }catch(e: any){
+    // a newer run took over; it shows its own result
+    if(e instanceof Cancelled)return;
     log.error('ANALYSIS', 'Analysis failed', e);
     setView({status:{kind:'error',text:'Analysis failed'},result:null as any,error:e.message||'Analysis failed.'});
-  }finally{analysisBusy=false;}
+  }finally{if(run===runSeq)analysisBusy=false;}
 }
 function openAnalysisTab(){api.switchTab(null,'analysis');}
 export {ensurePanel as renderAnalysis,runFakemonAnalysis,analysisPoolChanged,openAnalysisTab,scheduleAnalysis,getCfg as getAnalysisCfg,setAnalysisCfg,analysisView,analysisChoices};

@@ -290,7 +290,7 @@ html.reduce-motion, html.reduce-motion * {
     font-size:10px;
     font-weight:700;
     letter-spacing:.03em;
-    transition:all .12s ease;
+    transition: var(--t-ui);
 }
 .ab-connection-slot::before {
     content:"";

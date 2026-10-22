@@ -160,7 +160,7 @@
     background: rgba(184, 134, 11, 0.05);
 }
 .custom-move-showcase-list { display: flex; flex-direction: column; gap: 8px; }
-.custom-move-showcase-card { padding: 12px 14px; border-radius: 10px; background: var(--bg-card); cursor: pointer; transition: all .15s ease; border: 0; }
+.custom-move-showcase-card { padding: 12px 14px; border-radius: 10px; background: var(--bg-card); cursor: pointer; transition: var(--t-ui); border: 0; }
 .custom-move-showcase-card:hover { background: var(--bg-panel); transform: translateX(3px); }
 .custom-move-showcase-header { display:flex; align-items:center; gap:9px; }
 .custom-move-showcase-name { flex:1; font-weight:700; font-size:14px; color:var(--text-primary); }

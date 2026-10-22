@@ -44,7 +44,6 @@ export function BattlePage() {
             <div className="page-header battle-page-header">
                 <div className="page-heading">
                     <h1 className="page-title">Battle</h1>
-                    <p className="page-subtitle">Build a team from your Fakémon and battle other trainers.</p>
                 </div>
                 <div className="page-actions"><span className="events-status battle-status">{ui.status}</span></div>
             </div>

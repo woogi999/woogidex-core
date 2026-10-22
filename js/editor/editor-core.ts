@@ -9,6 +9,7 @@ import type { StatBlock } from '../app/types.ts';
 import { blankForm, clampBaseStat, eggGroupsText, form, formFromFakemon, genderRatioText, heightDisplay, setForm, STAT_KEYS, weightDisplay } from './draft.ts';
 import { notify, notifySync } from '../app/store.ts';
 import { flushSync } from 'react-dom';
+import { artSetTitle, cleanArtSets, editorArtSets, MAIN_ART_SET } from './art-sets.ts';
 // PokeAPI never rewrites a species entry, so a month is conservative.
 const POKEAPI_CACHE = { cacheName: 'woogidex-pokeapi-v1', maxAgeMs: 30 * 86400000 };
 // ==================== editor logic ====================
@@ -36,6 +37,12 @@ function resetEditor() {
             state.shinyArtworkData = null;
             state.cryData = null;
             state.artCredit = null;
+            state.shinyArtCredit = null;
+            state.artDescription = null;
+            state.shinyArtDescription = null;
+            state.artSets = [];
+            state.artTab = MAIN_ART_SET;
+            state.previewArtSet = MAIN_ART_SET;
             state.artworkMode = 'normal';
             state.previewArtworkMode = 'normal';
             state.evolutionGraph = null;
@@ -121,6 +128,13 @@ function resetEditor() {
             state.shinyArtworkData = fakemon.shinyArtwork || null;
             state.cryData = fakemon.cry || null;
             state.artCredit = fakemon.artCredit || null;
+            state.shinyArtCredit = fakemon.shinyArtCredit || null;
+            state.artDescription = fakemon.artDescription || null;
+            state.shinyArtDescription = fakemon.shinyArtDescription || null;
+            state.artSets = cleanArtSets(fakemon.artSets);
+            state.artTab = MAIN_ART_SET;
+            state.previewArtSet = MAIN_ART_SET;
+            state.previewArtIndex = 0;
             state.artworkMode = 'normal';
             state.previewArtworkMode = 'normal';
             renderAbilities();
@@ -561,9 +575,9 @@ function handlePreviewCustomMove(index) {
 }
 window.handlePreviewCustomMove = handlePreviewCustomMove;
 
-/** Normal or shiny artwork on the board (shiny only when there is some). */
+/** Normal or shiny on the board. A set with no shiny pass shows its normal images. */
 function setPreviewArtworkMode(mode) {
-    state.previewArtworkMode = mode === 'shiny' && state.shinyArtworkData ? 'shiny' : 'normal';
+    state.previewArtworkMode = mode === 'shiny' ? 'shiny' : 'normal';
     notify();
 }
 
@@ -604,6 +618,8 @@ function boardModel() {
             flags: getFlagLabels(m.flags || {}, m.category)
         };
     });
+    const sets = editorArtSets();
+    const gallery = sets.filter(set => set.images.length);
     const abilities = state.abilities.filter(a => a.name).map((a, i) => {
         const isCustom = a.source === 'custom' || a.custom === true;
         const sdEntry = Object.values<any>(state.sdAbilities).find(v => v.name === a.name);
@@ -628,7 +644,10 @@ function boardModel() {
         sets: state.sampleSets.map((set, i) => ({ name: set.name || 'Set ' + (i + 1), text: generateShowdownExport(name, set) })),
         artwork: state.artworkData || '', shinyArtwork: state.shinyArtworkData || '', cry: state.cryData || '',
         artCredit: state.artCredit || '',
-        artMode: state.previewArtworkMode === 'shiny' && state.shinyArtworkData ? 'shiny' : 'normal'
+        artMode: state.previewArtworkMode === 'shiny' ? 'shiny' : 'normal',
+        gallery: gallery.map(set => ({ id: set.id, kind: set.kind, title: artSetTitle(set, sets), images: set.images })),
+        artSet: state.previewArtSet || MAIN_ART_SET,
+        artIndex: state.previewArtIndex || 0
     };
 }
 

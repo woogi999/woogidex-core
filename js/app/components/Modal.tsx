@@ -6,6 +6,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { Icon } from './Icon.tsx';
+import { dialogOut } from '../../core/motion.ts';
 
 interface ModalProps {
     onClose: () => void;
@@ -23,8 +24,15 @@ interface ModalProps {
 
 export function Modal({ onClose, title, className = '', overlayClassName = '', children, dismissible = true, labelledBy }: ModalProps) {
     const box = useRef<HTMLDivElement>(null);
-    const closeRef = useRef(onClose);
-    closeRef.current = onClose;
+    // a close the person asked for plays the exit first (js/core/motion.ts)
+    const closing = useRef(false);
+    const requestClose = () => {
+        if (closing.current) return;
+        closing.current = true;
+        dialogOut(box.current, box.current?.parentElement || null, () => onClose());
+    };
+    const closeRef = useRef(requestClose);
+    closeRef.current = requestClose;
     // read while rendering, before a field's autoFocus moves the focus into the dialog
     const [opener] = useState(() => document.activeElement as HTMLElement | null);
 
@@ -55,12 +63,12 @@ export function Modal({ onClose, title, className = '', overlayClassName = '', c
 
     return createPortal(
         <div className={`modal-overlay active ${overlayClassName}`.trim()}
-            onMouseDown={e => { if (dismissible && e.target === e.currentTarget) onClose(); }}>
+            onMouseDown={e => { if (dismissible && e.target === e.currentTarget) requestClose(); }}>
             <div className={`modal ${className}`.trim()} ref={box} role="dialog" aria-modal="true" aria-labelledby={labelledBy} tabIndex={-1}>
                 {title !== undefined && (
                     <div className="modal-header">
                         <div><h3 id={labelledBy}>{title}</h3></div>
-                        <button className="modal-close" type="button" onClick={onClose} aria-label="Close"><Icon name="x" size={20} /></button>
+                        <button className="modal-close" type="button" onClick={requestClose} aria-label="Close"><Icon name="x" size={20} /></button>
                     </div>
                 )}
                 {children}

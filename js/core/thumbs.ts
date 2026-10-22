@@ -7,6 +7,11 @@
 // tab being killed on a cheap one. A card now gets a ~384px WebP made once
 // per session; the decode happens off the main thread where the browser
 // supports it (createImageBitmap), a couple at a time so it never blocks.
+//
+// Order: a card on screen asks with 'now' and goes ahead of the rest. Every other
+// card asks with 'later': those wait until nothing on screen is waiting, then
+// go one at a time in idle moments, so a big collection fills in while you
+// scroll instead of all at once.
 
 import { log } from './log.ts';
 
@@ -19,7 +24,10 @@ const PARALLEL = 2;
 const ready = new Map<string, string>();         // source -> object URL (insertion order = LRU)
 const waiting = new Map<string, Promise<string>>();
 let running = 0;
-const queue: Array<() => void> = [];
+type Job = { src: string; run: () => void };
+const queue: Job[] = [];       // on screen, in the order they came near
+const later: Job[] = [];       // off screen, in page order
+let idleAsked = false;
 
 /** The thumbnail if it's already made, else null. */
 export function cachedThumb(src: string): string | null {
@@ -33,31 +41,43 @@ export function wantsThumb(src: string | null | undefined): src is string {
     return !!src && src.length > MIN_SOURCE_CHARS && src.startsWith('data:image/') && typeof createImageBitmap === 'function';
 }
 
-/** Resolves to a small object URL for `src`, or to `src` itself if it can't be made smaller. */
-export function thumbFor(src: string): Promise<string> {
+/**
+ * Resolves to a small object URL for `src`, or to `src` itself if it can't be
+ * made smaller. 'now' (on screen) jumps the line; 'later' waits for idle time.
+ * Asking 'now' for one already waiting 'later' moves it up.
+ */
+export function thumbFor(src: string, when: 'now' | 'later' = 'now'): Promise<string> {
     const hit = cachedThumb(src);
     if (hit) return Promise.resolve(hit);
     let p = waiting.get(src);
     if (!p) {
         p = new Promise<string>(resolve => {
-            queue.push(() => make(src).then(url => {
-                if (url !== src) remember(src, url);
-                resolve(url);
-            }));
+            const job = { src, run: () => make(src).then(url => { if (url !== src) remember(src, url); resolve(url); }) };
+            if (when === 'now') queue.push(job); else later.push(job);
             pump();
         }).finally(() => waiting.delete(src));
         waiting.set(src, p);
+    } else if (when === 'now') {
+        const at = later.findIndex(j => j.src === src);
+        if (at >= 0) { queue.push(later.splice(at, 1)[0]); pump(); }
     }
     return p;
 }
 
+function start(job: Job) {
+    running++;
+    // the job resolves its own promise; this just frees the slot
+    Promise.resolve().then(job.run).finally(() => { running--; pump(); });
+}
+
 function pump() {
-    while (running < PARALLEL && queue.length) {
-        const job = queue.shift()!;
-        running++;
-        // the job resolves its own promise; this just frees the slot
-        Promise.resolve().then(job).finally(() => { running--; pump(); });
-    }
+    while (running < PARALLEL && queue.length) start(queue.shift()!);
+    // off-screen work: one at a time, only when the screen has nothing waiting
+    if (running || queue.length || !later.length || idleAsked) return;
+    idleAsked = true;
+    const go = () => { idleAsked = false; if (!running && !queue.length && later.length) start(later.shift()!); else pump(); };
+    if (typeof requestIdleCallback === 'function') requestIdleCallback(go, { timeout: 1500 });
+    else setTimeout(go, 120);
 }
 
 function remember(src: string, url: string) {

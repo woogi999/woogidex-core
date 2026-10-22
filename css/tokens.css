@@ -52,6 +52,15 @@
     --ctl-h-sm: 30px;
     --ctl-r: 8px;
 
+    /* --- motion (js/core/motion.ts runs the sequences) --- */
+    --ease-out: cubic-bezier(.16, 1, .3, 1);
+    --ease-in: cubic-bezier(.4, 0, 1, 1);
+    --dur-fast: 140ms;
+    --dur: 220ms;
+    --dur-slow: 360ms;
+    /* the one transition for a control's states (never `all`: that animates layout too) */
+    --t-ui: color 140ms ease, background-color 140ms ease, border-color 140ms ease, box-shadow 220ms cubic-bezier(.16, 1, .3, 1), opacity 140ms ease, transform 220ms cubic-bezier(.16, 1, .3, 1), filter 140ms ease;
+
     /* --- radii --- */
     --panel-r: 14px;
     --card-r: 12px;
@@ -156,7 +165,6 @@ body[data-page="not-found-view"] #main-content { padding-top: 0; }
     margin-bottom: var(--sp-5);
 }
 .page-title { font-size: 26px; font-weight: 800; letter-spacing: -0.01em; }
-.page-subtitle { margin-top: 2px; font-size: 14px; color: var(--text-secondary); }
 .page-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 
 @media (max-width: 900px) {
@@ -176,3 +184,58 @@ body[data-page="not-found-view"] #main-content { padding-top: 0; }
 ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
 ::view-transition-old(root) { z-index: 1; }
 ::view-transition-new(root) { z-index: 2; }
+
+/* ==================== motion baseline ====================
+   Every control eases between its states; every menu and popover grows from
+   where it opens. :where() keeps these at zero specificity, so a component
+   with its own transition wins. Sequences (staggers, the card-to-board
+   flight, exits) are js/core/motion.ts. */
+:where(button, .btn, a, input, select, textarea, .tab, [role="tab"], .chip, .type-badge, .collection-card, .region-item, .sidebar-item, label) {
+    transition:
+        color var(--dur-fast) ease,
+        background-color var(--dur-fast) ease,
+        border-color var(--dur-fast) ease,
+        box-shadow var(--dur) var(--ease-out),
+        opacity var(--dur-fast) ease,
+        transform var(--dur) var(--ease-out);
+}
+/* a pressed button gives a little under the finger */
+:where(.btn, .name-roll-btn, .segmented button, .an-tabs button, .art-set-tab, .board-art-set):active:not(:disabled) { transform: scale(.97); transition-duration: 60ms; }
+/* the active tab's underline draws in from the middle */
+.tabs .tab::after { transform-origin: center; }
+.tabs .tab.active::after { animation: tab-line-in var(--dur) var(--ease-out) both; }
+@keyframes tab-line-in { from { transform: scaleX(.3); opacity: 0; } }
+
+/* menus and popovers */
+.export-as-menu, .collection-card-export-menu[style*="block"], .header-profile-popover, .name-roll-popover,
+.type-dropdown-menu, .cat-dropdown-menu, .evo-combobox-menu, .region-assign-menu, .feed-menu, .mod-menu,
+.chat-msg-menu, .format-vars-menu, .autocomplete-dropdown.active, .card-actions.open {
+    animation: menu-in var(--dur) var(--ease-out) both;
+    transform-origin: top center;
+}
+@keyframes menu-in { from { opacity: 0; transform: translateY(-4px) scale(.97); } }
+
+/* pages and tabs swipe in from their side through js/core/motion.ts (slideIn);
+   the page must not grow a sideways scrollbar while one is still off to the side */
+html { overflow-x: clip; }
+
+/* Lenis (js/core/motion.ts) drives the page scroll on wheel */
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+.lenis.lenis-stopped { overflow: clip; }
+
+/* reduced motion: state changes still fade, nothing moves */
+.reduce-motion :where(*):active { transform: none !important; }
+.reduce-motion .export-as-menu, .reduce-motion .header-profile-popover, .reduce-motion .type-dropdown-menu { animation-name: fade-only !important; }
+@keyframes fade-only { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+    :where(*):active { transform: none !important; }
+    .export-as-menu, .header-profile-popover, .type-dropdown-menu, .tabs .tab.active::after { animation-name: fade-only !important; }
+}
+
+/* js/app/components/Presence.tsx: an inline one sits in a row of buttons */
+.presence-inline { display: inline-flex; flex: 0 0 auto; }
+
+/* text for screen readers only */
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }

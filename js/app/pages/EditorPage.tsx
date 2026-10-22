@@ -8,12 +8,16 @@
 // other modules draw into (abilities, learnset, evolution, sample sets,
 // analysis, the preview board) keep their contents between visits.
 
-import { useState } from 'react';
+import { memo, useLayoutEffect, useRef, useState } from 'react';
+import { directionIn, sheetResize, slideIn } from '../../core/motion.ts';
 import { api } from '../../core/app.ts';
 import { editForm, form } from '../../editor/draft.ts';
+import { STATUSES } from '../../features/notebook.ts';
 import { Icon } from '../components/Icon.tsx';
 import { RegionAssign } from '../components/RegionAssign.tsx';
 import { useClickAway } from '../components/editor/fields.tsx';
+import { ArtworkSection } from '../components/editor/ArtworkSection.tsx';
+import { NotesTab } from '../components/editor/NotesTab.tsx';
 import { BasicTab } from '../components/editor/BasicTab.tsx';
 import { StatsTab } from '../components/editor/StatsTab.tsx';
 import { MovesTab } from '../components/editor/MovesTab.tsx';
@@ -26,11 +30,13 @@ import '../dialogs/editorTools.tsx';
 import '../dialogs/exports.tsx';
 import { useStore } from '../store.ts';
 
-type Tab = 'basic' | 'stats' | 'moves' | 'analysis' | 'preview';
+type Tab = 'basic' | 'art' | 'notes' | 'stats' | 'moves' | 'analysis' | 'preview';
 // short names on phones, so all five fit without scrolling sideways
 const TABS: Array<[Tab, string, string]> = [
-    ['basic', 'Basic Info', 'Basics'], ['stats', 'Stats, Abilities, & Evos', 'Stats'], ['moves', 'Moves & Sets', 'Moves'], ['analysis', 'Analysis', 'Analysis']
+    ['basic', 'Basic Info', 'Basics'], ['art', 'Artwork', 'Art'], ['notes', 'Notes', 'Notes'], ['stats', 'Stats, Abilities & Evos', 'Stats'], ['moves', 'Moves & Sets', 'Moves'], ['analysis', 'Analysis', 'Analysis']
 ];
+
+const TAB_ORDER: Tab[] = ['basic', 'art', 'notes', 'stats', 'moves', 'analysis', 'preview'];
 
 const EXPORTS: Array<[string, () => void]> = [
     ['Export as PNG', () => api.exportAsPNG()],
@@ -57,13 +63,34 @@ function ExportMenu() {
     );
 }
 
-/** A tab's panel: always mounted, shown when it's the current tab (and animated in). */
-function Panel({ tab, current, className = '', children }: { tab: Tab; current: Tab; className?: string; children?: React.ReactNode }) {
+/**
+ * A hidden tab's contents keep their last render: a keystroke on Basic Info
+ * used to redraw the moves lists and the analysis too. The tab catches up
+ * when it shows again.
+ */
+const Resting = memo(function Resting({ children }: { rest: boolean; children?: React.ReactNode }) {
+    return <>{children}</>;
+}, (_, next) => next.rest);
+
+/** A tab's panel: always mounted, shown when it's the current tab (and animated in). `live` keeps a hidden one drawing. */
+function Panel({ tab, current, className = '', live = false, children }: { tab: Tab; current: Tab; className?: string; live?: boolean; children?: React.ReactNode }) {
     const on = tab === current;
     return (
-        <div id={`tab-${tab}`} className={`tab-content${on ? ' tab-content-enter' : ''}${className ? ` ${className}` : ''}`} style={{ display: on ? 'block' : 'none' }}>
-            {children}
+        <div id={`tab-${tab}`} className={`tab-content${className ? ` ${className}` : ''}`} style={{ display: on ? 'block' : 'none' }}>
+            <Resting rest={!on && !live}>{children}</Resting>
         </div>
+    );
+}
+
+/** The status, beside the title: a click flips it between Draft and Done. */
+function StatusButton() {
+    const s = STATUSES.find(([k]) => k === form.status) || STATUSES[0];
+    const done = s[0] === 'done';
+    return (
+        <button type="button" className={`btn btn-secondary btn-sm editor-status status-${s[0]}`} title={done ? 'Done. Click to mark as draft.' : 'Draft. Click to mark as done.'}
+            onClick={() => editForm({ status: done ? 'draft' : 'done' })}>
+            <Icon name={done ? 'check-circle' : 'document-text'} size={14} /><span>{s[1]}</span>
+        </button>
     );
 }
 
@@ -71,6 +98,13 @@ export function EditorPage() {
     useStore();
     const tab: Tab = api.getEditorTab();
     const fullscreen = !!api.getEditorFullscreen?.();
+    // a tab to the right slides in from the right, one to the left from the left
+    const lastTab = useRef<Tab>(tab);
+    useLayoutEffect(() => {
+        if (lastTab.current === tab) return;
+        slideIn(document.getElementById(`tab-${tab}`), directionIn(TAB_ORDER, lastTab.current, tab));
+        lastTab.current = tab;
+    }, [tab]);
     return (
         <div className="editor-sheet" role="dialog" aria-labelledby="editor-sheet-title">
             <div className="editor-sheet-head">
@@ -78,9 +112,10 @@ export function EditorPage() {
                 <div className="editor-sheet-heading">
                     <h2 className="editor-sheet-title" id="editor-sheet-title">{form.name.trim() || 'New Fakémon'}</h2>
                     <RegionAssign value={form.regionIds} onChange={regionIds => { editForm({ regionIds }); api.renderRegionSidebar(); }} />
+                    <StatusButton />
                 </div>
                 <div className="editor-actionbar-group">
-                    <button className="btn btn-secondary btn-icon btn-sm editor-fullscreen-toggle" type="button" onClick={() => api.toggleEditorFullscreen()}
+                    <button className="btn btn-secondary btn-icon btn-sm editor-fullscreen-toggle" type="button" onClick={() => sheetResize(document.getElementById('editor-view'), () => api.toggleEditorFullscreen())}
                         aria-pressed={fullscreen} aria-label={fullscreen ? 'Shrink the editor to a side panel' : 'Expand the editor to full screen'}
                         title={fullscreen ? 'Side panel' : 'Full screen'}><Icon name={fullscreen ? 'arrows-pointing-in' : 'arrows-pointing-out'} /></button>
                     {/* publishing needs a host with a community to publish to */}
@@ -105,10 +140,12 @@ export function EditorPage() {
             <div className="editor-sheet-body editor-form-col">
                 <Panel tab="analysis" current={tab}><AnalysisTab /></Panel>
                 <Panel tab="basic" current={tab}><BasicTab /></Panel>
+                <Panel tab="art" current={tab}><ArtworkSection /></Panel>
+                <Panel tab="notes" current={tab}><NotesTab /></Panel>
                 <Panel tab="stats" current={tab}><StatsTab /></Panel>
                 <Panel tab="moves" current={tab}><MovesTab /></Panel>
                 {/* the live board: Export as PNG captures it, so it's drawn even while hidden */}
-                <Panel tab="preview" current={tab} className="editor-preview-pane"><div id="pokedex-board-container"><EditorBoard id="pokedex-board-export" /></div></Panel>
+                <Panel tab="preview" current={tab} className="editor-preview-pane" live><div id="pokedex-board-container"><EditorBoard id="pokedex-board-export" /></div></Panel>
             </div>
         </div>
     );

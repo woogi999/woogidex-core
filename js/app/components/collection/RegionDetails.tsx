@@ -10,6 +10,8 @@ import { Icon } from '../Icon.tsx';
 import { cropThen } from '../../dialogs/cropImage.tsx';
 import type { Region } from '../../types.ts';
 import { NAME_MAX } from '../../../core/data.ts';
+import { NotesField } from '../notes/NotesField.tsx';
+import { cleanDoodles, setRegionNotes } from '../../../features/notebook.ts';
 
 export function ColorSwatches({ colors, selected, onPick }: { colors: string[]; selected: string | null; onPick: (hex: string) => void }) {
     return (
@@ -68,6 +70,14 @@ export function RegionDetails({ region }: { region: Region }) {
                             <textarea id="region-details-bio" rows={6} maxLength={4000} defaultValue={region.bio || ''} placeholder="Its history, its landmarks, its legends..." onChange={e => api.regionDetailsInput('bio', e.target.value)} /></div>
                         <div className="form-group"><label>Colour</label>
                             <ColorSwatches colors={REGION_COLORS} selected={region.color || null} onPick={hex => api.setRegionDetailsColor(hex)} /></div>
+                    </section>
+
+                    <section className="region-details-section" key={`${region.id}-notes`}>
+                        <header><h3>Notepad</h3></header>
+                        <p className="region-details-help">Your own notes for {region.name}: plot, gym order, map sketches. Only you see them.</p>
+                        <NotesField notes={region.notes || ''} doodles={cleanDoodles(region.doodles)} label={`${region.name} notepad`}
+                            placeholder="Routes, towns, the story so far…"
+                            onNotes={notes => setRegionNotes(region.id, { notes })} onDoodles={doodles => setRegionNotes(region.id, { doodles })} />
                     </section>
 
                     <section className="region-details-section">

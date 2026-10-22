@@ -11,6 +11,7 @@
 import { api } from '../core/app.ts';
 import { notifySync } from '../app/store.ts';
 import type { StatBlock } from '../app/types.ts';
+import { cleanDoodles, cleanTags, statusOf, type Doodle, type Status } from '../features/notebook.ts';
 
 export type StatKey = keyof StatBlock;
 
@@ -43,6 +44,11 @@ export interface EditorForm {
     level: number;
     stats: StatBlock;
     regionIds: string[];
+    // the notebook (js/features/notebook.ts)
+    status: Status;
+    notes: string;
+    tags: string[];
+    doodles: Doodle[];
 }
 
 export function blankForm(): EditorForm {
@@ -50,7 +56,8 @@ export function blankForm(): EditorForm {
         name: '', species: '', type1: '', type2: '', number: '', isMega: false, isForme: false,
         dexEntry1: '', dexEntry2: '', height: '', heightUnit: 'm', weight: '', weightUnit: 'kg',
         color: '', egg1: '', egg2: '', genderless: false, male: 50, level: 100,
-        stats: { hp: 60, atk: 60, def: 60, spa: 60, spd: 60, spe: 60 }, regionIds: []
+        stats: { hp: 60, atk: 60, def: 60, spa: 60, spd: 60, spe: 60 }, regionIds: [],
+        status: 'draft', notes: '', tags: [], doodles: []
     };
 }
 
@@ -63,6 +70,7 @@ export function setForm(patch: Partial<EditorForm>): void {
     // the fields are controlled inputs (see notifySync)
     notifySync();
 }
+
 
 /** A change made in the editor: redraws, then updates the board and autosaves, as typing always did. */
 export function editForm(patch: Partial<EditorForm>): void {
@@ -151,7 +159,8 @@ export function formFromFakemon(f: any): EditorForm {
         ...genderFromText(ratio),
         level: Number(f.level) || 100,
         stats: Object.fromEntries(STAT_KEYS.map(k => [k, clampBaseStat(f.stats?.[k] ?? 60)])) as unknown as StatBlock,
-        regionIds: api.entryRegionIds ? api.entryRegionIds(f) : []
+        regionIds: api.entryRegionIds ? api.entryRegionIds(f) : [],
+        status: statusOf(f), notes: typeof f.notes === 'string' ? f.notes : '', tags: cleanTags(f.tags), doodles: cleanDoodles(f.doodles)
     };
 }
 

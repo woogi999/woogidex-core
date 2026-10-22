@@ -40,7 +40,7 @@ export const TOURS: Record<TourKey, TourStep[]> = {
         {
             targets: ['.editor-tabs'],
             title: 'Fill it in, any order',
-            body: 'Basic Info has the name, types, Dex entries and art. Stats, moves and analysis are in the tabs next door. It saves as you go.'
+            body: 'Basic Info has the name, types and Dex entries. Artwork, stats, moves and analysis are in the tabs next door. It saves as you go.'
         },
         {
             targets: ['.editor-preview-tab'],

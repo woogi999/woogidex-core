@@ -4,11 +4,13 @@
 // phone settings apps work. Styles: css/settings.css. A host adds sections
 // and groups of its own (js/core/extend.ts).
 
-import { useEffect, useId, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { api, state } from '../../core/app.ts';
 import { isLowEndDevice } from '../../core/device.ts';
 import { Icon } from '../components/Icon.tsx';
 import { useStore, useViewShown } from '../store.ts';
+import { useSlide } from '../hooks.ts';
+import { slideIn } from '../../core/motion.ts';
 import { ext, type SettingsGroup as Group, type SettingsItem as Item, type SettingsSection as Section } from '../../core/extend.ts';
 import { resetTours } from '../../features/onboarding.ts';
 import { LANDING_PAGE } from '../../core/flags.ts';
@@ -47,8 +49,7 @@ const CORE_SECTIONS: Section[] = [
             {
                 id: 'cards', title: 'Collection cards',
                 items: [
-                    { id: 'date', setting: 'ShowCollectionCardDate', label: 'Show creation date on cards', desc: 'Display when each Fakémon was created on its collection card.' },
-                    { id: 'actions', setting: 'AlwaysShowCardActions', label: 'Always show card action buttons', desc: 'Keep pin, edit, export and delete visible on every card instead of only on hover.' }
+                    { id: 'date', setting: 'ShowCollectionCardDate', label: 'Show creation date on cards', desc: 'Display when each Fakémon was created on its collection card.' }
                 ]
             }
         ]
@@ -149,6 +150,18 @@ export function SettingsPage() {
     const showMain = !narrow || inSection || searching;
     const showNav = !narrow || (!inSection && !searching) || searching;
 
+    // the section slides in from its place in the menu (up or down, beside
+    // the menu), and on a phone a section comes in from the right, the menu
+    // back from the left
+    const main = useSlide(current.key, sections.map(s => s.key), 'y');
+    const root = useRef<HTMLDivElement>(null);
+    const wasIn = useRef(inSection);
+    useLayoutEffect(() => {
+        if (wasIn.current === inSection) return;
+        wasIn.current = inSection;
+        if (narrow) slideIn(root.current, inSection ? 1 : -1);
+    }, [inSection]);
+
     const open = (key: SectionKey) => {
         setSection(key);
         setInSection(true);
@@ -157,7 +170,7 @@ export function SettingsPage() {
     };
 
     return (
-        <div className={`st${narrow ? ' st-narrow' : ''}${narrow && inSection && !searching ? ' st-in-section' : ''}`}>
+        <div ref={root} className={`st${narrow ? ' st-narrow' : ''}${narrow && inSection && !searching ? ' st-in-section' : ''}`}>
             {showNav && (
                 <aside className="st-nav" aria-label="Settings sections">
                     <h1 className="st-title">Settings</h1>
@@ -182,7 +195,7 @@ export function SettingsPage() {
             )}
 
             {showMain && (
-                <main className="st-main">
+                <main className="st-main" ref={narrow ? undefined : main}>
                     {searching
                         ? <SearchResults query={query} sections={sections} onOpen={open} />
                         : <SectionView key={current.key} section={current} onBack={narrow ? () => setInSection(false) : undefined} />}

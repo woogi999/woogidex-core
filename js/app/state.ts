@@ -45,6 +45,16 @@ export interface AppState {
     shinyArtworkData: string | null;
     cryData: string | null;
     artCredit: any;
+    shinyArtCredit?: string | null;
+    artDescription?: string | null;
+    shinyArtDescription?: string | null;
+    /** the editor's artwork sets beyond the main one (js/editor/art-sets.ts) */
+    artSets: any[];
+    /** the set open on the editor's Artwork tab */
+    artTab?: string;
+    /** the set and concept image the Pokédex board shows */
+    previewArtSet?: string;
+    previewArtIndex?: number;
     artworkMode: 'normal' | 'shiny' | string;
     previewArtworkMode: 'normal' | 'shiny' | string;
     collectionShinyPreview: boolean;
@@ -98,6 +108,10 @@ export const state: AppState = {
     shinyArtworkData: null,
     cryData: null,
     artCredit: null,
+    shinyArtCredit: null,
+    artDescription: null,
+    shinyArtDescription: null,
+    artSets: [],
     artworkMode: 'normal',
     previewArtworkMode: 'normal',
     collectionShinyPreview: readBool('woogidex-collection-shiny-preview'),

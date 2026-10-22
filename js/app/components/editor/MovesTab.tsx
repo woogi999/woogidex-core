@@ -11,20 +11,28 @@ import '../../dialogs/sampleSets.tsx';
 
 const COMPACT_KEY = 'woogidex.learnset.compact';
 
+// the table (the compact rows) is the default; the cards are the other choice
+const LAYOUTS = [[false, 'layout-grid', 'Cards'], [true, 'table-cells', 'Table']] as const;
+
 export function MovesTab() {
-    const [compact, setCompact] = useState(() => { try { return localStorage.getItem(COMPACT_KEY) === '1'; } catch { return false; } });
-    const toggleCompact = () => {
-        setCompact(!compact);
-        try { localStorage.setItem(COMPACT_KEY, compact ? '0' : '1'); } catch { /* just this visit then */ }
+    const [compact, setCompact] = useState(() => { try { return localStorage.getItem(COMPACT_KEY) !== '0'; } catch { return true; } });
+    const choose = (next: boolean) => {
+        setCompact(next);
+        try { localStorage.setItem(COMPACT_KEY, next ? '1' : '0'); } catch { /* just this visit then */ }
     };
     return (
         <>
             <div className={`form-group${compact ? ' learnset-compact' : ''}`}>
                 <div className="learnset-head">
                     <label>Learnset</label>
-                    <button type="button" className="btn btn-secondary btn-sm" onClick={toggleCompact} aria-pressed={compact} title={compact ? 'Show roomy cards' : 'Show a compact list'}>
-                        <Icon name={compact ? 'squares-2x2' : 'list-bullet'} size={14} /> {compact ? 'Cards' : 'Compact list'}
-                    </button>
+                    <div className="segmented" role="group" aria-label="Learnset layout">
+                        {LAYOUTS.map(([key, icon, label]) => (
+                            <button key={label} type="button" className={compact === key ? 'active' : ''} aria-pressed={compact === key} aria-label={label} title={label}
+                                onClick={() => choose(key)}>
+                                <Icon name={icon} />
+                            </button>
+                        ))}
+                    </div>
                 </div>
                 <p className="field-hint">Add your moves here!</p>
                 <LearnsetFilters />

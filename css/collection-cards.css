@@ -160,39 +160,18 @@
 .collection-grid.collection-list .library-tile .card-meta-row { order: 3; flex: 1 1 auto; min-width: 0; margin-left: var(--sp-3); }
 
 /* ==================== card actions ====================
-   up to 7 buttons: too many for a card's width, so they stack in a strip just
-   outside the card's right edge, shown on hover. .collection-library-card
-   renders into the same grid and shares the rules. */
-.collection-card .card-actions { display: flex; gap: 3px; opacity: 0; transition: opacity .15s ease; }
-.collection-card:hover .card-actions,
-html.always-show-card-actions .collection-card .card-actions { opacity: 1; }
-@media (hover: none) { .collection-card .card-actions { opacity: 1; } }
-.collection-card .card-actions button {
-    width: 26px; height: 26px; padding: 0; flex: 0 0 26px;
-    display: flex; align-items: center; justify-content: center;
-    border: 1px solid var(--border); border-radius: 6px;
-    background: var(--bg-card); color: var(--text-secondary);
-    box-shadow: var(--shadow-sm);
-    cursor: pointer;
-}
-.collection-card .card-actions button svg { width: 13px; height: 13px; }
-.collection-card .card-actions button:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
-.collection-card .card-actions button.card-delete-btn:hover { background: var(--danger); border-color: var(--danger); }
-.collection-card .card-actions button.pinned-btn { background: var(--accent); border-color: var(--accent); color: #fff; }
-
+   a card has no buttons of its own: a click (or right-click, Enter, the menu
+   key) opens its menu (js/app/components/ContextMenu.tsx). */
+.collection-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .collection-grid:not(.collection-list) .collection-card { overflow: visible; }
-/* the action buttons sit inside the card, stacked down the artwork's
-   top-right corner; a short card wraps them into a second column to the left.
-   They used to hang off the card's right edge, over the next card. */
-.collection-grid:not(.collection-list) .card-actions {
-    position: absolute; top: 6px; right: 6px; z-index: 2;
-    flex-direction: column; flex-wrap: wrap-reverse; align-content: flex-start;
-    max-height: calc(100% - 12px);
+/* a pinned card says so in the artwork's top-right corner */
+.card-pin-mark {
+    position: absolute; top: 7px; right: 7px; z-index: 2;
+    width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 50%; background: var(--accent); color: #fff; box-shadow: var(--shadow-sm); pointer-events: none;
 }
-/* an open export menu still has to float above the neighbouring cards */
-.collection-grid:not(.collection-list) .collection-card:has(.collection-card-export-menu) { z-index: 300; }
-.collection-grid:not(.collection-list) .card-actions .collection-card-export-wrap { display: flex; flex: 0 0 26px; width: 26px; height: 26px; }
-/* the number moves to the bottom corner, out from under the buttons */
+.collection-grid.collection-list .card-pin-mark { position: static; order: 8; margin-left: auto; flex: 0 0 auto; }
+/* the number sits in the bottom corner, out from under the pin mark */
 .collection-grid:not(.collection-list) .card-art .card-number { top: auto; bottom: 8px; right: auto; left: 10px; }
 
 /* ==================== list layout ====================
@@ -229,23 +208,57 @@ html.always-show-card-actions .collection-card .card-actions { opacity: 1; }
 .collection-grid.collection-list .community-unpublish-btn { order: 9; position: static; margin-left: 6px; }
 @media (max-width: 720px) { .collection-grid.collection-list .community-card-author { display: none; } }
 
-/* ==================== toolbar ==================== */
+/* ==================== toolbar ====================
+   one row under the page header: the tabs on the left, then search, sort,
+   layout and the shiny switch on the right. On a narrow screen the controls
+   drop under the tabs. */
+.collection-nav {
+    display: flex; align-items: flex-end; gap: var(--sp-3) var(--sp-4); flex-wrap: wrap;
+    margin-bottom: var(--sp-4);
+    border-bottom: 1px solid var(--border);
+}
+.collection-nav .collection-tabs { flex: 0 1 auto; min-width: 0; margin: 0; border-bottom: 0; }
 .search-bar {
     display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap;
     margin-bottom: var(--sp-5);
 }
-.search-bar input { flex: 1 1 260px; min-width: 180px; max-width: 440px; }
-.search-bar select { flex: 0 0 auto; font-weight: 600; cursor: pointer; }
+.collection-nav .collection-toolbar { flex: 1 1 420px; justify-content: flex-end; margin: 0 0 var(--sp-2); flex-wrap: nowrap; }
+.collection-search { position: relative; flex: 1 1 200px; max-width: 300px; min-width: 0; display: flex; align-items: center; }
+.collection-search svg { position: absolute; left: 10px; color: var(--text-muted); pointer-events: none; }
+.collection-search input { width: 100%; height: var(--ctl-h); padding-left: 32px; }
+.collection-sort { display: flex; flex: 0 0 auto; }
+.collection-sort select { height: var(--ctl-h); font-weight: 600; cursor: pointer; border-top-right-radius: 0; border-bottom-right-radius: 0; }
+.collection-sort .btn { border-top-left-radius: 0; border-bottom-left-radius: 0; margin-left: -1px; }
+/* two icons in one outline; the pressed one is filled, so the current layout reads at a glance */
+.segmented { display: inline-flex; flex: 0 0 auto; padding: 2px; gap: 2px; border: 1px solid var(--border-strong); border-radius: var(--ctl-r); background: var(--bg-card); }
+.segmented button {
+    width: calc(var(--ctl-h) - 6px); height: calc(var(--ctl-h) - 6px);
+    display: flex; align-items: center; justify-content: center;
+    border: 0; border-radius: 6px; background: transparent; color: var(--text-muted); cursor: pointer;
+}
+.segmented button svg { width: 16px; height: 16px; }
+.segmented button:hover { color: var(--text-primary); }
+.segmented button.active { background: var(--bg-panel); color: var(--text-primary); }
+.segmented button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+#collection-shiny-toggle { flex: 0 0 auto; }
+#collection-shiny-toggle[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
 .collection-tabs { margin-bottom: var(--sp-4); }
 .breadcrumb-root { cursor: pointer; }
 .breadcrumb-root:hover { color: var(--accent); }
-/* the grid/list toggles only swap their icon: which layout is on is plain to see */
-#collection-shiny-toggle[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
 
+@media (max-width: 900px) {
+    .collection-nav { border-bottom: 0; }
+    .collection-nav .collection-tabs { flex: 1 1 100%; border-bottom: 1px solid var(--border); }
+    .collection-nav .collection-toolbar { flex: 1 1 100%; justify-content: flex-start; margin: 0; }
+    .collection-search { max-width: none; }
+}
 @media (max-width: 640px) {
     .collection-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-3); }
-    .search-bar input { flex: 1 1 100%; max-width: none; }
-    .search-bar select { flex: 1 1 0; min-width: 0; }
+    .collection-nav .collection-toolbar { flex-wrap: wrap; }
+    .collection-search { flex: 1 1 100%; }
+    .collection-sort { flex: 1 1 auto; }
+    .collection-sort select { flex: 1 1 auto; min-width: 0; }
+    #collection-shiny-toggle span { display: none; }
     .collection-header-actions .btn span { display: none; }
     .collection-header-actions .btn { padding: 0 var(--sp-3); }
 }
@@ -271,3 +284,176 @@ html.always-show-card-actions .collection-card .card-actions { opacity: 1; }
 .collection-grid > .collection-card.actions-open,
 .collection-grid > .collection-card:has(.collection-card-export-menu[style*="block"]),
 .collection-grid > .collection-card:focus-within { content-visibility: visible; }
+.collection-card .card-art img.card-icon-art { image-rendering: pixelated; }
+.collection-sort .btn { flex: 0 0 var(--ctl-h); width: var(--ctl-h); padding: 0; }
+.collection-grid.collection-list .card-art .card-pin-mark { position: absolute; top: -3px; right: -3px; width: 16px; height: 16px; }
+.collection-grid.collection-list .card-pin-mark svg { width: 10px; height: 10px; }
+
+/* ---- dragging a card (js/core/motion.ts: cardDragStart, cardDropInto) ---- */
+/* the chip that follows the pointer; it is drawn off screen for the snapshot */
+.drag-chip {
+    position: fixed; top: -200px; left: -400px; z-index: -1;
+    display: flex; align-items: center; gap: 10px; max-width: 220px; padding: 6px 14px 6px 6px;
+    border: 1px solid var(--accent); border-radius: 999px; background: var(--bg-card);
+    box-shadow: var(--shadow-lg); font: 700 13px 'Exo 2', sans-serif; color: var(--text-primary);
+}
+.drag-chip-art { width: 40px; height: 40px; flex: 0 0 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: var(--bg-panel); overflow: hidden; }
+.drag-chip-art img { width: 100%; height: 100%; object-fit: contain; }
+.drag-chip-art .library-emblem { transform: scale(.6); }
+.drag-chip-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.collection-card.is-drag-source { box-shadow: none; border-style: dashed; }
+/* where a card can go wakes up while one is held */
+body.card-dragging .folder-card:not(.is-drag-source) { border-style: dashed; border-color: var(--accent); }
+/* the address takes cards too: a part of it lights up as a place to drop */
+.breadcrumb-drop { border-radius: 8px; padding: 0 6px; margin: 0 -6px; transition: background-color var(--dur-fast) ease, box-shadow var(--dur-fast) ease; }
+body.card-dragging .breadcrumb-drop { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--accent) 45%, transparent); }
+.breadcrumb-drop.drag-over { background: var(--accent-soft); box-shadow: inset 0 0 0 2px var(--accent); }
+body.card-dragging .folder-card .folder-card-art svg { transition: transform var(--dur) var(--ease-out); }
+.folder-card.drag-over { border-style: solid !important; transform: translateY(-4px) scale(1.04); box-shadow: 0 0 0 4px var(--accent-glow), var(--shadow-md); }
+.folder-card.drag-over .folder-card-art svg { transform: translateY(-4px) scale(1.12) rotate(-4deg); }
+body.card-dragging .region-row { transition: background-color var(--dur-fast) ease, box-shadow var(--dur-fast) ease; }
+.drop-ghost { position: fixed; z-index: 21000; margin: 0; pointer-events: none; border-radius: var(--card-r); background: var(--bg-panel); box-shadow: var(--shadow-lg); }
+
+/* ---- big collections ----
+   a card far off screen skips layout and paint until it comes near
+   (content-visibility); its picture is made when it comes near too
+   (ThumbImg), and fades in when it arrives */
+.collection-grid > .collection-card { content-visibility: auto; contain-intrinsic-size: auto 280px; }
+.collection-grid.collection-list > .collection-card { contain-intrinsic-size: auto 64px; }
+.collection-card .card-art > img { animation: fade-only var(--dur-slow) ease both; }
+
+
+/* ==================== the notepad side of My Collection ====================
+   js/app/components/collection/Notebook.tsx and notes/NotesField.tsx */
+
+/* status: Draft (blue), Done (green) */
+.status-draft { --status: var(--info); }
+.status-done { --status: var(--success); }
+.status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--status, var(--text-muted)); flex: 0 0 auto; }
+.status-badge {
+    display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px 2px 6px; border-radius: 999px;
+    background: color-mix(in srgb, var(--status) 12%, var(--bg-card)); color: var(--status);
+    border: 1px solid color-mix(in srgb, var(--status) 30%, transparent);
+    font: 700 10.5px 'Exo 2', sans-serif; letter-spacing: .02em; white-space: nowrap;
+}
+.collection-card .card-art > .status-badge { position: absolute; top: 7px; left: 7px; z-index: 2; }
+.status-badge .status-icon { flex: 0 0 auto; }
+.status-picker button { width: auto; padding: 0 12px; gap: 6px; font: 600 13px 'Exo 2', sans-serif; }
+.status-picker button.active { background: color-mix(in srgb, var(--status) 12%, var(--bg-card)); color: var(--status); }
+.editor-status { gap: 6px; }
+
+/* tags */
+.tag-chip {
+    display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px;
+    background: var(--bg-panel); color: var(--text-secondary); font: 600 11.5px 'Exo 2', sans-serif; white-space: nowrap;
+}
+.tag-chip b { font-weight: 700; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.tag-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: calc(-1 * var(--sp-2)) 0 var(--sp-4); }
+.tag-bar-icon { color: var(--text-muted); }
+.tag-filter { border: 1px solid transparent; cursor: pointer; transition: var(--t-ui); }
+.tag-filter:hover { border-color: var(--border-strong); color: var(--text-primary); }
+.tag-filter.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+.tag-filter:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* the Unfinished shelf */
+.shelf { margin-bottom: var(--sp-5); }
+.shelf-head { display: flex; align-items: center; gap: var(--sp-3); margin-bottom: var(--sp-3); }
+.shelf-toggle { display: inline-flex; align-items: center; gap: 8px; padding: 0; border: 0; background: none; color: var(--text-primary); cursor: pointer; }
+.shelf-chev { color: var(--text-muted); transition: transform var(--dur) var(--ease-out); }
+.shelf.is-closed .shelf-chev { transform: rotate(-90deg); }
+.shelf-title { font: 800 16px 'Exo 2', sans-serif; }
+.shelf-count { min-width: 22px; padding: 1px 7px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font: 700 12px 'Exo 2', sans-serif; text-align: center; }
+.shelf-head .link-btn { margin-left: auto; font-size: 13px; }
+/* the grid's own cards, in one row that scrolls sideways */
+.shelf .collection-grid.shelf-strip {
+    grid-template-columns: none !important; grid-auto-flow: column; grid-auto-columns: 176px;
+    overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; padding: 4px 2px 10px; scrollbar-width: thin;
+}
+.shelf-strip > .collection-card { scroll-snap-align: start; }
+@media (max-width: 640px) { .shelf .collection-grid.shelf-strip { grid-auto-columns: 150px; } }
+
+/* ==================== the table layout ====================
+   js/app/components/collection/CollectionTable.tsx, after Showdown's dex
+   search: dense rows, the art as an icon, each number with its small label
+   above it. Every tab uses the same frame. */
+.dex-table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--panel-r); background: var(--bg-card); }
+.dex-table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+.dex-table thead th {
+    position: sticky; top: 0; z-index: 1; padding: 7px 6px; text-align: left; white-space: nowrap;
+    background: var(--bg-panel); color: var(--text-muted); font: 700 10.5px 'Exo 2', sans-serif; letter-spacing: .05em; text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+}
+.dex-table thead th.col-stat { text-align: center; }
+.table-sort { display: inline-flex; align-items: center; gap: 3px; padding: 0; border: 0; background: none; color: inherit; font: inherit; letter-spacing: inherit; text-transform: inherit; cursor: pointer; }
+.table-sort:hover, .table-sort.active { color: var(--text-primary); }
+.table-sort:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
+.dex-row { cursor: pointer; }
+.dex-row td { height: 42px; padding: 3px 6px; border-bottom: 1px solid var(--border-light); white-space: nowrap; vertical-align: middle; transition: background-color var(--dur-fast) ease; }
+.dex-row:last-child td { border-bottom: 0; }
+.dex-row:hover td { background: var(--accent-soft); }
+.dex-row:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.dex-row[draggable="true"] { cursor: grab; }
+.dex-row.pinned td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
+
+.dex-table .col-icon { width: 46px; padding-left: 8px; }
+.dex-art {
+    width: 36px !important; height: 36px; flex: 0 0 36px; padding: 0 !important; border-radius: 8px !important; aspect-ratio: auto !important;
+    display: flex; align-items: center; justify-content: center; background: var(--bg-panel); overflow: hidden; color: var(--text-muted);
+}
+.dex-art img { width: 100%; height: 100%; object-fit: contain; }
+.dex-art .library-emblem { width: 100%; box-shadow: none; }
+.dex-art .library-emblem svg { width: 55%; height: 55%; }
+.dex-art .type-emblem img { width: 60%; height: 60%; }
+.dex-art .library-emblem .item-icon-sheet { --item-icon-scale: 1.3; }
+
+.dex-table .col-num { width: 44px; font-family: 'Inconsolata', monospace; font-size: 12px; color: var(--text-muted); }
+.dex-table .col-name { min-width: 150px; }
+.dex-name { display: inline-flex; align-items: center; gap: 6px; max-width: 280px; min-width: 0; }
+.dex-name-text { font-weight: 700; overflow: hidden; text-overflow: ellipsis; }
+.dex-row.is-vanilla .dex-name-text { font-weight: 600; }
+.dex-name .vanilla-card-tag-inline { margin-left: 0; }
+.dex-pin { color: var(--accent); flex: 0 0 auto; }
+.dex-muted { color: var(--text-muted); font-size: 12px; }
+.dex-table .status-badge { padding: 1px 6px 1px 4px; font-size: 10px; }
+
+.dex-table .card-types { display: flex; gap: 3px; }
+.dex-table .type-badge { font-size: 10px; padding: 2px 7px; }
+.dex-table .col-abilities { max-width: 180px; overflow: hidden; text-overflow: ellipsis; font-size: 12px; color: var(--text-secondary); }
+.dex-table td.col-hidden { font-style: italic; color: var(--text-muted); }
+.dex-table .col-cat { width: 1%; }
+.dex-cat { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; color: var(--text-secondary); }
+
+/* a number and its label, stacked: Showdown's stat cells */
+.dex-table td.col-stat { min-width: 36px; text-align: center; font-size: 12.5px; line-height: 1.15; }
+.dex-table td.col-stat em { display: block; font: 600 9px 'Exo 2', sans-serif; font-style: normal; letter-spacing: .02em; color: var(--text-muted); white-space: nowrap; }
+.dex-table td.col-bst { font-weight: 800; }
+
+.dex-table .col-desc { width: 100%; min-width: 200px; white-space: normal; }
+.dex-desc { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-size: 12px; line-height: 1.35; color: var(--text-secondary); }
+.dex-desc.is-empty { color: var(--text-muted); font-style: italic; }
+
+/* rows that are not entries: folders, "Add new", "Show all" */
+.dex-table .col-wide { width: 100%; }
+.dex-folder .dex-name { gap: 10px; }
+.dex-add { color: var(--text-secondary); }
+.dex-add:hover { color: var(--accent); }
+.dex-add .dex-name-text { font-weight: 600; margin-right: 10px; }
+body.card-dragging .dex-folder td { background: color-mix(in srgb, var(--accent) 6%, transparent); }
+.dex-folder.drag-over td { background: var(--accent-soft); box-shadow: inset 0 1px 0 var(--accent), inset 0 -1px 0 var(--accent); }
+
+@media (max-width: 900px) { .dex-table .col-abilities, .dex-table .col-num { display: none; } }
+@media (max-width: 640px) {
+    .dex-table-fakemon .col-stat:not(.col-bst), .dex-table .col-cat { display: none; }
+    .dex-table .type-badge { min-width: 0; padding: 2px 6px; }
+    .dex-name { max-width: 150px; }
+    .dex-table .col-desc { min-width: 160px; }
+}
+
+/* Quick add, next to Create */
+.collection-quick-add svg { color: var(--warning); }
+@media (max-width: 640px) { .collection-quick-add span { display: none; } }
+
+/* cut and waiting to be pasted, as in File Explorer (js/features/clipboard.ts) */
+.collection-card.is-cut, .dex-row.is-cut { opacity: .5; }
+#collection-listing:focus { outline: none; }

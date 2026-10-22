@@ -4,10 +4,14 @@
 // custom-types.ts; this draws what they hold. A region's details or analytics
 // page takes the place of the tabs and grid.
 
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { cardDropInto, directionIn, fadeSwap, slideIn, staggerIn } from '../../core/motion.ts';
 import { api, state } from '../../core/app.ts';
 import { getRegionPage, isRegionDrawerOpen, NO_REGION, regionVanillaLibrary, regionVanillaPokemon } from '../../features/regions.ts';
 import { Icon } from '../components/Icon.tsx';
+import { Presence } from '../components/Presence.tsx';
+import { menuEvent, openContextMenu } from '../components/ContextMenu.tsx';
+import { canPaste, copyEntry, cutEntry, pasteInto, type ClipKind } from '../../features/clipboard.ts';
 import {
     AddCard, FakemonCard, FolderCard, LibraryCard, SkeletonCard, VanillaLibraryCard, VanillaMoreCard, VanillaPokemonCard
 } from '../components/collection/cards.tsx';
@@ -15,10 +19,18 @@ import { TypeCards, TypesAfter } from '../components/collection/TypesTab.tsx';
 import { RegionDetails } from '../components/collection/RegionDetails.tsx';
 import { RegionAnalytics } from '../components/collection/RegionAnalytics.tsx';
 import { useStore } from '../store.ts';
+import { useSlide } from '../hooks.ts';
 import type { CollectionTab, LibraryKind } from '../types.ts';
+import { TagBar, UnfinishedShelf } from '../components/collection/Notebook.tsx';
+import {
+    AddRow, DexTable, FakemonRow, FolderRow, LibraryRow, MoreRow, VanillaLibraryRow, VanillaPokemonRow
+} from '../components/collection/CollectionTable.tsx';
+
+type Layout = 'grid' | 'table';
 import '../dialogs/collection.tsx';
 import '../dialogs/customType.tsx';
 import '../dialogs/newFakemon.tsx';
+import { openBulkPaste, openQuickAdd } from '../dialogs/notebook.tsx';
 
 const TABS: Array<[CollectionTab, string]> = [['fakemon', 'Fakémon'], ['moves', 'Moves'], ['abilities', 'Abilities'], ['items', 'Items'], ['types', 'Types']];
 const SEARCH_PLACEHOLDER: Record<CollectionTab, string> = {
@@ -26,33 +38,133 @@ const SEARCH_PLACEHOLDER: Record<CollectionTab, string> = {
     items: 'Search your custom items...', types: 'Search your custom types...'
 };
 
+const PAGE_ORDER = ['grid', 'details', 'analytics'];
+
 export function CollectionPage() {
     useStore();
     const page = getRegionPage();
     const region = api.getActiveRegion();
+    const regionId = api.getActiveRegionId?.() ?? null;
+    // the sidebar stacks a region's grid, details and analytics, and the
+    // regions, top to bottom: moving between them slides up or down
+    const stage = useRef<HTMLDivElement>(null);
+    const where = useRef({ page: page || 'grid', regionId });
+    useLayoutEffect(() => {
+        const prev = where.current;
+        const next = { page: (page && region) ? page : 'grid', regionId };
+        where.current = next;
+        if (prev.page === next.page && prev.regionId === next.regionId) return;
+        if (prev.regionId !== next.regionId) {
+            const ids = [null, ...api.getRegions().map((r: any) => r.id), NO_REGION];
+            slideIn(stage.current, Math.sign(ids.indexOf(next.regionId) - ids.indexOf(prev.regionId)), 'y');
+        } else {
+            slideIn(stage.current, directionIn(PAGE_ORDER, prev.page, next.page), 'y');
+        }
+    }, [page, regionId]);
     if (page && region) {
         return (
-            <section id="region-details" className="region-details">
-                {page === 'analytics' ? <RegionAnalytics region={region} /> : <RegionDetails region={region} />}
-            </section>
+            <div className="collection-stage" ref={stage}>
+                <section id="region-details" className="region-details">
+                    {page === 'analytics' ? <RegionAnalytics region={region} /> : <RegionDetails region={region} />}
+                </section>
+            </div>
         );
     }
     const ui = api.collectionUI();
     const crumb = api.activeRegionBreadcrumb();
     return (
-        <>
+        <div className="collection-stage" ref={stage}>
             {crumb?.banner && <div className="collection-region-banner" style={{ backgroundImage: `url('${crumb.banner}')` }} />}
-            <Header view={ui.view} layout={ui.layout} />
-            <div className="tabs collection-tabs" role="tablist" aria-label="Collection view">
-                {TABS.map(([key, label]) => (
-                    <button key={key} className={`tab${ui.view === key ? ' active' : ''}`} type="button" role="tab" aria-selected={ui.view === key}
-                        onClick={() => api.setCollectionView(key)}>{label}</button>
-                ))}
+            <Header />
+            <div className="collection-nav">
+                <div className="tabs collection-tabs" role="tablist" aria-label="Collection view">
+                    {TABS.map(([key, label]) => (
+                        <button key={key} className={`tab${ui.view === key ? ' active' : ''}`} type="button" role="tab" aria-selected={ui.view === key}
+                            onClick={() => api.setCollectionView(key)}>{label}</button>
+                    ))}
+                </div>
+                <Toolbar view={ui.view} search={ui.search} sort={ui.sort} layout={ui.layout} />
             </div>
-            <Toolbar view={ui.view} search={ui.search} sort={ui.sort} />
-            {!ui.ready ? <SkeletonGrid layout={ui.layout} /> : ui.view === 'types' ? <TypesGrid layout={ui.layout} search={ui.search} /> : <Grid layout={ui.layout} />}
-        </>
+            {ui.view === 'fakemon' && ui.ready && <TagBar search={ui.search} />}
+            <TabStage view={ui.view}>
+                {!ui.ready ? <SkeletonGrid /> : ui.view === 'types' ? <TypesGrid layout={ui.layout} search={ui.search} /> : <Grid layout={ui.layout} />}
+            </TabStage>
+        </div>
     );
+}
+
+/** The listing under the tabs: it slides in from the side of the tab that was picked. */
+function TabStage({ view, children }: { view: CollectionTab; children: ReactNode }) {
+    const box = useSlide(view, TABS.map(([k]) => k));
+    // a click on the empty space takes the focus, so the keys below work there too
+    return (
+        <div ref={box} id="collection-listing" tabIndex={-1} onContextMenu={e => backgroundMenu(e, view)} onKeyDown={e => listingKeys(e, view)}>
+            {children}
+        </div>
+    );
+}
+
+const CREATE: Array<[string, string, () => void]> = [
+    ['Fakémon', 'sparkles', () => api.createNewFakemon()],
+    ['Folder', 'folder', () => api.createFolder()],
+    ['Custom move', 'bolt', () => api.openLibraryEditorSheet('moves')],
+    ['Custom ability', 'sparkles', () => api.openLibraryEditorSheet('abilities')],
+    ['Custom item', 'gem', () => api.openLibraryEditorSheet('items')],
+    ['Custom type', 'swatch', () => api.openLibraryEditorSheet('types')],
+    ['Region', 'map', () => api.createRegion()]
+];
+
+/** A right-click on the empty space, as in File Explorer: View, Sort by, Paste and New. */
+function backgroundMenu(e: React.MouseEvent, view: CollectionTab) {
+    const target = e.target as Element;
+    // a card, a row or a field keeps its own menu
+    if (target.closest('[data-entry-id], [data-folder-id], .collection-card, .dex-row, input, textarea, select, .shelf-head')) return;
+    e.preventDefault();
+    const { layout, sort } = api.collectionUI();
+    const listing = document.getElementById('collection-listing');
+    openContextMenu(e, {
+        items: [
+            { label: 'View', icon: 'eye', items: [['grid', 'Grid'], ['table', 'Table']].map(([key, label]) => ({
+                label, icon: layout === key ? 'check' : undefined, run: () => { if (layout !== key) fadeSwap(listing, () => api.setCollectionLayout(key)); }
+            })) },
+            { label: 'Sort by', icon: 'arrows-up-down', items: [
+                ...sort.options.map(([key, label]: [string, string]) => ({ label, icon: sort.by === key ? 'check' : undefined, run: () => api.changeCollectionSort(key, sort.order) })),
+                { label: 'Ascending', icon: sort.order === 'asc' ? 'check' : undefined, run: () => api.changeCollectionSort(sort.by, 'asc') },
+                { label: 'Descending', icon: sort.order === 'desc' ? 'check' : undefined, run: () => api.changeCollectionSort(sort.by, 'desc') }
+            ] },
+            'sep',
+            { label: 'Paste', icon: 'clipboard-document', hint: 'Ctrl+V', disabled: !canPaste(view), run: () => pasteInto(view, state.currentFolderId || null) },
+            'sep',
+            { label: 'New', icon: 'plus', items: [
+                ...CREATE.map(([label, icon, run]) => ({ label, icon, run })),
+                { label: 'Quick add', icon: 'light-bulb', hint: 'N', run: openQuickAdd }
+            ] }
+        ]
+    });
+}
+
+/** File Explorer's keys for the focused card or row: Ctrl+X, Ctrl+C, Ctrl+V and Delete. */
+function listingKeys(e: React.KeyboardEvent, view: CollectionTab) {
+    const target = e.target as Element;
+    if (target.closest('input, textarea, select, [contenteditable]')) return;
+    const entry = target.closest<HTMLElement>('[data-entry-id]');
+    const kind = entry?.dataset.entryKind as ClipKind | undefined;
+    const id = entry?.dataset.entryId;
+    const key = e.key.toLowerCase();
+    const ctrl = e.ctrlKey || e.metaKey;
+    if (ctrl && (key === 'x' || key === 'c') && kind && id) {
+        e.preventDefault();
+        (key === 'x' ? cutEntry : copyEntry)(kind, id);
+    } else if (ctrl && key === 'v' && canPaste(view)) {
+        e.preventDefault();
+        // on a folder: into it; anywhere else: here
+        const folder = target.closest<HTMLElement>('[data-folder-id]')?.dataset.folderId;
+        pasteInto(view, folder || state.currentFolderId || null);
+    } else if (e.key === 'Delete' && kind && id) {
+        e.preventDefault();
+        if (kind === 'fakemon') api.deleteFakemon(id, menuEvent(entry));
+        else api.deleteCustomLibraryItem(kind, id, menuEvent(entry));
+    }
 }
 
 // ---- header: where you are, and what you can do ----
@@ -86,38 +198,54 @@ function MenuButton({ className, icon, label, items }: { className: string; icon
     );
 }
 
+/**
+ * A part of the address you can click, and drop cards on as in File
+ * Explorer: `dropOut` takes a dragged card out of its folder (to the level
+ * this part names).
+ */
+function Crumb({ onClick, dropOut, children }: { onClick: () => void; dropOut?: boolean; children: ReactNode }) {
+    const [over, setOver] = useState(false);
+    const dragging = () => !!(api.getDraggedFakemonId?.() || api.getDraggedLibraryItem?.());
+    const drop = dropOut ? {
+        onDragOver: (e: React.DragEvent) => { if (!dragging()) return; e.preventDefault(); if (!over) setOver(true); },
+        onDragLeave: () => setOver(false),
+        onDrop: (e: React.DragEvent) => { setOver(false); cardDropInto(e.currentTarget); api.dropOnFolder(null, e); }
+    } : {};
+    return (
+        <span className={`breadcrumb-root${dropOut ? ' breadcrumb-drop' : ''}${over ? ' drag-over' : ''}`} onClick={onClick} style={{ cursor: 'pointer' }} {...drop}>
+            {children}
+        </span>
+    );
+}
+
 function Breadcrumb() {
     const region = api.activeRegionBreadcrumb();
     const folder = state.currentFolderId ? state.folders.find(f => f.id === state.currentFolderId) : null;
+    const inFolder = !!state.currentFolderId;
     const sep = <span className="breadcrumb-sep" style={{ color: 'var(--text-muted)' }}> / </span>;
-    const link = (onClick: () => void, children: ReactNode) => <span className="breadcrumb-root" onClick={onClick} style={{ cursor: 'pointer' }}>{children}</span>;
     if (region) {
         const label = <>{region.color && <span className="region-dot region-dot-lg" style={{ '--region-color': region.color } as React.CSSProperties} />}{region.name}</>;
         return (
             <>
-                {link(() => api.selectRegion(null), 'My Collection')}
+                <Crumb onClick={() => api.selectRegion(null)}>My Collection</Crumb>
                 {sep}
                 {folder
-                    ? <>{link(() => api.openFolder(null), label)}{sep}<span className="breadcrumb-current">{folder.name}</span></>
+                    ? <><Crumb onClick={() => api.openFolder(null)} dropOut>{label}</Crumb>{sep}<span className="breadcrumb-current">{folder.name}</span></>
                     : <span className="breadcrumb-current">{label}</span>}
             </>
         );
     }
-    if (!state.currentFolderId) return link(() => api.openFolder(null), 'My Collection');
-    return <>{link(() => api.openFolder(null), 'My Collection')}{sep}<span className="breadcrumb-current">{folder ? folder.name : 'Folder'}</span></>;
+    if (!inFolder) return <Crumb onClick={() => api.openFolder(null)}>My Collection</Crumb>;
+    return <><Crumb onClick={() => api.openFolder(null)} dropOut>My Collection</Crumb>{sep}<span className="breadcrumb-current">{folder ? folder.name : 'Folder'}</span></>;
 }
 
-function Header({ view, layout }: { view: CollectionTab; layout: 'grid' | 'list' }) {
-    const region = api.activeRegionBreadcrumb();
+function Header() {
     const activeRegion = api.getActiveRegion();
     const activeId = api.getActiveRegionId();
-    const isList = layout === 'list';
-    const shiny = !!state.collectionShinyPreview;
     return (
         <div className="page-header" id="collection-header-row">
             <div className="page-heading">
                 <h1 className="page-title collection-heading" id="collection-heading"><Breadcrumb /></h1>
-                <p className="page-subtitle">{region ? (region.description || 'Everything in this region.') : 'Your Fakémon, folders, and custom moves, abilities and items.'}</p>
             </div>
             <div className="page-actions collection-header-actions">
                 {/* phones: the regions sidebar is a drawer, opened from here */}
@@ -125,18 +253,6 @@ function Header({ view, layout }: { view: CollectionTab; layout: 'grid' | 'list'
                     aria-expanded={isRegionDrawerOpen()} aria-controls="app-sidebar">
                     <Icon name="map" /><span>{activeRegion?.name || (activeId === NO_REGION ? 'No region' : 'All')}</span><Icon name="chevron-down" className="collection-regions-chev" />
                 </button>
-                <button className="btn btn-secondary btn-icon" type="button" onClick={() => api.toggleCollectionLayout()}
-                    title={isList ? 'Switch to grid view' : 'Switch to list view'} aria-label="Toggle list or grid view" aria-pressed={isList}>
-                    <Icon name={isList ? 'layout-grid' : 'list'} />
-                </button>
-                {view === 'fakemon' && (
-                    <button className={`btn btn-secondary btn-icon collection-shiny-toggle${shiny ? ' active' : ''}`} id="collection-shiny-toggle" type="button"
-                        onClick={() => api.toggleCollectionShinyPreview()} aria-pressed={shiny}
-                        title={shiny ? 'Show normal artwork in your collection' : 'Show shiny artwork in your collection'}
-                        aria-label={shiny ? 'Show normal artwork in collection' : 'Show shiny artwork in collection'}>
-                        <Icon name="sparkles" />
-                    </button>
-                )}
                 <button className="btn btn-secondary" type="button" onClick={() => api.openImportModal()}><Icon name="upload" /><span>Import</span></button>
                 <MenuButton className="btn-secondary" icon="download" label={activeRegion ? `Export ${activeRegion.name}` : 'Export'} items={[
                     ['Export as JSON', () => api.exportCollection()],
@@ -144,8 +260,13 @@ function Header({ view, layout }: { view: CollectionTab; layout: 'grid' | 'list'
                     ['Export as Essentials Mod', () => api.exportCollectionAsEssentialsMod()],
                     ['Export as Plain Text (.zip)', () => api.exportCollectionAsPlainTextZip()]
                 ]} />
+                <button className="btn btn-secondary collection-quick-add" type="button" onClick={openQuickAdd} title="Quick add (N)">
+                    <Icon name="light-bulb" /><span>Quick add</span>
+                </button>
                 <MenuButton className="btn-primary" icon="plus" label="Create" items={[
                     ['New Fakémon', () => api.createNewFakemon()],
+                    ['Quick add (N)', openQuickAdd],
+                    ['Paste a list of names', openBulkPaste],
                     ['New Folder', () => api.createFolder()],
                     ['New Custom Move', () => api.openLibraryEditorSheet('moves')],
                     ['New Custom Ability', () => api.openLibraryEditorSheet('abilities')],
@@ -160,39 +281,60 @@ function Header({ view, layout }: { view: CollectionTab; layout: 'grid' | 'list'
 
 // ---- search and sort ----
 
-function Toolbar({ view, search, sort }: { view: CollectionTab; search: string; sort: { by: string; order: string; options: Array<[string, string]> } }) {
+function Toolbar({ view, search, sort, layout }: { view: CollectionTab; search: string; sort: { by: string; order: string; options: Array<[string, string]> }; layout: Layout }) {
     // the field keeps what's typed itself; the grid follows a moment later
     const [text, setText] = useState(search);
     useEffect(() => { setText(search); }, [search]);
-    const orders: Array<[string, string]> = view === 'fakemon' ? [['desc', 'Descending'], ['asc', 'Ascending']] : [['asc', 'Ascending'], ['desc', 'Descending']];
+    const asc = sort.order === 'asc';
+    const shiny = !!state.collectionShinyPreview;
     return (
         <div className="search-bar collection-toolbar">
-            <input type="text" id="search-input" placeholder={SEARCH_PLACEHOLDER[view]} value={text}
-                onChange={e => { setText(e.target.value); api.setCollectionSearch(e.target.value); }} />
-            <select id="collection-sort-by" aria-label="Sort collection by" value={sort.by} onChange={e => api.changeCollectionSort(e.target.value, sort.order)}>
-                {sort.options.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-            </select>
-            <select id="collection-sort-order" aria-label="Sort direction" value={sort.order} onChange={e => api.changeCollectionSort(sort.by, e.target.value)}>
-                {orders.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-            </select>
+            <label className="collection-search">
+                <Icon name="search" size={15} />
+                <input type="search" id="search-input" placeholder={SEARCH_PLACEHOLDER[view]} value={text} aria-label={SEARCH_PLACEHOLDER[view].replace('...', '')}
+                    onChange={e => { setText(e.target.value); api.setCollectionSearch(e.target.value); }} />
+            </label>
+            <div className="collection-sort">
+                <select id="collection-sort-by" aria-label="Sort by" value={sort.by} onChange={e => api.changeCollectionSort(e.target.value, sort.order)}>
+                    {sort.options.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                </select>
+                <button className="btn btn-secondary btn-icon" id="collection-sort-order" type="button" onClick={() => api.changeCollectionSort(sort.by, asc ? 'desc' : 'asc')}
+                    aria-label={asc ? 'Ascending. Switch to descending' : 'Descending. Switch to ascending'} title={asc ? 'Ascending' : 'Descending'}>
+                    <Icon name={asc ? 'arrow-up' : 'arrow-down'} />
+                </button>
+            </div>
+            <div className="segmented collection-layout" role="group" aria-label="Layout">
+                {([['grid', 'layout-grid', 'Grid'], ['table', 'table-cells', 'Table']] as const).map(([key, icon, label]) => (
+                    <button key={key} type="button" className={layout === key ? 'active' : ''} aria-pressed={layout === key} aria-label={label} title={label}
+                        // the listing fades out, changes layout, and fades back in
+                        onClick={() => { if (layout !== key) fadeSwap(document.getElementById('collection-listing'), () => api.setCollectionLayout(key)); }}>
+                        <Icon name={icon} />
+                    </button>
+                ))}
+            </div>
+            <Presence show={view === 'fakemon'} inline>
+                <button className={`btn btn-secondary collection-shiny-toggle${shiny ? ' active' : ''}`} id="collection-shiny-toggle" type="button"
+                    onClick={() => api.toggleCollectionShinyPreview()} aria-pressed={shiny}
+                    title={shiny ? 'Show normal artwork' : 'Show shiny artwork'}>
+                    <Icon name="sparkles" /><span>Shiny</span>
+                </button>
+            </Presence>
         </div>
     );
 }
 
 // ---- the grid ----
 
-function gridClass(layout: 'grid' | 'list') {
-    return `collection-grid${layout === 'list' ? ' collection-list' : ''}`;
+function SkeletonGrid() {
+    return <div id="collection-grid" className="collection-grid">{Array.from({ length: 8 }, (_, i) => <SkeletonCard key={i} />)}</div>;
 }
 
-function SkeletonGrid({ layout }: { layout: 'grid' | 'list' }) {
-    return <div id="collection-grid" className={gridClass(layout)}>{Array.from({ length: 8 }, (_, i) => <SkeletonCard key={i} />)}</div>;
-}
-
-function TypesGrid({ layout, search }: { layout: 'grid' | 'list'; search: string }) {
+function TypesGrid({ layout, search }: { layout: Layout; search: string }) {
     return (
         <>
-            <div id="collection-grid" className={gridClass(layout)} style={{ display: layout === 'list' ? 'flex' : 'grid' }}><TypeCards search={search} /></div>
+            {layout === 'table'
+                ? <DexTable kind="types"><TypeCards search={search} table /></DexTable>
+                : <div id="collection-grid" className="collection-grid"><TypeCards search={search} /></div>}
             <div id="collection-extra"><TypesAfter search={search} /></div>
         </>
     );
@@ -209,13 +351,22 @@ function ShowAllVanilla({ kind, total }: { kind: string; total: number }) {
     return <VanillaMoreCard total={total} onClick={() => api.showAllRegionVanilla(kind)} />;
 }
 
-function Grid({ layout }: { layout: 'grid' | 'list' }) {
+function Grid({ layout }: { layout: Layout }) {
     const { kind, search, folders, entries } = api.collectionListing();
     const inFolder = (x: { folderId?: string | null }) => !!x.folderId && !search;
     const vanillaPokemon: any[] = kind === 'fakemon' ? regionVanillaPokemon(search) : [];
     const vanillaLibrary = kind !== 'fakemon' ? regionVanillaLibrary(kind, search) : null;
     const nothing = !entries.length && !folders.length && !vanillaPokemon.length && !vanillaLibrary;
-    // an empty collection still gets its "Add new" card; the message is for a search that found nothing
+    // cards arrive when the listing itself changes (folder, a search), not on every edit;
+    // a tab or region change slides the whole listing instead (CollectionPage, TabStage),
+    // and a layout change fades it (Toolbar)
+    const grid = useRef<HTMLDivElement>(null);
+    const listing = `${state.currentFolderId}|${search ? 's' : ''}`;
+    useLayoutEffect(() => {
+        const items = grid.current?.querySelector('#collection-grid tbody') || grid.current?.querySelector('#collection-grid');
+        if (items) staggerIn(Array.from(items.children));
+    }, [listing]);
+    // the "Add new" card leads every listing outside a search; the message is for a search that found nothing
     if (search && nothing) {
         const [title, button, run] = EMPTY[kind];
         return (
@@ -227,17 +378,41 @@ function Grid({ layout }: { layout: 'grid' | 'list' }) {
             </div>
         );
     }
+    // the shelf of ideas and drafts sits on top of the Fakémon, outside folders and searches
+    const shelf = kind === 'fakemon' && !search && !state.currentFolderId ? <UnfinishedShelf table={layout === 'table'} /> : null;
+    const more = vanillaLibrary && vanillaLibrary.shown.length < vanillaLibrary.total;
+    if (layout === 'table') {
+        return (
+            <div ref={grid}>
+                {shelf}
+                <DexTable kind={kind}>
+                    {!search && <AddRow kind={kind} />}
+                    {folders.map(({ folder, count }: any) => <FolderRow key={folder.id} folder={folder} count={count} kind={kind} />)}
+                    {kind === 'fakemon'
+                        ? entries.map((f: any) => <FakemonRow key={f.id} f={f} inFolder={inFolder(f)} />)
+                        : entries.map((item: any) => <LibraryRow key={item.id} kind={kind as LibraryKind} item={item} inFolder={inFolder(item)} />)}
+                    {/* the main-game entries a region brings over, after its own */}
+                    {vanillaPokemon.map(p => <VanillaPokemonRow key={p.id} p={p} />)}
+                    {vanillaLibrary && vanillaLibrary.shown.map(([id, v]: [string, any]) => <VanillaLibraryRow key={id} kind={kind as LibraryKind} id={id} v={v} />)}
+                    {more && <MoreRow kind={kind} total={vanillaLibrary.total} onClick={() => api.showAllRegionVanilla(kind)} />}
+                </DexTable>
+            </div>
+        );
+    }
     return (
-        <div id="collection-grid" className={gridClass(layout)} style={{ display: layout === 'list' ? 'flex' : 'grid' }}>
-            {!search && <AddCard kind={kind} />}
-            {folders.map(({ folder, count }: any) => <FolderCard key={folder.id} folder={folder} count={count} kind={kind} />)}
-            {kind === 'fakemon'
-                ? entries.map((f: any) => <FakemonCard key={f.id} f={f} layout={layout} inFolder={inFolder(f)} />)
-                : entries.map((item: any) => <LibraryCard key={item.id} kind={kind as LibraryKind} item={item} inFolder={inFolder(item)} />)}
-            {/* the main-game entries a region brings over, after its own */}
-            {vanillaPokemon.map(p => <VanillaPokemonCard key={p.id} p={p} layout={layout} />)}
-            {vanillaLibrary && vanillaLibrary.shown.map(([id, v]: [string, any]) => <VanillaLibraryCard key={id} kind={kind as LibraryKind} id={id} v={v} />)}
-            {vanillaLibrary && vanillaLibrary.shown.length < vanillaLibrary.total && <ShowAllVanilla kind={kind} total={vanillaLibrary.total} />}
+        <div ref={grid}>
+            {shelf}
+            <div id="collection-grid" className="collection-grid">
+                {!search && <AddCard kind={kind} />}
+                {folders.map(({ folder, count }: any) => <FolderCard key={folder.id} folder={folder} count={count} kind={kind} />)}
+                {kind === 'fakemon'
+                    ? entries.map((f: any) => <FakemonCard key={f.id} f={f} inFolder={inFolder(f)} />)
+                    : entries.map((item: any) => <LibraryCard key={item.id} kind={kind as LibraryKind} item={item} inFolder={inFolder(item)} />)}
+                {/* the main-game entries a region brings over, after its own */}
+                {vanillaPokemon.map(p => <VanillaPokemonCard key={p.id} p={p} />)}
+                {vanillaLibrary && vanillaLibrary.shown.map(([id, v]: [string, any]) => <VanillaLibraryCard key={id} kind={kind as LibraryKind} id={id} v={v} />)}
+                {more && <ShowAllVanilla kind={kind} total={vanillaLibrary.total} />}
+            </div>
         </div>
     );
 }

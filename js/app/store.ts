@@ -7,7 +7,7 @@
 // per-field subscriptions keeps this impossible to get subtly wrong, and the
 // app is small enough that re-rendering the visible page is cheap.
 
-import { useSyncExternalStore } from 'react';
+import { createContext, useContext, useSyncExternalStore } from 'react';
 
 type Listener = () => void;
 const listeners = new Set<Listener>();
@@ -43,9 +43,43 @@ export function subscribe(fn: Listener): () => void {
     return () => { listeners.delete(fn); };
 }
 
-/** Re-renders the calling component whenever notify() runs; returns the version. */
+// ---- pages off screen keep their last render ----
+// Every page stays mounted. Without this, each keystroke in the editor
+// re-rendered My Collection's whole grid behind the sheet, and every page
+// opened once before (the Community Hub, Settings...) on every change.
+
+/** The page (its view id) the components below belong to; null for the shell. */
+export const PageView = createContext<string | null>(null);
+
+// the editor's hidden board feeds Export as PNG and the quick preview, so the
+// editor always keeps up
+const ALWAYS_LIVE = new Set(['editor-view', 'ability-block-editor-view']);
+
+/** Whether a page is off screen, or under the editor sheet. */
+function offScreen(view: string): boolean {
+    if (ALWAYS_LIVE.has(view)) return false;
+    const page = document.body.dataset.page;
+    if (view !== page) return true;
+    return document.body.classList.contains('editor-sheet-open');
+}
+
+const pausedAt = new Map<string, number>();
+
+/** The version a page sees: the live one, or the one it had when it went off screen. */
+function versionFor(view: string | null): number {
+    if (!view || !offScreen(view)) { if (view) pausedAt.delete(view); return version; }
+    if (!pausedAt.has(view)) pausedAt.set(view, version);
+    return pausedAt.get(view)!;
+}
+
+/**
+ * Re-renders the calling component whenever notify() runs; returns the
+ * version. Inside a page that is off screen it waits, and catches up when
+ * the page shows again (showing a page calls notify()).
+ */
 export function useStore(): number {
-    return useSyncExternalStore(subscribe, () => version);
+    const view = useContext(PageView);
+    return useSyncExternalStore(subscribe, () => versionFor(view));
 }
 
 // ---- pages being opened ----

@@ -8,8 +8,8 @@ import {
     MULT_LABEL, TYPE_ICON_FILES, matchup, overrideFor, typeBackground, typeStrength, typeUserCount
 } from '../../../features/custom-types.ts';
 import { Icon } from '../Icon.tsx';
-import { ActionButton, AddCard, CardActions, ExportButton } from './cards.tsx';
-import { useCardMenus } from './menus.ts';
+import { AddCard, PinMark, cardActions, cardMenu } from './cards.tsx';
+import { AddRow, TypeRow } from './CollectionTable.tsx';
 
 /** The symbol inside a type's emblem: an uploaded icon, the main-game symbol, or its initials. */
 export function TypeIcon({ name, entry }: { name: string; entry?: any }) {
@@ -23,28 +23,32 @@ export function TypeIcon({ name, entry }: { name: string; entry?: any }) {
 
 type TypeActions = { pin: (e: any) => void; edit: () => void; duplicate: (e: any) => void; exportFn: (e: any) => void; remove: (e: any) => void; removeTitle?: string };
 
-function TypeCard({ name, bg, onClick, tag, desc, regionId, entry, pinned, actions, menuKey }: {
+function TypeCard({ name, bg, onClick, tag, desc, regionId, entry, pinned, actions, table }: {
     name: string; bg: string; onClick: () => void; tag?: string; desc?: string; regionId: string | null;
-    entry?: any; pinned: boolean; actions: TypeActions; menuKey: string;
+    entry?: any; pinned: boolean; actions: TypeActions; table: boolean;
 }) {
-    const { actions: openActions } = useCardMenus();
+    const menu = cardMenu(card => ({
+        title: name, subtitle: tag ? `${tag} type` : 'Custom type',
+        items: cardActions(card, {
+            edit: actions.edit, pinned, pin: actions.pin, duplicate: actions.duplicate,
+            exports: [['Export', actions.exportFn]], remove: actions.remove, removeLabel: actions.removeTitle
+        })
+    }), onClick);
     const { strong, weak } = typeStrength(name, regionId);
     const style = bg ? { background: bg } : undefined;
     const cls = `type-${name.toLowerCase()}`;
+    const emblem = <span className={`library-emblem type-emblem ${cls}`} style={style}><TypeIcon name={name} entry={entry} /></span>;
+    if (table) {
+        return <TypeRow name={name} icon={emblem} tag={tag} desc={desc} strong={strong} weak={weak} users={typeUserCount(name)} pinned={pinned} menu={menu} />;
+    }
     return (
-        <div className={`collection-card library-tile type-tile${pinned ? ' pinned' : ''}${openActions === menuKey ? ' actions-open' : ''}`}
-            onClick={onClick} title={desc || undefined}>
-            <CardActions menuKey={menuKey}>
-                <ActionButton icon="pin" title={pinned ? 'Unpin' : 'Pin'} className={pinned ? 'pinned-btn' : ''} onClick={actions.pin} />
-                <ActionButton icon="pencil" title="Edit" onClick={actions.edit} />
-                <ActionButton icon="copy" title="Duplicate" onClick={actions.duplicate} />
-                <ExportButton menuKey={menuKey} formats={[['Export', actions.exportFn]]} />
-                <ActionButton icon="trash-2" title={actions.removeTitle || 'Delete'} className="card-delete-btn" onClick={actions.remove} />
-            </CardActions>
+        <div className={`collection-card library-tile type-tile${pinned ? ' pinned' : ''}`}
+            title={desc || undefined} aria-label={`${name} type`} {...menu}>
             <div className="card-art">
-                <span className={`library-emblem type-emblem ${cls}`} style={style}><TypeIcon name={name} entry={entry} /></span>
+                {emblem}
                 <span className="card-number library-tile-corner">{typeUserCount(name)} Fakémon</span>
                 {tag && <span className="vanilla-card-tag">{tag}</span>}
+                {pinned && <PinMark />}
             </div>
             <div className="card-body">
                 <div className="card-name">{name}</div>
@@ -57,8 +61,8 @@ function TypeCard({ name, bg, onClick, tag, desc, regionId, entry, pinned, actio
 
 const byPin = (a: { pinned?: boolean }, b: { pinned?: boolean }) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0);
 
-/** The cards, for the collection grid. */
-export function TypeCards({ search }: { search: string }) {
+/** The cards for the collection grid, or the rows for its table. */
+export function TypeCards({ search, table = false }: { search: string; table?: boolean }) {
     const { list, vanilla, regionId, vanillaCards } = api.typesTabArgs();
     const q = search.trim().toLowerCase();
     const match = (n: string) => !q || n.toLowerCase().includes(q);
@@ -68,9 +72,9 @@ export function TypeCards({ search }: { search: string }) {
         .sort(byPin);
     return (
         <>
-            {!q && <AddCard kind="types" />}
+            {!q && (table ? <AddRow kind="types" /> : <AddCard kind="types" />)}
             {custom.map(t => (
-                <TypeCard key={t.id} menuKey={`type:${t.id}`} name={t.name} bg={typeBackground(t)} desc={t.desc} regionId={regionId} entry={t} pinned={!!t.pinned}
+                <TypeCard key={t.id} table={table} name={t.name} bg={typeBackground(t)} desc={t.desc} regionId={regionId} entry={t} pinned={!!t.pinned}
                     onClick={() => api.openCustomTypeEditor(t.id)}
                     actions={{
                         pin: e => api.toggleCustomTypePin(t.id, e), edit: () => api.openCustomTypeEditor(t.id),
@@ -81,7 +85,7 @@ export function TypeCards({ search }: { search: string }) {
             {mainGame.map(({ name, pinned }) => {
                 const o = overrideFor(name, regionId);
                 return (
-                    <TypeCard key={`vanilla:${name}`} menuKey={`vanilla-type:${name}`} name={name} bg={o ? typeBackground(o) : ''} regionId={regionId} entry={o} pinned={pinned}
+                    <TypeCard key={`vanilla:${name}`} table={table} name={name} bg={o ? typeBackground(o) : ''} regionId={regionId} entry={o} pinned={pinned}
                         tag={o ? 'Edited' : 'Main games'} desc={o?.desc || ''}
                         onClick={() => api.editVanillaType(name)}
                         actions={{

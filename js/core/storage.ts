@@ -657,6 +657,11 @@ function normalizeCollections() {
                 }),
                 dexEntry1: form.dexEntry1.trim(),
                 dexEntry2: form.dexEntry2.trim(),
+                // the notebook (js/features/notebook.ts); private, never published
+                status: form.status,
+                ...(form.notes.trim() ? { notes: form.notes } : {}),
+                ...(form.tags.length ? { tags: [...form.tags] } : {}),
+                ...(form.doodles.length ? { doodles: form.doodles.map(d => ({ ...d })) } : {}),
                 // unit-suffixed ('3.5 ft'), otherwise a foot/pound value reloads
                 // as metres/kilograms and silently changes the Fakemon's size
                 height: heightDisplay(),
@@ -684,6 +689,11 @@ function normalizeCollections() {
                 shinyArtwork: state.shinyArtworkData,
                 cry: state.cryData,
                 artCredit: state.artCredit,
+                shinyArtCredit: state.shinyArtCredit || null,
+                artDescription: state.artDescription || null,
+                shinyArtDescription: state.shinyArtDescription || null,
+                // only when there are some, so plain records stay as they were
+                ...(state.artSets?.length ? { artSets: JSON.parse(JSON.stringify(state.artSets)) } : {}),
                 evolutionGraph: state.evolutionGraph ? JSON.parse(JSON.stringify(state.evolutionGraph)) : null,
                 evolutionStage: state.evolutionGraph && typeof api.calculateEvolutionStages === 'function' ? (api.calculateEvolutionStages(state.evolutionGraph)[state.editingId ? `fakemon:${state.editingId}` : 'current:fakemon'] || 1) : 1,
                 createdAt: state.editingId ? (state.fakemonDB.find(f => f.id === state.editingId)?.createdAt || Date.now()) : Date.now(),

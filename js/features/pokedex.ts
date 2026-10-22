@@ -8,6 +8,7 @@ import { closeCardMenus } from '../app/components/collection/menus.ts';
 import { cachedFetch } from '../core/net-cache.ts';
 import { eggGroupsFromText, genderFromText, setForm, STAT_KEYS, type StatKey } from '../editor/draft.ts';
 import type { CollectionTab } from '../app/types.ts';
+import { matchesSearch } from './notebook.ts';
 // PokeAPI never rewrites a species entry, so a month is conservative.
 const POKEAPI_CACHE = { cacheName: 'woogidex-pokeapi-v1', maxAgeMs: 30 * 86400000 };
 
@@ -363,7 +364,7 @@ const POKEAPI_CACHE = { cacheName: 'woogidex-pokeapi-v1', maxAgeMs: 30 * 8640000
         function getEditorTab() { return editorTab; }
 
         function switchTab(_tabEl, tabName) {
-            editorTab = ['basic', 'stats', 'moves', 'analysis', 'preview'].includes(tabName) ? tabName : 'basic';
+            editorTab = ['basic', 'art', 'notes', 'stats', 'moves', 'analysis', 'preview'].includes(tabName) ? tabName : 'basic';
             notify();
             if (editorTab === 'stats') {
                 setTimeout(() => api.renderEvolutionBoard?.(), 10);
@@ -592,21 +593,31 @@ const POKEAPI_CACHE = { cacheName: 'woogidex-pokeapi-v1', maxAgeMs: 30 * 8640000
         // false until storage has loaded and the first render ran: the page shows skeleton cards
         let collectionReady = false;
 
-        // Grid or list is remembered per tab: Fakémon read best as art, the
-        // libraries as rows, so those start as lists.
+        // Grid or table is remembered per tab: Fakémon read best as art, the
+        // libraries as rows, so those start as tables. The old list layout is
+        // the table now.
         const COLLECTION_LAYOUT_KEY = 'woogidex.collection.layout.v2';
-        const DEFAULT_LAYOUTS = { fakemon: 'grid', moves: 'list', abilities: 'list', items: 'list', types: 'list' };
+        const DEFAULT_LAYOUTS = { fakemon: 'grid', moves: 'table', abilities: 'table', items: 'table', types: 'table' };
         function readLayouts() {
             try { return { ...DEFAULT_LAYOUTS, ...(JSON.parse(localStorage.getItem(COLLECTION_LAYOUT_KEY) || '{}') || {}) }; }
             catch { return { ...DEFAULT_LAYOUTS }; }
         }
-        function layoutFor(view) { return readLayouts()[view] === 'list' ? 'list' : 'grid'; }
+        function layoutFor(view) {
+            const saved = readLayouts()[view];
+            return saved === 'list' || saved === 'table' ? 'table' : 'grid';
+        }
         let collectionLayout = layoutFor('fakemon');
 
-        function toggleCollectionLayout() {
-            collectionLayout = collectionLayout === 'list' ? 'grid' : 'list';
+        function setCollectionLayout(layout) {
+            const next = layout === 'table' || layout === 'list' ? 'table' : 'grid';
+            if (next === collectionLayout) return;
+            collectionLayout = next;
             try { localStorage.setItem(COLLECTION_LAYOUT_KEY, JSON.stringify({ ...readLayouts(), [collectionView]: collectionLayout })); } catch {}
             renderCollection();
+        }
+
+        function toggleCollectionLayout() {
+            setCollectionLayout(collectionLayout === 'table' ? 'grid' : 'table');
         }
 
         const COLLECTION_SORT_KEY = 'woogidex.collection.sort.v2';
@@ -732,8 +743,9 @@ const POKEAPI_CACHE = { cacheName: 'woogidex-pokeapi-v1', maxAgeMs: 30 * 8640000
 
             let entries;
             if (kind === 'fakemon') {
+                // name, species, types, number, notes and tags; "#tag" and "is:idea" too (js/features/notebook.ts)
                 entries = search
-                    ? own.filter(f => [f.name, f.species, f.type1, f.type2].some(v => v && String(v).toLowerCase().includes(search)))
+                    ? own.filter(f => matchesSearch(f, search))
                     : atFolderLevel(own, 'fakemon');
                 if (api.getActiveRegionId?.()) entries = entries.filter(f => api.fakemonInActiveRegion(f));
                 entries = sortFakemonList(entries, sort.by, sort.order);
@@ -810,6 +822,6 @@ export {
     moveFakemonToFolder, moveFakemonOutOfFolder, moveLibraryItemToFolder, moveLibraryItemOutOfFolder,
     deleteCustomLibraryItem, toggleCustomLibraryPin, duplicateCustomLibraryItem,
     handleCardDragStart, handleCardDragEnd, handleLibraryCardDragStart, dropOnFolder, getDraggedFakemonId, getDraggedLibraryItem,
-    sortFakemonList, getFakemonBST, changeCollectionSort, toggleCollectionLayout, openLibraryEditorSheet,
+    sortFakemonList, getFakemonBST, changeCollectionSort, toggleCollectionLayout, setCollectionLayout, openLibraryEditorSheet,
     startNewFakemonEditor, openPokemonTemplateChooser, getPokemonTemplateEntries, templateMatches, usePokemonTemplate, getPokemonTemplateSprite
 };

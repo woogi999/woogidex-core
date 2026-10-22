@@ -109,8 +109,28 @@ export const ext = {
     tourFor: [] as Array<() => string | null>
 };
 
+// Every register function replaces an entry with the same key instead of
+// adding a second one. A module that runs again (a hot reload in
+// development, a second copy of the app) then cannot double the header,
+// the pages or Settings.
+function put<T>(list: T[], item: T, same: (a: T) => boolean): void {
+    const at = list.findIndex(same);
+    if (at >= 0) list[at] = item; else list.push(item);
+}
+
+/**
+ * The components in a slot list, one per component name (the newest wins).
+ * A host pushes straight into ext.headerActions and the like, so the header
+ * reads them through this.
+ */
+export function slots<C extends ComponentType<any>>(list: C[]): C[] {
+    const byName = new Map<string, C>();
+    list.forEach((c, i) => byName.set(c.displayName || c.name || `#${i}`, c));
+    return [...byName.values()];
+}
+
 export function registerPage(spec: PageSpec): void {
-    ext.pages.push(spec);
+    put(ext.pages, spec, p => p.view === spec.view);
     // a host page needs a container; Core's own are in index.html
     const make = () => {
         if (document.getElementById(spec.view)) return;
@@ -124,7 +144,7 @@ export function registerPage(spec: PageSpec): void {
 }
 
 export function registerNav(item: NavItem): void {
-    ext.nav.push(item);
+    put(ext.nav, item, n => n.page === item.page);
     ext.nav.sort((a, b) => a.order - b.order);
 }
 
@@ -133,10 +153,10 @@ export function registerRoute(name: string, spec: RouteSpec): void {
 }
 
 export function registerSettingsSection(section: SettingsSection): void {
-    ext.settingsSections.push(section);
+    put(ext.settingsSections, section, s => s.key === section.key);
     ext.settingsSections.sort((a, b) => a.order - b.order);
 }
 
 export function registerSettingsGroup(section: string, group: SettingsGroup, before?: string): void {
-    ext.settingsGroups.push({ section, group, before });
+    put(ext.settingsGroups, { section, group, before }, g => g.section === section && g.group.id === group.id);
 }

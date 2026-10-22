@@ -7,6 +7,7 @@ import { api, state } from '../../../core/app.ts';
 import { NO_REGION, REGION_COLORS, countIn, getRegionPage } from '../../../features/regions.ts';
 import { Icon } from '../Icon.tsx';
 import { useStore } from '../../store.ts';
+import { Presence } from '../Presence.tsx';
 
 function Row({ id, name, mark, count, active, editable, droppable }: {
     id: string | null; name: string; mark: ReactNode; count: number; active: boolean; editable?: boolean; droppable?: boolean;
@@ -52,12 +53,10 @@ export function RegionSidebar() {
                     <div key={r.id} style={{ display: 'contents' }}>
                         <Row id={r.id} name={r.name} mark={<Dot color={r.color || REGION_COLORS[0]} />} count={countIn(r.id)} active={isActive && !page} editable droppable />
                         {/* the way into a region's own pages, under the region you're in */}
-                        {isActive && (
-                            <>
-                                <button type="button" className={`region-subrow${page === 'details' ? ' active' : ''}`} onClick={() => api.openRegionDetails()}><Icon name="book-open" /><span>Region details</span></button>
-                                <button type="button" className={`region-subrow${page === 'analytics' ? ' active' : ''}`} onClick={() => api.openRegionAnalytics()}><Icon name="chart-bar" /><span>Analytics</span></button>
-                            </>
-                        )}
+                        <Presence show={isActive} className="region-subrows">
+                            <button type="button" className={`region-subrow${page === 'details' ? ' active' : ''}`} onClick={() => api.openRegionDetails()}><Icon name="book-open" /><span>Region details</span></button>
+                            <button type="button" className={`region-subrow${page === 'analytics' ? ' active' : ''}`} onClick={() => api.openRegionAnalytics()}><Icon name="chart-bar" /><span>Analytics</span></button>
+                        </Presence>
                     </div>
                 );
             })}

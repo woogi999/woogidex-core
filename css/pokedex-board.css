@@ -79,7 +79,8 @@
 .board-abilities { grid-area: abil; min-width: 0; }
 .board-dex { grid-area: dex; min-width: 0; }
 
-.board-artwork-left {
+.board-artwork-left { display: flex; flex-direction: column; gap: var(--sp-2); min-width: 0; }
+.board-artwork-frame {
     position: relative;
     aspect-ratio: 1;
     width: 100%;
@@ -102,8 +103,8 @@
     opacity: 0; pointer-events: none;
     transition: opacity .16s ease;
 }
-.board-artwork-left:hover .board-artwork-mode,
-.board-artwork-left:focus-within .board-artwork-mode { opacity: 1; pointer-events: auto; }
+.board-artwork-frame:hover .board-artwork-mode,
+.board-artwork-frame:focus-within .board-artwork-mode { opacity: 1; pointer-events: auto; }
 .board-artwork-shiny-toggle {
     width: 32px; height: 32px; padding: 0;
     display: flex; align-items: center; justify-content: center;
@@ -117,6 +118,38 @@
 .board-artwork-shiny-toggle:hover { color: var(--text-primary); background: var(--bg-panel); }
 .board-artwork-shiny-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .board-artwork-shiny-toggle.active { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+
+/* pixel art (sprites, icons) keeps its hard edges when scaled up */
+.board-art-pixel img, .board-art-pixel canvas { image-rendering: pixelated; }
+.board-art-icon .board-artwork-image { padding: 30%; }
+/* set switcher, concept thumbnails and credits under the frame */
+.board-art-sets, .board-art-thumbs { display: flex; flex-wrap: wrap; gap: 4px; }
+.board-art-set {
+    appearance: none; border: 1px solid var(--border); border-radius: 999px;
+    background: var(--bg-card); color: var(--text-secondary);
+    font: 600 11.5px/1 'Exo 2', sans-serif; padding: 5px 9px; cursor: pointer;
+}
+.board-art-set:hover { color: var(--text-primary); background: var(--bg-panel); }
+.board-art-set.active { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+.board-art-set:focus-visible, .board-art-thumb:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.board-art-thumb {
+    appearance: none; width: 40px; height: 40px; padding: 3px; cursor: pointer;
+    border: 1px solid var(--border); border-radius: 8px; background: var(--bg-panel);
+}
+.board-art-thumb.active { border-color: var(--accent); }
+.board-art-thumb img, .board-art-thumb canvas { width: 100%; height: 100%; object-fit: contain; display: block; }
+.board-artwork-credit {
+    display: flex; align-items: flex-start; gap: 6px; margin: 0;
+    font-size: 12px; line-height: 1.4; color: var(--text-secondary); overflow-wrap: anywhere;
+}
+.board-artwork-credit svg { flex: 0 0 auto; margin-top: 2px; color: var(--text-muted); }
+.board-artwork-credit a { color: var(--accent); }
+.board-artwork-description { margin: 0; font-size: 12px; line-height: 1.5; color: var(--text-secondary); white-space: pre-line; }
+.board-artwork-left .board-artwork-image { animation: board-art-swap var(--dur-slow) var(--ease-out) both; }
+@keyframes board-art-swap { from { opacity: 0; transform: scale(.97); filter: blur(4px); } }
+.reduce-motion .board-artwork-left .board-artwork-image { animation-name: board-art-fade; }
+@keyframes board-art-fade { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .board-artwork-left .board-artwork-image { animation-name: board-art-fade; } }
 
 /* profile: label-over-value pairs */
 .board-facts-grid {

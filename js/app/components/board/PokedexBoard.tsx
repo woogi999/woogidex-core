@@ -8,9 +8,10 @@
 // Community Hub shields it), the evolution chain, the forme tabs, and a line
 // under the title (who published it).
 
-import type { ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { api } from '../../../core/app.ts';
 import { Icon } from '../Icon.tsx';
+import { ART_KINDS, setPreviewArtIndex, setPreviewArtSet, type ArtImage, type ArtKind } from '../../../editor/art-sets.ts';
 
 export interface BoardModel {
     name: string; species: string; type1: string; type2: string; number: string;
@@ -24,20 +25,128 @@ export interface BoardModel {
     sets: Array<{ name: string; text: string }>;
     artwork: string; shinyArtwork: string; cry: string; artCredit: string;
     artMode: 'normal' | 'shiny';
+    /** every artwork set with a picture in it, the main one first (js/editor/art-sets.ts) */
+    gallery: Array<{ id: string; kind: ArtKind; title: string; images: ArtImage[] }>;
+    /** the set shown, and which of its concept images */
+    artSet: string;
+    artIndex: number;
 }
 
 const STAT_ROWS: Array<[keyof BoardModel['stats'], string]> = [['hp', 'HP'], ['atk', 'Atk'], ['def', 'Def'], ['spa', 'SpA'], ['spd', 'SpD'], ['spe', 'Spe']];
 const CATEGORY_TITLE: Record<string, string> = { physical: 'Physical', special: 'Special', status: 'Status' };
 
-/** The credit text, with a URL in it made a link. */
-function ArtCredit({ credit }: { credit: string }) {
+/** One credit, with a URL in it made a link. */
+function CreditText({ credit }: { credit: string }) {
     const m = credit.match(/(https?:\/\/[^\s]+)/i);
-    if (!m) return <div className="board-artwork-credit">{credit}</div>;
+    if (!m) return <>{credit}</>;
     const url = m[1];
-    const label = credit.replace(url, '').trim() || 'link';
+    // the words around the link stay text; the link shows its own address
+    const label = url.replace(/^https?:\/\//i, '').replace(/\/$/, '');
+    return <>{credit.slice(0, m.index)}<a href={url} target="_blank" rel="noopener noreferrer">{label}</a>{credit.slice(m.index! + url.length)}</>;
+}
+
+/** The credits of what is on screen, each one time. */
+function ArtCredits({ images }: { images: ArtImage[] }) {
+    const credits = [...new Set(images.map(i => i.credit || '').filter(Boolean))];
+    if (!credits.length) return null;
     return (
-        <div className="board-artwork-credit">
-            {credit.slice(0, m.index)}<a href={url} target="_blank" rel="noopener noreferrer">{label}</a>
+        <p className="board-artwork-credit">
+            <Icon name="paint-brush" size={13} />
+            <span>{credits.map((c, i) => <span key={c}>{i > 0 && ' · '}<CreditText credit={c} /></span>)}</span>
+        </p>
+    );
+}
+
+const SHINY_OF: Record<string, string> = { normal: 'shiny', front: 'shinyFront', back: 'shinyBack' };
+
+/**
+ * The artwork corner: the chosen set, a shiny and a cry button, the set
+ * switcher when there is more than one set, and the credits of what shows.
+ */
+function BoardArt({ m, renderArt, onToggleShiny }: { m: BoardModel; renderArt?: (src: string, alt: string) => ReactNode; onToggleShiny: () => void }) {
+    const set = m.gallery.find(g => g.id === m.artSet) || m.gallery[0];
+    const kind: ArtKind = set?.kind || 'official';
+    const hasShiny = !!set?.images.some(i => Object.values(SHINY_OF).includes(i.slot));
+    const shiny = m.artMode === 'shiny' && hasShiny;
+    const pick = (slot: string) => (shiny && set?.images.find(i => i.slot === SHINY_OF[slot])) || set?.images.find(i => i.slot === slot);
+    const draw = (img: ArtImage | undefined, alt: string) => img ? (renderArt ? renderArt(img.src, alt) : <img src={img.src} alt={alt} />) : null;
+    const index = set ? Math.min(m.artIndex, set.images.length - 1) : 0;
+    // a sprite set shows one side at a time; the turn button flips it
+    const [backSide, setBackSide] = useState(false);
+    useEffect(() => { setBackSide(false); }, [set?.id]);
+    const hasBothSides = kind === 'sprites' && !!pick('front') && !!pick('back');
+    const side = kind !== 'sprites' ? '' : (backSide && pick('back')) || !pick('front') ? 'back' : 'front';
+    let shown: ArtImage[] = [];
+    let body: ReactNode;
+    if (!set) {
+        body = <img className="no-art-placeholder" src="assets/no_art_placeholder.png" alt="No artwork" />;
+    } else if (kind === 'sprites') {
+        const img = pick(side);
+        shown = img ? [img] : [];
+        body = draw(img, `${m.name}${shiny ? ' shiny' : ''} ${side} sprite`);
+    } else if (kind === 'concept') {
+        shown = set.images[index] ? [set.images[index]] : [];
+        body = draw(set.images[index], `${m.name} concept art`);
+    } else if (kind === 'icon') {
+        const img = pick('icon');
+        shown = img ? [img] : [];
+        body = draw(img, `${m.name} icon`);
+    } else {
+        // the main set can hold only a shiny: show it rather than an empty frame
+        const img = pick('normal') || set.images[0];
+        shown = img ? [img] : [];
+        body = draw(img, `${m.name}${shiny ? ' shiny' : ''} artwork`);
+    }
+    return (
+        <div className="board-artwork-left">
+            <div className={`board-artwork-frame board-art-${kind}`}>
+                {(hasShiny || m.cry || hasBothSides) && (
+                    <div className="board-artwork-mode" aria-label="Preview controls">
+                        {hasShiny && (
+                            <button type="button" className={`collection-shiny-toggle board-artwork-shiny-toggle${shiny ? ' active' : ''}`} aria-pressed={shiny}
+                                title={shiny ? 'Show normal' : 'Show shiny'} aria-label={shiny ? 'Show normal' : 'Show shiny'}
+                                onClick={e => { e.preventDefault(); e.stopPropagation(); onToggleShiny(); }}>
+                                <Icon name="sparkles" />
+                            </button>
+                        )}
+                        {hasBothSides && (
+                            <button type="button" className={`collection-shiny-toggle board-artwork-shiny-toggle${side === 'back' ? ' active' : ''}`} aria-pressed={side === 'back'}
+                                title={side === 'back' ? 'Show the front' : 'Show the back'} aria-label={side === 'back' ? 'Show the front sprite' : 'Show the back sprite'}
+                                onClick={e => { e.preventDefault(); e.stopPropagation(); setBackSide(b => !b); }}>
+                                <Icon name="arrow-path" />
+                            </button>
+                        )}
+                        {m.cry && (
+                            <button type="button" className="collection-shiny-toggle board-artwork-shiny-toggle board-artwork-cry-toggle" title="Play Pokemon cry" aria-label="Play Pokemon cry"
+                                onClick={e => api.playPokemonCry(e)}>
+                                <Icon name="volume-2" />
+                            </button>
+                        )}
+                    </div>
+                )}
+                {/* keyed by what shows, so a switch replays the crossfade (css/pokedex-board.css) */}
+                <div key={`${set?.id}:${shiny}:${index}:${side}`} className={`board-artwork-image${ART_KINDS[kind].pixel ? ' board-art-pixel' : ''}`}>{body}</div>
+            </div>
+            {kind === 'concept' && set && set.images.length > 1 && (
+                <div className="board-art-thumbs" role="group" aria-label="Concept art">
+                    {set.images.map((img, i) => (
+                        <button key={i} type="button" className={`board-art-thumb${i === index ? ' active' : ''}`}
+                            aria-label={`Concept art ${i + 1}`} aria-pressed={i === index} onClick={() => setPreviewArtIndex(i)}>
+                            {draw(img, '')}
+                        </button>
+                    ))}
+                </div>
+            )}
+            {m.gallery.length > 1 && (
+                <div className="board-art-sets" role="group" aria-label="Artwork sets">
+                    {m.gallery.map(g => (
+                        <button key={g.id} type="button" className={`board-art-set${g.id === set?.id ? ' active' : ''}`} aria-pressed={g.id === set?.id}
+                            onClick={() => setPreviewArtSet(g.id)}>{g.title}</button>
+                    ))}
+                </div>
+            )}
+            <ArtCredits images={shown} />
+            {shown.filter(i => i.description).map(i => <p key={i.slot + i.src.length} className="board-artwork-description">{i.description}</p>)}
         </div>
     );
 }
@@ -58,9 +167,6 @@ export function PokedexBoard({ model: m, id, renderArt, underTitle, formeTabs, e
     onMove?: (name: string) => void;
     onCustomMove?: (index: number, name: string) => void;
 }) {
-    const shiny = m.artMode === 'shiny';
-    const art = shiny ? m.shinyArtwork : m.artwork;
-    const alt = `${m.name}${shiny ? ' shiny' : ''} artwork`;
     const hasMoves = m.moves.physical.length + m.moves.special.length + m.moves.status.length + m.customMoves.length > 0;
     const moveClick = onMove || ((name: string) => api.showMoveDetail(name));
     return (
@@ -77,31 +183,7 @@ export function PokedexBoard({ model: m, id, renderArt, underTitle, formeTabs, e
             </header>
 
             <div className="board-main">
-                <div className="board-artwork-left">
-                    {(m.shinyArtwork || m.cry) && (
-                        <div className="board-artwork-mode" aria-label="Preview controls">
-                            {m.shinyArtwork && (
-                                <button type="button" className={`collection-shiny-toggle board-artwork-shiny-toggle${shiny ? ' active' : ''}`} aria-pressed={shiny}
-                                    title={shiny ? 'Show normal artwork' : 'Show shiny artwork'} aria-label={shiny ? 'Show normal artwork' : 'Show shiny artwork'}
-                                    onClick={e => { e.preventDefault(); e.stopPropagation(); onToggleShiny(); }}>
-                                    <Icon name="sparkles" />
-                                </button>
-                            )}
-                            {m.cry && (
-                                <button type="button" className="collection-shiny-toggle board-artwork-shiny-toggle board-artwork-cry-toggle" title="Play Pokemon cry" aria-label="Play Pokemon cry"
-                                    onClick={e => api.playPokemonCry(e)}>
-                                    <Icon name="volume-2" />
-                                </button>
-                            )}
-                        </div>
-                    )}
-                    <div className="board-artwork-image">
-                        {art
-                            ? (renderArt ? renderArt(art, alt) : <img src={art} alt={alt} />)
-                            : shiny ? <span className="placeholder">Shiny</span> : <img className="no-art-placeholder" src="assets/no_art_placeholder.png" alt="No artwork" />}
-                    </div>
-                    {m.artCredit && <ArtCredit credit={m.artCredit} />}
-                </div>
+                <BoardArt m={m} renderArt={renderArt} onToggleShiny={onToggleShiny} />
                 <section className="board-block board-facts">
                     <h3 className="board-section-title">Profile</h3>
                     {m.facts.length > 0 && (

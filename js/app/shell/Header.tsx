@@ -3,8 +3,10 @@
 // icon-only on narrow screens; each carries its name in title/aria-label.
 // A host adds tabs, buttons and menu rows (js/core/extend.ts).
 
+import { useLayoutEffect, useRef } from 'react';
 import { api } from '../../core/app.ts';
-import { ext, registerNav } from '../../core/extend.ts';
+import { navInk } from '../../core/motion.ts';
+import { ext, registerNav, slots } from '../../core/extend.ts';
 import { Icon } from '../components/Icon.tsx';
 import { useClickAway } from '../components/editor/fields.tsx';
 import { notify, useStore } from '../store.ts';
@@ -37,15 +39,29 @@ export function Header() {
     const page = document.body.dataset.page || '';
     // a page can light up another page's tab (a post is still "in" Community)
     const section = ext.nav.find(n => n.alsoFor?.includes(page))?.page || page;
+    // one marker slides from the old tab to the new one (js/core/motion.ts)
+    const nav = useRef<HTMLElement>(null);
+    const shown = useRef<string | null>(null);
+    useLayoutEffect(() => {
+        const from = shown.current;
+        shown.current = section;
+        navInk(nav.current, from !== null && from !== section);
+    }, [section]);
+    useLayoutEffect(() => {
+        const keep = () => navInk(nav.current, false);
+        window.addEventListener('resize', keep);
+        return () => window.removeEventListener('resize', keep);
+    }, []);
     return (
         <>
             <div className="header-left">
                 <button className="logo logo-button" type="button" onClick={() => api.showLanding()} aria-label="Woogidex home" title="Woogidex">
                     <img src="assets/woogidex_logo.png" alt="Woogidex" width="95" height="32" />
                 </button>
-                {ext.headerLeft.map((Slot, i) => <Slot key={i} />)}
+                {slots(ext.headerLeft).map((Slot, i) => <Slot key={i} />)}
             </div>
-            <nav className="header-nav" aria-label="Main navigation">
+            <nav className="header-nav" aria-label="Main navigation" ref={nav}>
+                <span className="header-nav-ink" aria-hidden="true" />
                 {ext.nav.map(n => {
                     const badge = n.badge?.() || 0;
                     return (
@@ -58,7 +74,7 @@ export function Header() {
                 })}
             </nav>
             <div className="header-actions">
-                {ext.headerActions.map((Slot, i) => <Slot key={i} />)}
+                {slots(ext.headerActions).map((Slot, i) => <Slot key={i} />)}
                 <AccountMenu />
             </div>
         </>
@@ -83,16 +99,16 @@ function AccountMenu() {
             </button>
             {open && (
                 <div className="header-profile-popover">
-                    {ext.accountMenuTop.map((Slot, i) => <Slot key={i} close={close} />)}
+                    {slots(ext.accountMenuTop).map((Slot, i) => <Slot key={i} close={close} />)}
                     <button type="button" className="header-profile-popover-item" onClick={then(() => api.openSettings())}><Icon name="settings" /><span>Settings</span></button>
-                    {ext.accountMenuItems.map((Slot, i) => <Slot key={i} close={close} />)}
+                    {slots(ext.accountMenuItems).map((Slot, i) => <Slot key={i} close={close} />)}
                     {/* a switch, not a one-shot button, so it reads as a setting and shows which theme is on */}
                     <label className="header-profile-popover-item header-theme-row">
                         <Icon name="moon" /><span>Dark mode</span>
                         <input className="header-theme-input" type="checkbox" role="switch" checked={!!api.isDarkModeEnabled()} onChange={() => api.toggleDarkMode()} />
                         <span className="header-theme-switch" aria-hidden="true" />
                     </label>
-                    {ext.accountMenuBottom.map((Slot, i) => <Slot key={i} close={close} />)}
+                    {slots(ext.accountMenuBottom).map((Slot, i) => <Slot key={i} close={close} />)}
                 </div>
             )}
         </div>

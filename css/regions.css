@@ -333,28 +333,46 @@
 .type-gradient-angle-value { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 13px; min-width: 40px; text-align: right; }
 
 /* ==================== region analytics ==================== */
-.an-head { display: flex; justify-content: space-between; align-items: flex-end; gap: var(--sp-4); flex-wrap: wrap; margin-bottom: var(--sp-5); }
+.an-head { display: flex; justify-content: space-between; align-items: flex-end; gap: var(--sp-4); flex-wrap: wrap; margin-bottom: var(--sp-4); }
+/* the three sections: one outline, the open one filled */
+.an-tabs { display: inline-flex; padding: 2px; gap: 2px; border: 1px solid var(--border-strong); border-radius: var(--ctl-r); background: var(--bg-card); }
+.an-tabs button {
+    height: calc(var(--ctl-h) - 6px); padding: 0 var(--sp-4); border: 0; border-radius: 6px;
+    background: transparent; color: var(--text-secondary); font: 600 13px 'Exo 2', sans-serif; cursor: pointer;
+}
+.an-tabs button:hover { color: var(--text-primary); }
+.an-tabs button.active { background: var(--bg-panel); color: var(--text-primary); }
+.an-tabs button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+/* the headline numbers: one panel, cells split by hairlines */
+.an-kpis {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    margin-bottom: var(--sp-4); overflow: hidden;
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--panel-r);
+}
+.an-kpis .an-stat { padding: var(--sp-3) var(--sp-4); background: transparent; border: 0; border-radius: 0; box-shadow: -1px 0 0 var(--border-light), 0 -1px 0 var(--border-light); }
+.an-kpis .an-stat strong { font-size: 22px; }
 .an-head h2 { font-size: 26px; font-weight: 800; }
 .an-head p { margin-top: 2px; font-size: 14px; color: var(--text-secondary); }
 .an-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--sp-3); margin-bottom: var(--sp-5); }
 .an-stats-small { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin-bottom: var(--sp-4); }
-.an-stat { display: flex; flex-direction: column; gap: 2px; padding: var(--sp-4); background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--card-r); }
+.an-stat { display: flex; flex-direction: column; gap: 2px; padding: var(--sp-3) var(--sp-4); background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--card-r); }
 .an-stats-small .an-stat { background: var(--bg-panel); border: 0; }
 .an-stat-label { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); }
 .an-stat strong { font-size: 24px; font-weight: 800; font-variant-numeric: tabular-nums; }
 .an-stat small { font-size: 12px; color: var(--text-muted); }
-.an-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-4); }
-.an-card { padding: var(--sp-5); background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--panel-r); min-width: 0; }
+/* cards keep their own height: a short one does not stretch to its neighbour */
+.an-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-3); align-items: start; }
+.an-card { padding: var(--sp-4); background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--panel-r); min-width: 0; }
 .an-card.an-wide { grid-column: 1 / -1; }
-.an-card > header { margin-bottom: var(--sp-4); }
+.an-card > header { margin-bottom: var(--sp-3); }
 .an-card h3 { font-size: 16px; font-weight: 800; }
-.an-card > header p { margin-top: 4px; font-size: 13px; line-height: 1.5; color: var(--text-secondary); }
+.an-card > header p { margin-top: 2px; font-size: 12.5px; line-height: 1.45; color: var(--text-secondary); }
 .an-sub { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); margin-bottom: var(--sp-2); }
-.an-bars { display: flex; flex-direction: column; gap: 6px; }
-.an-bar-row { display: grid; grid-template-columns: minmax(80px, 150px) minmax(0, 1fr) 56px; align-items: center; gap: var(--sp-3); font-size: 13px; }
+.an-bars { display: flex; flex-direction: column; gap: 5px; }
+.an-bar-row { display: grid; grid-template-columns: minmax(72px, 128px) minmax(0, 1fr) 44px; align-items: center; gap: var(--sp-3); font-size: 13px; }
 .an-bar-label { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .an-bar-label .type-badge { min-width: 72px; text-align: center; font-size: 11px; }
-.an-bar-track { display: flex; height: 12px; border-radius: 999px; background: var(--bg-panel); overflow: hidden; }
+.an-bar-track { display: flex; height: 10px; border-radius: 999px; background: var(--bg-panel); overflow: hidden; }
 /* the accent is only for bars with no type: .type-* (css/controls.css) comes
    earlier in the cascade, so a plain default here used to paint over every
    type bar except ones with a region-specific (higher-specificity) rule */
@@ -382,7 +400,7 @@
 .an-good { color: var(--success); }
 .an-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .an-muted { color: var(--text-muted); font-size: 13px; }
-.an-empty { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 64px 16px; text-align: center; color: var(--text-muted); border: 1.5px dashed var(--border-strong); border-radius: var(--panel-r); }
+.an-empty { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 48px 16px; text-align: center; color: var(--text-muted); border: 1.5px dashed var(--border-strong); border-radius: var(--panel-r); }
 .an-empty svg { width: 36px; height: 36px; color: var(--accent); }
 .an-empty p { font-size: 16px; font-weight: 700; color: var(--text-primary); }
 @media (max-width: 900px) {
@@ -434,3 +452,34 @@
 @media (max-width: 640px) {
     .type-group-boards { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* shared weaknesses: weak grows left of the centre line, resist grows right */
+.an-diverge { display: flex; flex-direction: column; font-size: 13px; }
+.an-diverge-row {
+    display: grid; grid-template-columns: 84px 32px minmax(0, 1fr) 32px 36px; align-items: center; gap: var(--sp-2);
+    padding: 3px 0; border-bottom: 1px solid var(--border-light);
+}
+.an-diverge-row:last-child { border-bottom: 0; }
+.an-diverge-head { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); padding-bottom: 6px; border-bottom-color: var(--border); }
+.an-diverge-row .type-badge { min-width: 76px; text-align: center; font-size: 11px; }
+.an-diverge-bars { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; height: 10px; }
+.an-diverge-side { display: flex; height: 100%; background: var(--bg-panel); }
+.an-diverge-side.left { justify-content: flex-end; border-radius: 999px 0 0 999px; }
+.an-diverge-side.right { border-radius: 0 999px 999px 0; }
+.an-diverge-side span { display: block; height: 100%; }
+.an-diverge-side.left span { background: var(--danger); border-radius: 999px 0 0 999px; }
+.an-diverge-side.right span { background: var(--success); border-radius: 0 999px 999px 0; }
+@media (max-width: 640px) {
+    .an-head { align-items: stretch; }
+    .an-tabs { width: 100%; }
+    .an-tabs button { flex: 1 1 0; padding: 0; }
+    .an-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .an-diverge-row { grid-template-columns: 80px 26px minmax(0, 1fr) 26px 30px; }
+}
+
+/* two independent columns, so a tall card never leaves a hole beside a short one */
+.an-cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-3); align-items: start; margin-bottom: var(--sp-3); }
+.an-col { display: flex; flex-direction: column; gap: var(--sp-3); min-width: 0; }
+.an-stats-small .an-stat strong { font-size: 20px; }
+.an-sub-gap { margin-top: var(--sp-4); }
+@media (max-width: 900px) { .an-cols { grid-template-columns: minmax(0, 1fr); } }

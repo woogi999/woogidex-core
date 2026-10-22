@@ -29,11 +29,13 @@ import { notify, markViewShown } from '../app/store.ts';
 import { pushToast } from '../app/shell/Toasts.tsx';
 import { closeHeaderProfilePopover, toggleHeaderProfilePopover } from '../app/shell/Header.tsx';
 import * as regions from '../features/regions.ts';
+import * as notebook from '../features/notebook.ts';
 import * as customTypes from '../features/custom-types.ts';
 import * as entityArt from '../editor/entity-art.ts';
 import * as moveInheritance from '../features/move-inheritance.ts';
 import { maybeShowOriginNotice } from './dev-notice.ts';
 import { initArtShield } from './art-shield.ts';
+import { cancelSheetOut, initSmoothScroll, sheetIn, sheetOut, slideIn } from './motion.ts';
 import { ext } from './extend.ts';
 // whatever this build adds to the app (js/core/extend.ts): vite.shared.js
 // points the alias at js/host/standalone.ts, or at a host's own module
@@ -294,6 +296,21 @@ const topLevelViewIds = () => [...CORE_VIEW_IDS, ...ext.pages.map(p => p.view)];
 // mapped to the page they sit on. The editor slides in over My Collection.
 const SHEET_VIEWS = { 'editor-view': 'collection-view' };
 
+/**
+ * Which way a page move goes: 1 to the right (a header tab further right, or
+ * a page deeper under the same tab), -1 to the left, 0 when either page is
+ * not in the header.
+ */
+function viewDirection(from: string | undefined, to: string): number {
+    const at = (view?: string) => {
+        const i = ext.nav.findIndex(n => n.page === view || (!!view && !!n.alsoFor?.includes(view)));
+        return i < 0 ? null : { order: i, depth: ext.nav[i].page === view ? 0 : 1 };
+    };
+    const a = at(from), b = at(to);
+    if (!a || !b) return 0;
+    return Math.sign(b.order - a.order) || Math.sign(b.depth - a.depth);
+}
+
 function activateTopLevelView(viewId, options: Record<string, any> = {}) {
     const { preserveAbilityEditor = false } = options;
     // the guest view of a public event is one page only; anything else ends it
@@ -316,12 +333,18 @@ function activateTopLevelView(viewId, options: Record<string, any> = {}) {
     // a sheet keeps (or brings up) the page it belongs over
     const pageId = SHEET_VIEWS[viewId] || viewId;
     const pageWasShowing = document.getElementById(pageId)?.style.display === 'block';
+    const previousPage = document.body.dataset.page;
     const targetWasShowing = document.getElementById(viewId)?.style.display === 'block';
 
 
     topLevelViewIds().forEach(id => {
         const el = document.getElementById(id);
-        if (el) el.style.display = (id === viewId || id === pageId) ? 'block' : 'none';
+        if (!el) return;
+        const show = id === viewId || id === pageId;
+        if (show) { cancelSheetOut(el); el.style.display = 'block'; return; }
+        // the editor sheet slides away (js/core/motion.ts) rather than vanishing
+        if (id === 'editor-view' && el.style.display === 'block') sheetOut(el, () => { el.style.display = 'none'; });
+        else el.style.display = 'none';
     });
 
     // the shell reads these: the sidebar only exists on My Collection, the 404
@@ -332,21 +355,16 @@ function activateTopLevelView(viewId, options: Record<string, any> = {}) {
     // the idle moment boot left it for (memoised, so a no-op once loaded)
     if (viewId === 'editor-view') api.fetchShowdownData?.();
 
-    // the page under a sheet stays put; only what just appeared animates in
+    // the page under a sheet stays put; only what just appeared animates in,
+    // from the side it sits on in the header (js/core/motion.ts)
     const target = document.getElementById(viewId);
     const page = document.getElementById(pageId);
-    if (page && page !== target && !pageWasShowing) {
-        page.classList.remove('top-level-view-enter');
-        void page.offsetWidth;
-        page.classList.add('top-level-view-enter');
-    }
-    // a sheet has its own slide-in (css/editor.css); the page enter animation's
-    // transform would also re-anchor the sheet's fixed-position scrim
-    if (target && !SHEET_VIEWS[viewId] && !targetWasShowing) {
-        // force a reflow so the enter animation replays (same trick as switchTab())
-        target.classList.remove('top-level-view-enter');
-        void target.offsetWidth;
-        target.classList.add('top-level-view-enter');
+    if (page && page !== target && !pageWasShowing) slideIn(page, viewDirection(previousPage, pageId));
+    // My Collection's region sidebar sits outside the page; it moves with it
+    if (pageId === 'collection-view' && previousPage !== pageId) slideIn(document.getElementById('app-sidebar'), viewDirection(previousPage, pageId));
+    if (target && !targetWasShowing) {
+        if (SHEET_VIEWS[viewId]) sheetIn(target);
+        else slideIn(target, viewDirection(previousPage, viewId));
     }
 
     // a React page refetches what it shows each time it opens (useViewShown)
@@ -375,7 +393,7 @@ const battleStubs = {
     onBattleViewLeave: (...args: any[]) => { battleModule?.then(m => m.onBattleViewLeave?.(...args)); }
 };
 
-Object.assign(api, data, editor, sampleSets, editorCore, pokedex, storage, exporter, showdownExport, essentialsExport, evolution, analysis, battleStubs, abilityBlocks, nameRoll, fieldRoll, protect, router, recovery, regions, customTypes, entityArt, moveInheritance, settingsApi, {
+Object.assign(api, data, editor, sampleSets, editorCore, pokedex, storage, exporter, showdownExport, essentialsExport, evolution, analysis, battleStubs, abilityBlocks, nameRoll, fieldRoll, protect, router, recovery, regions, notebook, customTypes, entityArt, moveInheritance, settingsApi, {
     loadDarkMode, toggleDarkMode, updateDarkModeUI, openSettings, takeSettingsTab, isDarkModeEnabled,
     setRoute, setPageTitle, setShareMeta, setRobots, setCanonical, showNotFound, showLanding, activateTopLevelView,
     updateSettingsUI, loadSettings, showToast, closeHeaderProfilePopover, toggleHeaderProfilePopover
@@ -482,6 +500,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         .catch(e => { log.error('BOOT', 'Could not open the first page', e); api.showCollection?.(); });
     api.initContentProtection?.();
     initArtShield();
+    initSmoothScroll();
     api.updateEditorStats();
     done({ fakemons: state.fakemonDB.length, sdLoaded: state.sdLoaded });
     log.info('BOOT', 'Application ready', { fakemons: state.fakemonDB.length, sdLoaded: state.sdLoaded });

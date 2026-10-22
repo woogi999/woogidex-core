@@ -320,7 +320,7 @@
     font-weight: 600;
     cursor: pointer;
     outline: none;
-    transition: all 0.2s ease;
+    transition: var(--t-ui);
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;

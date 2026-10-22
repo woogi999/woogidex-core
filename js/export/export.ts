@@ -5,6 +5,7 @@ import { state, api } from '../core/app.ts';
 import { sortLearnsetEntries, normalizeMoveCategoryInput, normalizeMoveTypeInput } from '../editor/editor.ts';
 import { form } from '../editor/draft.ts';
 import { openDialog } from '../app/dialogs.tsx';
+import { cleanArtSets } from '../editor/art-sets.ts';
 
 
         function downloadJsonFile(filename, data) {
@@ -264,6 +265,8 @@ import { openDialog } from '../app/dialogs.tsx';
                     if (key && !copy.learnset.some(x => String(x?.name || '').toLowerCase() === key)) copy.learnset.push({ ...m, source: 'custom', custom: true });
                 });
                 if (!Array.isArray(copy.abilities)) copy.abilities = [];
+                // a file can say anything: keep only well-formed artwork sets
+                if (copy.artSets !== undefined) { copy.artSets = cleanArtSets(copy.artSets); if (!copy.artSets.length) delete copy.artSets; }
                 if (!Array.isArray(copy.eggGroups)) copy.eggGroups = String(copy.eggGroups || '').split(/\s*\/\s*|\s*,\s*/).filter(Boolean);
                 const previousId = String(copy.id ?? '');
                 copy.id = `${now}-${index}-${Math.random().toString(36).slice(2, 8)}`;

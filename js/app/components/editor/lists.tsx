@@ -17,7 +17,8 @@ const CATEGORY_ICON: Record<string, string> = {
     Status: 'https://img.pokemondb.net/images/icons/move-status.png'
 };
 
-export function CategoryIcon({ category, size = 16 }: { category: string; size?: number }) {
+/** A move's Physical, Special or Status icon. `size` is pixels, or a share of the box it sits in ("55%"). */
+export function CategoryIcon({ category, size = 16 }: { category: string; size?: number | string }) {
     return <img src={CATEGORY_ICON[category] || CATEGORY_ICON.Status} alt={category} style={{ width: size, height: size, verticalAlign: 'middle', imageRendering: 'auto' }} />;
 }
 

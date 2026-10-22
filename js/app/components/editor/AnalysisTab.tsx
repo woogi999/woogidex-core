@@ -1,20 +1,18 @@
 // The editor's Analysis tab: what to compare against, a status line while it
 // works, and the estimated competitive profile (tier, strengths and
-// weaknesses, stat and typing percentiles, CAP rating, matchups). The
-// numbers come from js/features/analysis.ts.
+// weaknesses, a stat radar, percentiles, score dials, CAP rating, matchups).
+// The numbers come from js/features/analysis.ts; the charts are
+// components/charts.tsx.
 
 import { api } from '../../../core/app.ts';
 import { Icon } from '../Icon.tsx';
+import { Gauge, PercentileRows, Radar } from '../charts.tsx';
 
+/** The results' shape while they load: the same cards, charts and dials, empty. */
 function Skeleton() {
-    const detail = (i: number) => (
-        <div key={i} className="analysis-card panel-lite">
-            <div className="skel skel-text" style={{ width: '40%', height: 12, marginBottom: 14 }} />
-            <div className="skel skel-text" style={{ width: 70, height: 38, marginBottom: 10 }} />
-            <div className="skel skel-text" style={{ width: '90%' }} />
-            <div className="skel skel-text" style={{ width: '60%' }} />
-        </div>
-    );
+    const line = (width: string | number, height = 10, extra: React.CSSProperties = {}) =>
+        <div className="skel skel-text" style={{ width, height, ...extra }} />;
+    const head = (w: string) => <>{line(w, 15, { marginBottom: 8 })}{line('75%', 10, { marginBottom: 14 })}</>;
     const matchupCards = [0, 1, 2, 3].map(i => (
         <div key={i} className="analysis-matchup-card skel-card">
             <div className="analysis-matchup-icon skel" />
@@ -23,43 +21,78 @@ function Skeleton() {
     ));
     const strength = (widths: string[]) => (
         <div className="analysis-card panel-lite analysis-strength-card skel-card">
-            <div className="skel skel-text" style={{ width: '45%', height: 15, marginBottom: 12 }} />
+            {line('45%', 15, { marginBottom: 12 })}
             {widths.map((w, i) => <div key={i} className="skel skel-text" style={{ width: w }} />)}
         </div>
     );
+    const combo = (
+        <div className="analysis-stat-combo">
+            {[0, 1, 2, 3, 4].map(i => <div key={i}>{line('70%', 9)}{line('50%', 14, { marginTop: 6 })}</div>)}
+        </div>
+    );
     return (
-        <>
+        <div role="status" aria-busy="true" aria-label="Loading the analysis">
             <div className="analysis-profile panel-lite skel-card">
                 <div className="analysis-profile-main">
-                    <div className="skel skel-text" style={{ width: '60%', height: 11, marginBottom: 10 }} />
-                    <div className="skel skel-text" style={{ width: '80%', height: 42, margin: '6px 0 8px' }} />
-                    <div className="skel skel-text" style={{ width: '70%', height: 12 }} />
+                    {line('60%', 11, { marginBottom: 10 })}
+                    {line('80%', 42, { margin: '6px 0 8px' })}
+                    {line('70%', 12)}
                 </div>
                 <div className="analysis-profile-summary">
                     <div className="analysis-discord-message">
                         <span className="analysis-discord-avatar skel skel-circle" />
                         <div className="analysis-discord-body">
-                            <div className="skel skel-text" style={{ width: 80, marginBottom: 8 }} />
-                            <div className="skel skel-text" style={{ width: '100%' }} />
-                            <div className="skel skel-text" style={{ width: '85%' }} />
+                            {line(80, 10, { marginBottom: 8 })}
+                            {line('100%')}
+                            {line('85%')}
                         </div>
                     </div>
                 </div>
-                <div className="skel skel-text" style={{ width: '90%', height: 11 }} />
+                {line('90%', 11)}
             </div>
             <div className="analysis-two-col analysis-strength-row">{strength(['95%', '88%', '70%'])}{strength(['92%', '80%', '65%'])}</div>
-            <div className="analysis-detail-grid">{[0, 1, 2, 3].map(detail)}</div>
+            <div className="analysis-two-col analysis-chart-row">
+                <div className="analysis-card panel-lite skel-card">
+                    {head('35%')}
+                    <div className="skel skel-radar" />
+                </div>
+                <div className="analysis-card panel-lite skel-card">
+                    {head('40%')}
+                    {[62, 48, 80, 35, 55].map((w, i) => (
+                        <div key={i} className="chart-pct-row">
+                            {line('80%', 10)}
+                            <span className="chart-pct-track"><span className="skel skel-pct-fill" style={{ width: `${w}%` }} /></span>
+                            {line('100%', 10)}
+                        </div>
+                    ))}
+                </div>
+            </div>
+            <div className="analysis-dials">
+                {[0, 1, 2, 3].map(i => (
+                    <div key={i} className="analysis-dial skel-card">
+                        <div className="chart-gauge">
+                            <div className="skel skel-gauge" />
+                            {line(70, 11, { marginTop: 12 })}
+                            {line(100, 9, { marginTop: 6 })}
+                        </div>
+                    </div>
+                ))}
+            </div>
+            <div className="analysis-two-col">
+                <div className="analysis-card panel-lite skel-card">{head('45%')}{combo}</div>
+                <div className="analysis-card panel-lite skel-card">{head('50%')}{combo}</div>
+            </div>
             <div className="analysis-card panel-lite analysis-matchups-card skel-card">
                 <div className="analysis-matchups-header">
-                    <div><div className="skel skel-text" style={{ width: 160, height: 15, marginBottom: 8 }} /><div className="skel skel-text" style={{ width: 220 }} /></div>
-                    <div className="analysis-matchups-score"><span className="skel skel-text" style={{ width: 40, height: 9 }} /><b className="skel skel-text" style={{ width: 34, height: 16 }} /></div>
+                    <div>{line(160, 15, { marginBottom: 8 })}{line(220)}</div>
+                    <div className="analysis-matchups-score">{line(40, 9)}{line(34, 16)}</div>
                 </div>
                 <div className="analysis-matchup-columns">
                     <div className="analysis-matchup-group favorable"><h4><span><Icon name="check" size={14} /></span> Looks good into</h4><div className="analysis-matchup-list">{matchupCards}</div></div>
                     <div className="analysis-matchup-group unfavorable"><h4><span><Icon name="x" size={14} /></span> Looks rough into</h4><div className="analysis-matchup-list">{matchupCards}</div></div>
                 </div>
             </div>
-        </>
+        </div>
     );
 }
 
@@ -77,7 +110,10 @@ function Matchups({ rows, empty }: { rows: any[]; empty: string }) {
                     <div className="analysis-matchup-icon">
                         <img src={x.sprite.src} alt="" loading="lazy" onError={e => { const img = e.currentTarget; if (img.src !== x.sprite.fallback) img.src = x.sprite.fallback; }} />
                     </div>
-                    <div className="analysis-matchup-info"><strong>{x.name}</strong><span>{x.scenario}</span></div>
+                    <div className="analysis-matchup-info">
+                        <strong>{x.name}</strong><span>{x.scenario}</span>
+                        <i className="analysis-matchup-meter" aria-hidden="true"><i style={{ width: `${Math.max(0, Math.min(100, x.score))}%` }} /></i>
+                    </div>
                     <b className="analysis-matchup-score">{x.score}</b>
                 </div>
             ))}
@@ -85,7 +121,29 @@ function Matchups({ rows, empty }: { rows: any[]; empty: string }) {
     );
 }
 
+const STAT_AXES = ['HP', 'Atk', 'Def', 'SpA', 'SpD', 'Spe'];
+
+/** The four 0-100 scores side by side, each its own small dial. */
+function ScoreDials({ c }: { c: any }) {
+    const dials: Array<[string, number, string]> = [
+        ['Stat spread', c.statCombination, 'How well the stats work together'],
+        ['Role value', c.roleScore, 'How clear and useful its job is'],
+        ['Kit ceiling', c.kit, 'Stats, typing, ability and moves together'],
+        ['Matchups', c.matchups ?? 50, 'Against the Pokémon it would meet']
+    ];
+    return (
+        <div className="analysis-dials">
+            {dials.map(([label, v, caption]) => (
+                <div key={label} className="analysis-dial">
+                    <Gauge value={Number(v) || 0} label={label} caption={<><b>{label}</b><span>{caption}</span></>} />
+                </div>
+            ))}
+        </div>
+    );
+}
+
 function Results({ r }: { r: any }) {
+    const c = r.charts;
     const combo = (items: Array<[string, string | number]>) => (
         <div className="analysis-stat-combo">{items.map(([label, value]) => <div key={label}><span>{label}</span><b>{value}</b></div>)}</div>
     );
@@ -117,32 +175,41 @@ function Results({ r }: { r: any }) {
                 </div>
             </div>
 
-            <div className="analysis-detail-grid">
-                <div className="analysis-card panel-lite">
-                    <h3>Typing &amp; role</h3>
-                    <div className="analysis-big">{r.typePct}</div>
-                    <p><span className="analysis-type-list"><Types types={r.types} /></span> · {r.typing.weak} weaknesses · {r.typing.resist} resistances · {r.typing.immune} immunities</p>
-                    <p>{r.tools.join(' · ')}</p>
-                    <div className="analysis-role-score">Role value <b>{r.roleScore}/100</b></div>
+            {c && (
+                <div className="analysis-two-col analysis-chart-row">
+                    <div className="analysis-card panel-lite">
+                        <h3>Stat spread</h3>
+                        <p className="analysis-card-help">Its base stats against the average of the comparison pool.</p>
+                        <Radar label="Base stats against the pool average" axes={STAT_AXES} max={Math.max(150, ...c.stats, ...c.poolAvg)}
+                            series={[{ name: r.name || 'This Fakémon', kind: 'main', values: c.stats }, { name: 'Pool average', kind: 'ref', values: c.poolAvg }]} />
+                    </div>
+                    <div className="analysis-card panel-lite">
+                        <h3>Where it ranks</h3>
+                        <p className="analysis-card-help">Percentile in the pool. Higher is better. The hollow dot is the usage-weighted metagame.</p>
+                        <PercentileRows label="Percentiles" mainName="Pool" refName="Metagame" rows={[
+                            { label: 'Bulk', value: c.pct.bulk, compare: c.meta.bulk },
+                            { label: 'Offense', value: c.pct.offense, compare: c.meta.offense },
+                            { label: 'Speed', value: c.pct.speed, compare: c.meta.speed },
+                            { label: 'Typing', value: c.pct.typing, compare: c.meta.typing },
+                            { label: 'BST', value: c.pct.bst }
+                        ]} />
+                        <p className="analysis-card-foot"><span className="analysis-type-list"><Types types={r.types} /></span> · {r.typing.weak} weaknesses · {r.typing.resist} resistances · {r.typing.immune} immunities{r.tools.length ? ` · ${r.tools.join(', ')}` : ''}</p>
+                    </div>
                 </div>
-                <div className="analysis-card panel-lite">
-                    <h3>Stat combination</h3>
-                    <div className="analysis-big">{r.statCombination}/100</div>
-                    <p>Overall quality of the stat spread relative to the selected pool.</p>
-                    {combo([['Bulk', r.pcts.bulk], ['Offense', r.pcts.offense], ['Speed', r.pcts.speed], ['BST', r.pcts.bst]])}
-                </div>
+            )}
+
+            {c && <ScoreDials c={c} />}
+
+            <div className="analysis-two-col">
                 <div className="analysis-card panel-lite">
                     <h3>Selected environment</h3>
-                    <p><strong>{r.selectedFormat}</strong></p>
-                    <p>{r.metagameCount} usage-weighted Pokémon represented</p>
+                    <p><strong>{r.selectedFormat}</strong> · {r.metagameCount} usage-weighted Pokémon</p>
                     {combo([['Stat profile', r.metagame.stat], ['Bulk', r.metagame.bulk], ['Offense', r.metagame.offense], ['Speed', r.metagame.speed], ['Matchups', r.metagame.matchups]])}
                 </div>
                 <div className="analysis-card panel-lite">
-                    <h3>CAP stat rating</h3>
-                    <div className="analysis-big">{r.cap.BSR}</div>
-                    <p>{r.cap.category} · CAP's nonlinear stat rating. This is a stat-power measure, not an automatic tier.</p>
+                    <h3>CAP stat rating <span className="analysis-inline-big">{r.cap.BSR}</span></h3>
+                    <p>{r.cap.category} · CAP's nonlinear stat rating. A stat-power measure, not a tier.</p>
                     {combo([['PT', r.cap.PT], ['ST', r.cap.ST], ['PS', r.cap.PS], ['SS', r.cap.SS], ['ODB', r.cap.ODB], ['PSB', r.cap.PSB]])}
-                    <p>Kit ceiling <b>{r.kitScore}/100</b> · Matchups <b>{r.matchupScore}/100</b></p>
                 </div>
             </div>
 
@@ -223,11 +290,8 @@ export function AnalysisTab() {
                     <div className="analysis-check"><label><input type="checkbox" checked={cfg.natdex} onChange={e => set({ natdex: e.target.checked })} /> National Dex pool</label></div>
                 )}
             </div>
-            <div className="analysis-status">
-                {view.status.kind === 'busy' && <span className="analysis-spinner" />}
-                {view.status.kind === 'ok' && <span className="analysis-ok"><Icon name="check" size={14} /></span>}
-                <span className={view.status.kind === 'error' ? 'analysis-error' : undefined}>{view.status.text}</span>
-            </div>
+            {/* what it is doing, for screen readers only: the skeleton shows it on screen */}
+            <span className="sr-only" role="status">{view.status.kind === 'busy' ? view.status.text : ''}</span>
             <div className="analysis-results">
                 {view.error ? <div className="analysis-error panel-lite">{view.error}</div> : view.result ? <Results r={view.result} /> : <Skeleton />}
             </div>

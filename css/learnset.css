@@ -16,8 +16,8 @@
         }
 
         /* learnset layout improvements */
-        .learnset-item { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; margin-bottom: 8px; cursor: pointer; transition: all 0.15s; position: relative; background: transparent; border: 0; border-bottom: 1px solid var(--border-light); border-radius: 0; }
-        .learnset-item:hover { background: var(--bg-panel); transform: translateX(4px); }
+        .learnset-item { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; margin-bottom: 8px; cursor: pointer; transition: var(--t-ui); position: relative; background: transparent; border: 0; border-bottom: 1px solid var(--border-light); border-radius: 0; }
+        .learnset-item:hover { background: var(--bg-panel); }
         .learnset-main {
             flex: 1;
             display: flex;
@@ -54,7 +54,7 @@
             color: var(--text-primary);
             cursor: pointer;
             outline: none;
-            transition: all 0.2s;
+            transition: var(--t-ui);
             width: auto;
             min-width: 70px;
             flex-shrink: 0;
@@ -73,7 +73,7 @@
             color: var(--text-primary);
             text-align: center;
             outline: none;
-            transition: all 0.2s;
+            transition: var(--t-ui);
         }
         .learnset-item .level-input-inline:hover { border-color: var(--text-secondary); }
         .learnset-item .level-input-inline:focus { border-color: var(--text-primary); box-shadow: 0 0 0 3px var(--accent-glow); }
@@ -102,7 +102,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.2s;
+            transition: var(--t-ui);
             flex-shrink: 0;
             margin-top: 2px;
         }

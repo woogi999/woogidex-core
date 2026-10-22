@@ -1,12 +1,17 @@
 // Region details' sibling page: what a region's roster looks like as data.
-// Basics first (how many, which types, how strong), then the numbers a
-// competitive designer reaches for (stat spreads, roles, speed tiers, the
-// region's shared weaknesses, STAB coverage, how evenly the types are spread).
+// One line of headline numbers, then three tabs: Overview (how strong, which
+// roles, how fast), Types (spread, shared weaknesses, coverage) and Library
+// (the moves, abilities, items and types the region has to work with).
 // Pure reads of the collection; nothing here writes.
 
-import type { ReactNode } from 'react';
+import { useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { api, state } from '../../../core/app.ts';
 import { Icon } from '../Icon.tsx';
+import { ChartFrame, Histogram, Radar, Scatter, SplitBar, StripPlot } from '../charts.tsx';
+import { countUp } from '../../../core/motion.ts';
+import { useSlide } from '../../hooks.ts';
+import { POKEMON_COLORS } from '../../../core/data.ts';
+import { dexNumberCheck, runs } from '../../../features/notebook.ts';
 import type { Region } from '../../types.ts';
 
 const STATS: Array<[StatKey, string]> = [['hp', 'HP'], ['atk', 'Atk'], ['def', 'Def'], ['spa', 'SpA'], ['spd', 'SpD'], ['spe', 'Spe']];
@@ -15,6 +20,7 @@ type StatKey = 'hp' | 'atk' | 'def' | 'spa' | 'spd' | 'spe';
 /** A Fakémon or a main-game Pokémon, in one shape. */
 interface Mon {
     name: string;
+    number?: string;
     source: 'fakemon' | 'vanilla';
     types: string[];
     stats: Record<StatKey, number>;
@@ -44,6 +50,14 @@ function toKg(text: unknown) {
     return /lb/.test(String(text)) ? n * 0.4536 : n;
 }
 
+/** Percent male from a saved gender ratio ('87.5-12.5'), -1 for 'genderless', null when unset. */
+function maleOf(ratio: unknown): number | null {
+    if (ratio === undefined || ratio === null || ratio === '') return null;
+    if (/genderless/i.test(String(ratio))) return -1;
+    const m = String(ratio).match(/^\s*([\d.]+)/);
+    return m ? Number(m[1]) : null;
+}
+
 function statsOf(source: any): Record<StatKey, number> {
     return Object.fromEntries(STATS.map(([k]) => [k, Number(source?.[k]) || 0])) as Record<StatKey, number>;
 }
@@ -53,14 +67,14 @@ function fromFakemon(f: any): Mon {
     const stats = statsOf(f.stats);
     const eggs = Array.isArray(f.eggGroups) ? f.eggGroups : String(f.eggGroups || '').split(/[,/]/).map((s: string) => s.trim()).filter(Boolean);
     return {
-        name: f.name || 'Unnamed', source: 'fakemon',
+        name: f.name || 'Unnamed', number: f.number || '', source: 'fakemon',
         types: [f.type1, f.type2].filter(Boolean),
         stats, bst: totalOf(stats),
         abilities: (f.abilities || []).map((a: any) => a?.name).filter(Boolean),
         moves: (f.learnset || []).map((m: any) => m?.name).filter(Boolean),
         height: toMeters(f.height), weight: toKg(f.weight),
         color: f.color || '', eggGroups: eggs.filter((e: string) => e !== 'None'),
-        male: f.genderRatio === undefined || f.genderRatio === null ? null : Number(f.genderRatio)
+        male: maleOf(f.genderRatio)
     };
 }
 
@@ -144,6 +158,78 @@ function Section({ title, help, wide, children }: { title: string; help?: ReactN
     );
 }
 
+/** Dots past this many in one row turn into a "+N". */
+const ROLE_DOTS_MAX = 36;
+
+/** One row per role, one dot per Pokémon in it: who, not only how many. */
+function RoleDots({ mons }: { mons: Mon[] }) {
+    const groups = new Map<string, Mon[]>();
+    for (const m of mons) {
+        const r = roleOf(m);
+        if (!groups.has(r)) groups.set(r, []);
+        groups.get(r)!.push(m);
+    }
+    const rows = [...groups.entries()].sort((a, b) => b[1].length - a[1].length);
+    return (
+        <ChartFrame label="Pokémon by role" className="chart-dots">
+            {rows.map(([role, list]) => (
+                <div key={role} className="chart-dots-row">
+                    <span className="chart-dots-label">{role}</span>
+                    <span className="chart-dots-marks">
+                        {list.slice(0, ROLE_DOTS_MAX).map((m, i) => <i key={i} className="chart-dots-dot chart-pop" tabIndex={0} data-tip={`${m.name} · BST ${m.bst}`} />)}
+                        {list.length > ROLE_DOTS_MAX && <em className="chart-dots-more">+{list.length - ROLE_DOTS_MAX}</em>}
+                    </span>
+                    <span className="chart-dots-value">{list.length}</span>
+                </div>
+            ))}
+        </ChartFrame>
+    );
+}
+
+/** The Pokédex colours, as swatches of themselves. */
+const colorHex = (name: string) => POKEMON_COLORS.find((c: any) => c.name.toLowerCase() === name.toLowerCase())?.hex as string | undefined;
+
+function ColorSwatches({ colors }: { colors: Array<[string, number]> }) {
+    const hex = (name: string) => colorHex(name) || 'var(--text-muted)';
+    return (
+        <ChartFrame label="Pokédex colours" className="chart-swatches">
+            {colors.map(([name, n]) => (
+                <span key={name} className="chart-swatch chart-pop" tabIndex={0} data-tip={`${name}: ${n} Pokémon`}>
+                    <i style={{ background: hex(name) }} />{name}<b>{n}</b>
+                </span>
+            ))}
+        </ChartFrame>
+    );
+}
+
+/** The holes and clashes in the region's Pokédex numbers. */
+function DexNumbers({ own }: { own: Array<{ name: string; number?: string }> }) {
+    const c = dexNumberCheck(own);
+    const ok = c.used > 0 && !c.missing.length && !c.clashes.length;
+    return (
+        <Section title="Pokédex numbers" wide help={c.used ? `#${c.first} to #${c.last}: ${c.used} number${c.used === 1 ? '' : 's'} in use.` : ''}>
+            {!c.used ? <p className="an-muted">No Pokédex numbers set yet. Give each Fakémon one on the Basic Info tab.</p> : (
+                <div className="an-split dex-check">
+                    <div>
+                        <h4 className="an-sub">Gaps</h4>
+                        {c.missing.length
+                            ? <p className="dex-check-list"><b>{c.missing.length}</b> free: {runs(c.missing)}</p>
+                            : <p className="dex-check-ok"><Icon name="check-circle" size={16} />No gaps.</p>}
+                    </div>
+                    <div>
+                        <h4 className="an-sub">Shared numbers</h4>
+                        {c.clashes.length
+                            ? <ul className="dex-check-clashes">{c.clashes.slice(0, 12).map(x => <li key={x.n}><b>#{String(x.n).padStart(3, '0')}</b> {x.names.join(', ')}</li>)}</ul>
+                            : <p className="dex-check-ok"><Icon name="check-circle" size={16} />Every number is used once.</p>}
+                    </div>
+                    {c.unnumbered > 0 && <p className="an-muted dex-check-note">{c.unnumbered} Fakémon {c.unnumbered === 1 ? 'has' : 'have'} no number yet.</p>}
+                    {ok && <p className="an-muted dex-check-note">The dex runs without a break.</p>}
+                </div>
+            )}
+        </Section>
+    );
+}
+
 const TypeBadge = ({ t }: { t: string }) => <span className={`type-badge type-${String(t).toLowerCase()}`}>{t}</span>;
 const typeRow = ([label, value]: [string, number]): BarRow => ({ key: label, label: <TypeBadge t={label} />, value, cls: `type-${label.toLowerCase()}` });
 const plainRow = ([label, value]: [string, number]): BarRow => ({ key: label, label, value });
@@ -211,7 +297,6 @@ function Content({ region, mons, own, matchup, allTypes }: {
 
     return (
         <>
-            <h3 className="an-part">Moves, abilities, items and types</h3>
             <div className="an-grid">
                 <Section title="Moves" help="What the region's Pokémon have to fight with." wide>
                     <div className="an-stats an-stats-small">
@@ -220,7 +305,16 @@ function Content({ region, mons, own, matchup, allTypes }: {
                         <Stat label="Priority moves" value={priority} sub={`${inaccurate} damaging moves under 100% accuracy`} />
                     </div>
                     <div className="an-split">
-                        <div><h4 className="an-sub">Physical, special and status</h4><Bars rows={cats.map(plainRow)} /></div>
+                        <div><h4 className="an-sub">Physical, special and status</h4>
+                            <SplitBar label="Moves by category" parts={['Physical', 'Special', 'Status'].map(k => ({ label: k, value: cats.find(([c]) => c === k)?.[1] || 0, cls: `chart-cat-${k.toLowerCase()}` }))} />
+                            {bps.length > 0 && (
+                                <>
+                                    <h4 className="an-sub an-sub-gap">Base power of damaging moves</h4>
+                                    <Histogram label="Damaging moves by base power" marker={{ at: Math.min(1, median(bps) / 160), label: `median ${round(median(bps))}` }}
+                                        bins={[0, 20, 40, 60, 80, 100, 120, 140].map(lo => ({ label: lo === 140 ? '140+' : String(lo), value: bps.filter((b: number) => b >= lo && (lo === 140 || b < lo + 20)).length, tip: `${lo === 140 ? '140 or more' : `${lo}–${lo + 19}`}: ${bps.filter((b: number) => b >= lo && (lo === 140 || b < lo + 20)).length} moves` }))} />
+                                </>
+                            )}
+                        </div>
                         <div><h4 className="an-sub">By type</h4><Bars rows={moveTypes.slice(0, 8).map(typeRow)} /></div>
                     </div>
                     <div className="an-notes">
@@ -275,7 +369,37 @@ function Content({ region, mons, own, matchup, allTypes }: {
 }
 
 // ---- the page ----
+type AnalyticsTab = 'overview' | 'types' | 'library';
+const TABS: Array<[AnalyticsTab, string]> = [['overview', 'Overview'], ['types', 'Types'], ['library', 'Library']];
+// the tab outlives a visit to another region, as a filter would
+let lastTab: AnalyticsTab = 'overview';
+
+/**
+ * What the numbers depend on, cheaply: a big region takes a moment to work
+ * out, and the store notifies on every autosave. The page re-renders only
+ * when this, the region or the tab changes.
+ */
+function dataSignature(region: Region): string {
+    let newest = 0;
+    for (const f of state.fakemonDB || []) newest = Math.max(newest, Number(f.updatedAt) || 0);
+    const lib = ['customMoves', 'customAbilities', 'customItems'].map(k => ((state as any)[k] || []).length).join(',');
+    return [region.id, JSON.stringify(region.vanilla || {}), (state.fakemonDB || []).length, newest, lib, state.sdLoaded ? 1 : 0,
+        (api.getCustomTypes?.() || []).length, Object.keys(state.sdPokedex || {}).length].join('|');
+}
+
 export function RegionAnalytics({ region }: { region: Region }) {
+    const [tab, setTabState] = useState<AnalyticsTab>(lastTab);
+    const setTab = (t: AnalyticsTab) => { lastTab = t; setTabState(t); };
+    const sig = dataSignature(region);
+    // the same element back means React skips the whole page (see dataSignature)
+    return useMemo(() => <AnalyticsBody region={region} tab={tab} setTab={setTab} />, [sig, tab, region]);
+}
+
+function AnalyticsBody({ region, tab, setTab }: { region: Region; tab: AnalyticsTab; setTab: (t: AnalyticsTab) => void }) {
+    const kpis = useRef<HTMLDivElement>(null);
+    useLayoutEffect(() => { countUp(kpis.current); }, [region.id]);
+    // the next tab slides in from its side
+    const pane = useSlide(tab, TABS.map(([k]) => k));
     const own = (state.fakemonDB || []).filter(f => !f.pendingVanilla && api.entryInRegion(f, region.id)).map(fromFakemon);
     const vanillaIds: string[] = api.regionPoolIds?.(region, 'pokemon') || [];
     // the main-game Pokemon the region brings over always count, except ones
@@ -285,25 +409,41 @@ export function RegionAnalytics({ region }: { region: Region }) {
     const mons = [...own, ...vanilla];
 
     const regionId = region.id;
-    const matchup = (a: string, d: string): number => api.matchup ? api.matchup(a, d, regionId) : 1;
+    // looked up thousands of times for a big roster: each pair is worked out one time
+    const matchCache = new Map<string, number>();
+    const matchup = (a: string, d: string): number => {
+        const key = `${a}|${d}`;
+        let v = matchCache.get(key);
+        if (v === undefined) { v = api.matchup ? api.matchup(a, d, regionId) : 1; matchCache.set(key, v as number); }
+        return v as number;
+    };
     const tabArgs = api.typesTabArgs?.();
     const allTypes: string[] = tabArgs ? [...(tabArgs.vanilla || []), ...(tabArgs.list || []).map((t: any) => t.name)] : [];
 
     const head = (
-        <div className="an-head"><div><h2>{region.name} analytics</h2><p>What your region looks like, from the basics to the numbers competitive players check.</p></div></div>
+        <div className="an-head">
+            <div><h2>{region.name} analytics</h2><p>What your region looks like, from the basics to the numbers competitive players check.</p></div>
+            <div className="an-tabs" role="tablist" aria-label="Analytics sections">
+                {TABS.map(([key, label]) => (
+                    <button key={key} type="button" role="tab" aria-selected={tab === key} className={tab === key ? 'active' : ''} onClick={() => setTab(key)}>{label}</button>
+                ))}
+            </div>
+        </div>
     );
+    const library = <Content region={region} mons={mons} own={own} matchup={matchup} allTypes={allTypes} />;
 
     if (!mons.length) {
         // no Pokemon yet, but its moves, abilities, items and types still say something
         return (
             <>
                 {head}
-                <div className="an-empty">
-                    <Icon name="chart-bar" />
-                    <p>No Pokémon in {region.name} yet.</p>
-                    <span>Add some from My Collection (drag a card onto the region, or use Add to region in the editor) and they'll show up here.</span>
-                </div>
-                <Content region={region} mons={[]} own={[]} matchup={matchup} allTypes={allTypes} />
+                {tab === 'library' ? library : (
+                    <div className="an-empty">
+                        <Icon name="chart-bar" />
+                        <p>No Pokémon in {region.name} yet.</p>
+                        <span>Add some from My Collection (drag a card onto the region, or use Add to region in the editor) and they'll show up here. The Library tab already counts its moves, abilities and items.</span>
+                    </div>
+                )}
             </>
         );
     }
@@ -359,7 +499,8 @@ export function RegionAnalytics({ region }: { region: Region }) {
     const defense = attackTypes.map(att => {
         const mults = mons.map(m => m.types.reduce((x, t) => x * matchup(att, t), 1));
         return { att, weak: mults.filter(x => x > 1).length, resist: mults.filter(x => x < 1).length };
-    }).sort((a, b) => (b.weak - b.resist) - (a.weak - a.resist));
+    }).filter(d => d.weak || d.resist).sort((a, b) => (b.weak - b.resist) - (a.weak - a.resist) || b.weak - a.weak);
+    const maxHits = Math.max(1, ...defense.map(d => Math.max(d.weak, d.resist)));
     const stabTypes = [...new Set(mons.flatMap(m => m.types))];
     const uncovered = attackTypes.filter(def => !stabTypes.some(att => matchup(att, def) > 1));
 
@@ -377,116 +518,156 @@ export function RegionAnalytics({ region }: { region: Region }) {
     const heaviest = [...mons].filter(m => m.weight).sort((a, b) => b.weight! - a.weight!)[0];
     const eggs = countBy(mons.flatMap(m => m.eggGroups));
     const colors = countBy(mons.map(m => m.color).filter(Boolean));
+    const sized = mons.filter(m => m.height && m.weight);
+    const bodyKnown = heights.length || weights.length || gendered.length || genderless || eggs.length || colors.length;
 
     return (
         <>
             {head}
-            <div className="an-stats">
-                <Stat label="Pokémon" value={n} sub={vanilla.length ? `${own.length} yours · ${vanilla.length} from the main games` : 'all yours'} />
-                <Stat label="Average BST" value={round(mean(bsts))} sub={`median ${round(median(bsts))}`} />
+            <div className="an-kpis" ref={kpis}>
+                <Stat label="Pokémon" value={<span data-count={n}>{n}</span>} sub={vanilla.length ? `${own.length} yours · ${vanilla.length} main games` : 'all yours'} />
+                <Stat label="Average BST" value={<span data-count={Math.round(mean(bsts))}>{round(mean(bsts))}</span>} sub={`median ${round(median(bsts))}`} />
                 <Stat label="BST range" value={`${Math.min(...bsts)}–${Math.max(...bsts)}`} sub={`spread ±${round(stdev(bsts))}`} />
                 <Stat label="Single type" value={`${pct(mono, n)}%`} sub={`${mono} of ${n}`} />
-                <Stat label="Type combos" value={combos.length} sub={`${uniqueCombos} used only once`} />
+                <Stat label="Type combos" value={<span data-count={combos.length}>{combos.length}</span>} sub={`${uniqueCombos} used only once`} />
                 <Stat label="Custom content" value={lib('customMoves') + lib('customAbilities') + lib('customItems')} sub={`${lib('customMoves')} moves · ${lib('customAbilities')} abilities · ${lib('customItems')} items`} />
             </div>
 
-            <h3 className="an-part">Pokémon</h3>
-            <div className="an-grid">
-                <Section title="Type distribution" help="How many Pokémon have each type. The solid part is the first type, the lighter part the second." wide>
-                    <div className="an-bars">
-                        {typeRows.map(r => (
-                            <div className="an-bar-row" key={r.t}>
-                                <span className="an-bar-label"><TypeBadge t={r.t} /></span>
-                                <span className="an-bar-track">
-                                    <span className={`an-bar-fill type-${r.t.toLowerCase()}`} style={{ width: `${(r.primary / maxType) * 100}%` }} />
-                                    <span className={`an-bar-fill an-bar-secondary type-${r.t.toLowerCase()}`} style={{ width: `${(r.secondary / maxType) * 100}%` }} />
-                                </span>
-                                <span className="an-bar-value">{r.total}</span>
+            <div ref={pane}>
+            {tab === 'overview' && (
+                <>
+                <div className="an-cols">
+                    <div className="an-col">
+                        <Section title="Base stat totals" help="How strong the roster is overall.">
+                            <div className="an-split">
+                                <div><Histogram label="Pokémon by base stat total" bins={bins.map(b => ({ label: String(b.label).split('–')[0], value: b.value, tip: `${b.label}: ${b.value} Pokémon` }))}
+                                    marker={bins.length ? { at: Math.min(1, Math.max(0, (median(bsts) - Number(bins[0].key)) / (bins.length * 50))), label: `median ${round(median(bsts))}` } : undefined} /></div>
+                                <div className="an-list">
+                                    {n > 10
+                                        ? <><h4>Strongest</h4>{bstList(byBst.slice(0, 5))}<h4>Weakest</h4>{bstList(byBst.slice(-5).reverse())}</>
+                                        // too few for two lists without repeating names
+                                        : <><h4>By total</h4>{bstList(byBst)}</>}
+                                </div>
                             </div>
-                        ))}
+                        </Section>
+                        <Section title="Roles" help="A rough read of what each stat spread is built for.">
+                            <RoleDots mons={mons} />
+                        </Section>
+                        <Section title="Most common abilities" help={`${abilityUse.length} different abilit${abilityUse.length === 1 ? 'y' : 'ies'} across the roster.`}>
+                            <Bars rows={abilityUse.slice(0, 8).map(plainRow)} />
+                        </Section>
                     </div>
-                    <div className="an-notes">
-                        <p><strong>Type balance: {evenness}%.</strong> 100% means every type appears equally often; low numbers mean a few types dominate.</p>
-                        {unused.length ? <p><strong>No Pokémon yet:</strong> <Badges types={unused} /></p> : <p>Every type has at least one Pokémon.</p>}
-                        {shared.length
-                            ? <p><strong>Shared typings:</strong> {shared.slice(0, 6).map(([k, c]) => `${k} (${c})`).join(', ')}</p>
-                            : <p>No two Pokémon share the exact same typing.</p>}
+                    <div className="an-col">
+                        <Section title="Average stat profile" help={<>Across the roster, <strong>{topStat.label}</strong> is the highest stat on average. The ± is how much it varies between Pokémon.</>}>
+                            <Radar label="Average base stats" axes={statAvg.map(s => s.label)} max={Math.max(150, ...statAvg.map(s => s.value + s.spread))}
+                                series={[{ name: 'Roster average', kind: 'main', values: statAvg.map(s => s.value), band: statAvg.map(s => [Math.max(0, s.value - s.spread), s.value + s.spread] as [number, number]) }]} />
+                        </Section>
+                        <Section title="Speed tiers" help={`Fastest: ${fastest.map(m => `${m.name} (${m.stats.spe})`).join(', ')}.`}>
+                            <StripPlot label="Base Speed of each Pokémon" min={0} max={160} points={mons.map(m => ({ label: m.name, value: m.stats.spe }))}
+                                bands={[{ from: 0, to: 50, label: 'slow' }, { from: 50, to: 80, label: 'mid' }, { from: 80, to: 100, label: 'quick' }, { from: 100, to: 120, label: 'fast' }, { from: 120, to: 160, label: 'very fast' }]} />
+                        </Section>
+                        <Section title="Most learned moves" help={own.length ? `Your Fakémon learn ${round(avgMoves)} moves on average.` : ''}>
+                            {moveUse.length ? <Bars rows={moveUse.slice(0, 8).map(plainRow)} /> : <p className="an-muted">No learnsets yet. Add moves on the Moves &amp; Sets tab of the editor.</p>}
+                        </Section>
                     </div>
-                </Section>
+                </div>
+                    <Section title="Size, breeding and colour" wide>
+                        {bodyKnown ? (
+                            <>
+                                <div className="an-stats an-stats-small">
+                                    <Stat label="Average height" value={heights.length ? `${round(mean(heights), 1)} m` : '—'} sub={tallest ? `tallest: ${tallest.name}` : 'not set'} />
+                                    <Stat label="Average weight" value={weights.length ? `${round(mean(weights), 1)} kg` : '—'} sub={heaviest ? `heaviest: ${heaviest.name}` : 'not set'} />
+                                    <Stat label="Genderless" value={`${pct(genderless, n)}%`} sub={gendered.length ? `the rest ${round(mean(gendered.map(m => m.male as number)))}% male on average` : ''} />
+                                </div>
+                                {sized.length >= 3 && (
+                                    <><h4 className="an-sub">Height and weight</h4>
+                                    <Scatter label="Height against weight" xLabel="height (m)" yLabel="weight (kg)" log points={sized.map(m => ({ label: m.name, x: m.height!, y: m.weight!, color: m.color ? colorHex(m.color) : undefined }))} /></>
+                                )}
+                                {(eggs.length > 0 || colors.length > 0) && (
+                                    <div className="an-split">
+                                        <div><h4 className="an-sub">Egg groups</h4>{eggs.length ? <Bars rows={eggs.slice(0, 6).map(plainRow)} /> : <p className="an-muted">None set.</p>}</div>
+                                        <div><h4 className="an-sub">Colours</h4>{colors.length ? <ColorSwatches colors={colors} /> : <p className="an-muted">None set.</p>}</div>
+                                    </div>
+                                )}
+                            </>
+                        ) : <p className="an-muted">No heights, weights, egg groups, genders or colours set yet. Fill them in on the Basic Info tab of the editor.</p>}
+                    </Section>
+                    <DexNumbers own={own} />
+                </>
+            )}
 
-                <Section title="Base stat totals" help="How strong the roster is overall.">
-                    <div className="an-split">
-                        <div><Bars rows={bins} /></div>
-                        <div className="an-list">
-                            {n > 5
-                                ? <><h4>Strongest</h4>{bstList(byBst.slice(0, 5))}<h4>Weakest</h4>{bstList(byBst.slice(-5).reverse())}</>
-                                // too few for two lists without repeating names
-                                : <><h4>By total</h4>{bstList(byBst)}</>}
-                        </div>
+            {tab === 'types' && (
+                <div className="an-cols">
+                    <div className="an-col">
+                        <Section title="Type distribution" help="How many Pokémon have each type. The solid part is the first type, the lighter part the second.">
+                            <div className="an-bars">
+                                {used.map(r => (
+                                    <div className="an-bar-row" key={r.t}>
+                                        <span className="an-bar-label"><TypeBadge t={r.t} /></span>
+                                        <span className="an-bar-track">
+                                            <span className={`an-bar-fill type-${r.t.toLowerCase()}`} style={{ width: `${(r.primary / maxType) * 100}%` }} />
+                                            <span className={`an-bar-fill an-bar-secondary type-${r.t.toLowerCase()}`} style={{ width: `${(r.secondary / maxType) * 100}%` }} />
+                                        </span>
+                                        <span className="an-bar-value">{r.total}</span>
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="an-notes">
+                                <p><strong>Type balance: {evenness}%.</strong> 100% means every type appears equally often. A low number means a few types dominate.</p>
+                                {unused.length ? <p><strong>No Pokémon yet:</strong> <Badges types={unused} /></p> : <p>Every type has at least one Pokémon.</p>}
+                                {shared.length
+                                    ? <p><strong>Shared typings:</strong> {shared.slice(0, 6).map(([k, c]) => `${k} (${c})`).join(', ')}</p>
+                                    : <p>No two Pokémon share the exact same typing.</p>}
+                            </div>
+                        </Section>
+                        <Section title="STAB coverage" help="Types that no Pokémon in the region can hit super-effectively with a move of its own type.">
+                            <ChartFrame label="Super-effective coverage by type" className="chart-coverage">
+                                {attackTypes.map(t => {
+                                    const hit = !uncovered.includes(t);
+                                    return (
+                                        <span key={t} className={`chart-coverage-cell${hit ? '' : ' miss'}`} tabIndex={0}
+                                            data-tip={hit ? `${t}: hit super-effectively by ${stabTypes.filter(a => matchup(a, t) > 1).join(', ')}` : `${t}: nothing in the region hits it super-effectively`}>
+                                            <TypeBadge t={t} />
+                                        </span>
+                                    );
+                                })}
+                            </ChartFrame>
+                            <p className="an-muted an-coverage-note">{uncovered.length ? `${uncovered.length} type${uncovered.length === 1 ? '' : 's'} not covered (faded).` : 'Every type is covered.'}</p>
+                        </Section>
                     </div>
-                </Section>
-
-                <Section title="Average stat profile" help={<>Across the roster, <strong>{topStat.label}</strong> is the highest stat on average. The ± is how much it varies between Pokémon.</>}>
-                    <Bars max={150} color="var(--accent)" rows={statAvg.map(s => ({ key: s.label, label: s.label, value: s.value, text: <>{round(s.value)} <small>±{round(s.spread)}</small></> }))} />
-                </Section>
-
-                <Section title="Roles" help="A rough read of what each stat spread is built for.">
-                    <Bars rows={roles.map(plainRow)} />
-                </Section>
-
-                <Section title="Speed tiers" help={`Fastest: ${fastest.map(m => `${m.name} (${m.stats.spe})`).join(', ')}.`}>
-                    <Bars rows={speedTiers} />
-                </Section>
-
-                <Section title="Shared weaknesses" help="For each attacking type: how many of your Pokémon take extra damage from it, and how many resist it. Types at the top are the region's soft spots.">
-                    <div className="an-table-wrap">
-                        <table className="an-table">
-                            <thead><tr><th>Attacking type</th><th>Weak</th><th>Resist</th><th>Net</th></tr></thead>
-                            <tbody>
+                    <div className="an-col">
+                        <Section title="Shared weaknesses" help="For each attacking type: how many of your Pokémon take extra damage (red) and how many resist it (green). The region's soft spots are at the top.">
+                            <div className="an-diverge" role="table" aria-label="Weak and resist counts by attacking type">
+                                <div className="an-diverge-row an-diverge-head" role="row">
+                                    <span role="columnheader">Attacker</span>
+                                    <span role="columnheader" className="an-num">Weak</span>
+                                    <span role="columnheader" aria-hidden="true" />
+                                    <span role="columnheader" className="an-num">Resist</span>
+                                    <span role="columnheader" className="an-num">Net</span>
+                                </div>
                                 {defense.map(d => {
                                     const net = d.weak - d.resist;
                                     return (
-                                        <tr key={d.att}>
-                                            <td><TypeBadge t={d.att} /></td>
-                                            <td className="an-num an-bad">{d.weak}</td>
-                                            <td className="an-num an-good">{d.resist}</td>
-                                            <td className={`an-num ${net > 0 ? 'an-bad' : net < 0 ? 'an-good' : ''}`}>{net > 0 ? '+' : ''}{net}</td>
-                                        </tr>
+                                        <div className="an-diverge-row" role="row" key={d.att}>
+                                            <span role="cell"><TypeBadge t={d.att} /></span>
+                                            <span role="cell" className="an-num an-bad">{d.weak}</span>
+                                            <span role="cell" className="an-diverge-bars" aria-hidden="true">
+                                                <span className="an-diverge-side left"><span style={{ width: `${(d.weak / maxHits) * 100}%` }} /></span>
+                                                <span className="an-diverge-side right"><span style={{ width: `${(d.resist / maxHits) * 100}%` }} /></span>
+                                            </span>
+                                            <span role="cell" className="an-num an-good">{d.resist}</span>
+                                            <span role="cell" className={`an-num ${net > 0 ? 'an-bad' : net < 0 ? 'an-good' : ''}`}>{net > 0 ? '+' : ''}{net}</span>
+                                        </div>
                                     );
                                 })}
-                            </tbody>
-                        </table>
+                            </div>
+                        </Section>
                     </div>
-                </Section>
+                </div>
+            )}
 
-                <Section title="STAB coverage" help="Types that no Pokémon in the region can hit super-effectively with a move of its own type.">
-                    {uncovered.length
-                        ? <p className="an-chips"><Badges types={uncovered} /></p>
-                        : <p>Between them, your Pokémon's own types hit every type super-effectively.</p>}
-                </Section>
-
-                <Section title="Most common abilities" help={`${abilityUse.length} different abilities across the roster.`}>
-                    <Bars rows={abilityUse.slice(0, 8).map(plainRow)} />
-                </Section>
-
-                <Section title="Most learned moves" help={own.length ? `Your Fakémon learn ${round(avgMoves)} moves on average.` : ''}>
-                    {moveUse.length ? <Bars rows={moveUse.slice(0, 8).map(plainRow)} /> : <p className="an-muted">No learnsets yet.</p>}
-                </Section>
-
-                <Section title="Size, breeding and colour" wide>
-                    <div className="an-stats an-stats-small">
-                        <Stat label="Average height" value={heights.length ? `${round(mean(heights), 1)} m` : '—'} sub={tallest ? `tallest: ${tallest.name}` : ''} />
-                        <Stat label="Average weight" value={weights.length ? `${round(mean(weights), 1)} kg` : '—'} sub={heaviest ? `heaviest: ${heaviest.name}` : ''} />
-                        <Stat label="Genderless" value={`${pct(genderless, n)}%`} sub={gendered.length ? `the rest ${round(mean(gendered.map(m => m.male as number)))}% male on average` : ''} />
-                    </div>
-                    <div className="an-split">
-                        <div><h4 className="an-sub">Egg groups</h4>{eggs.length ? <Bars rows={eggs.slice(0, 6).map(plainRow)} /> : <p className="an-muted">None set.</p>}</div>
-                        <div><h4 className="an-sub">Colours</h4>{colors.length ? <Bars rows={colors.slice(0, 6).map(plainRow)} /> : <p className="an-muted">None set.</p>}</div>
-                    </div>
-                </Section>
+            {tab === 'library' && library}
             </div>
-
-            <Content region={region} mons={mons} own={own} matchup={matchup} allTypes={allTypes} />
         </>
     );
 }

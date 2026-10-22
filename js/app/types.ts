@@ -35,6 +35,11 @@ export interface Filed {
 export interface Fakemon extends Filed {
     id: Id;
     name: string;
+    // the private notebook (js/features/notebook.ts)
+    status?: 'idea' | 'draft' | 'done';
+    notes?: string;
+    tags?: string[];
+    doodles?: Array<{ id: string; src: string }>;
     species?: string;
     number?: string;
     type1?: string;
@@ -57,6 +62,11 @@ export interface Fakemon extends Filed {
     shinyArtwork?: string | null;
     cry?: string | null;
     artCredit?: any;
+    shinyArtCredit?: string | null;
+    artDescription?: string | null;
+    shinyArtDescription?: string | null;
+    /** artwork sets beyond the main Official Artwork (js/editor/art-sets.ts) */
+    artSets?: import('../editor/art-sets.ts').ArtSet[];
     evolutionGraph?: any;
     evolutionStage?: number;
     createdAt?: number;
@@ -81,7 +91,10 @@ export interface VanillaPool { mode: string; ids: string[]; }
 export interface Region {
     id: Id; type: 'region'; name: string; tagline?: string; bio?: string; banner?: string; color?: string;
     vanilla?: Partial<Record<'pokemon' | 'moves' | 'abilities' | 'items' | 'types', VanillaPool>>;
-    createdAt?: number; [extra: string]: any;
+    createdAt?: number;
+    /** the region's notepad (js/features/notebook.ts) */
+    notes?: string; doodles?: Array<{ id: string; src: string }>;
+    [extra: string]: any;
 }
 export interface CustomType extends Filed { id: Id; type: 'custom-type'; name: string; color?: string; gradient?: any; [extra: string]: any; }
 

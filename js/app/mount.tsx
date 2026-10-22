@@ -10,7 +10,7 @@ import './dialogs/battlePaused.tsx';
 import './dialogs/cropImage.tsx';
 import { NotFoundPage } from './pages/NotFoundPage.tsx';
 import { SettingsPage } from './pages/SettingsPage.tsx';
-import { useViewShown } from './store.ts';
+import { PageView, useViewShown } from './store.ts';
 import { api } from '../core/app.ts';
 import { ext } from '../core/extend.ts';
 import { CollectionPage } from './pages/CollectionPage.tsx';
@@ -20,6 +20,8 @@ import { Header } from './shell/Header.tsx';
 import { Sidebar } from './shell/Sidebar.tsx';
 import { Toasts } from './shell/Toasts.tsx';
 import { Onboarding } from './shell/Onboarding.tsx';
+import { ContextMenuHost, initContextMenu, setPageMenuItems } from './components/ContextMenu.tsx';
+import { openBulkPaste, openQuickAdd } from './dialogs/notebook.tsx';
 
 // Battle (its engine, the 3D field, the netcode: a sizeable share of the
 // site) only downloads the first time someone opens it. Until then the page
@@ -67,11 +69,30 @@ const PAGES: Array<[string, ComponentType]> = [
     ['onboarding-root', Onboarding]
 ];
 
+/** A page inside its view, so useStore() can let it rest while it is off screen. */
+function inView(view: string, Page: ComponentType): ComponentType {
+    function InView() { return <PageView.Provider value={view}><Page /></PageView.Provider>; }
+    InView.displayName = `InView(${Page.displayName || Page.name})`;
+    return InView;
+}
+
+// the shell around the pages is always on screen
+const SHELL = new Set(['app-header', 'app-sidebar', 'toast-container', 'onboarding-root']);
+
 /** Mounts every React page. Runs once at boot, before the first route opens. */
 export function mountPages(): void {
     // mounted at once: the editor's boards are drawn into by other modules straight after boot
     // (the editors stay eager for that; the other pages wait to be opened, above)
-    for (const [id, Page] of PAGES) mountIsland(id, Page, {}, { sync: true });
+    for (const [id, Page] of PAGES) mountIsland(id, SHELL.has(id) ? Page : inView(id, Page), {}, { sync: true });
     // the host's pages (js/core/extend.ts)
-    for (const { view, Page, lazy } of ext.pages) mountIsland(view, lazy ? whenFirstShown(Page, view) : Page, {}, { sync: true });
+    for (const { view, Page, lazy } of ext.pages) mountIsland(view, inView(view, lazy ? whenFirstShown(Page, view) : Page), {}, { sync: true });
+    // the right-click menu draws into a layer of its own, above everything
+    mountIsland(document.body.appendChild(Object.assign(document.createElement('div'), { id: 'context-menu-root' })), ContextMenuHost);
+    setPageMenuItems(() => document.body.dataset.page === 'collection-view'
+        ? [{ label: 'New Fakémon', icon: 'plus', run: () => api.createNewFakemon() }, { label: 'Quick add', icon: 'light-bulb', hint: 'N', run: openQuickAdd },
+            { label: 'Paste a list of names', icon: 'clipboard-document-list', run: openBulkPaste }, { label: 'New folder', icon: 'folder', run: () => api.createFolder?.() }]
+        : []);
+    initContextMenu();
+    // quick search (a host) and other modules open these through api
+    Object.assign(api, { openQuickAdd, openBulkPaste });
 }

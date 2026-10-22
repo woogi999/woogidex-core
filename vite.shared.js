@@ -315,7 +315,7 @@ export function woogidexConfig({ react, loadEnv, root, core, host, inputs = {}, 
         ],
         resolve: {
             alias: { '@woogidex/host': host || resolve(CORE, 'js/host/standalone.ts') },
-            dedupe: ['react', 'react-dom', 'three', 'html2canvas', ...dedupe],
+            dedupe: ['react', 'react-dom', 'three', 'html2canvas', 'gsap', 'lenis', ...dedupe],
             // Core linked into a site as a folder junction stays at the site's
             // path, so its imports find the site's node_modules
             preserveSymlinks: isSite
