@@ -21,7 +21,7 @@
     padding: var(--sp-6);
     background: var(--bg-card);
     border: 1px solid var(--border);
-    border-radius: 16px;
+    border-radius: 10px;
     overflow: hidden;
 }
 
@@ -45,7 +45,7 @@
 .board-types { display: flex; flex-wrap: wrap; gap: 6px; margin-top: var(--sp-3); }
 .board-number {
     flex: 0 0 auto;
-    font-family: 'Inconsolata', monospace;
+    font-family: var(--font-sans);
     font-size: 22px;
     font-weight: 700;
     font-style: italic;
@@ -127,14 +127,14 @@
 .board-art-set {
     appearance: none; border: 1px solid var(--border); border-radius: 999px;
     background: var(--bg-card); color: var(--text-secondary);
-    font: 600 11.5px/1 'Exo 2', sans-serif; padding: 5px 9px; cursor: pointer;
+    font: 600 11.5px/1 var(--font-sans); padding: 5px 9px; cursor: pointer;
 }
 .board-art-set:hover { color: var(--text-primary); background: var(--bg-panel); }
 .board-art-set.active { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
 .board-art-set:focus-visible, .board-art-thumb:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .board-art-thumb {
     appearance: none; width: 40px; height: 40px; padding: 3px; cursor: pointer;
-    border: 1px solid var(--border); border-radius: 8px; background: var(--bg-panel);
+    border: 1px solid var(--border); border-radius: 5px; background: var(--bg-panel);
 }
 .board-art-thumb.active { border-color: var(--accent); }
 .board-art-thumb img, .board-art-thumb canvas { width: 100%; height: 100%; object-fit: contain; display: block; }
@@ -146,7 +146,7 @@
 .board-artwork-credit a { color: var(--accent); }
 .board-artwork-description { margin: 0; font-size: 12px; line-height: 1.5; color: var(--text-secondary); white-space: pre-line; }
 .board-artwork-left .board-artwork-image { animation: board-art-swap var(--dur-slow) var(--ease-out) both; }
-@keyframes board-art-swap { from { opacity: 0; transform: scale(.97); filter: blur(4px); } }
+@keyframes board-art-swap { from { opacity: 0; transform: scale(.97); } }
 .reduce-motion .board-artwork-left .board-artwork-image { animation-name: board-art-fade; }
 @keyframes board-art-fade { from { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .board-artwork-left .board-artwork-image { animation-name: board-art-fade; } }
@@ -207,7 +207,7 @@
     border-top: 1px solid var(--border-light);
 }
 .board-bst-display .label { font-size: 11.5px; font-weight: 600; color: var(--text-muted); }
-.board-bst-display .value { font-family: 'Inconsolata', monospace; font-size: 18px; font-weight: 800; color: var(--text-primary); }
+.board-bst-display .value { font-family: var(--font-sans); font-size: 18px; font-weight: 800; color: var(--text-primary); }
 
 /* learnset: category label, then flat chips */
 .move-category { margin-bottom: var(--sp-4); }
@@ -224,7 +224,7 @@
 .move-list { display: flex; flex-wrap: wrap; gap: 4px; }
 .move-tag {
     padding: 3px 8px;
-    border-radius: 6px;
+    border-radius: 4px;
     font-size: 12px; font-weight: 600; line-height: 1.4;
     color: var(--text-primary);
     background: var(--bg-panel);
@@ -250,7 +250,7 @@
 }
 .pokedex-board .board-custom-move-item:hover { background: none; }
 .pokedex-board .board-custom-move-item:hover .cm-name { color: var(--accent); }
-.pokedex-board .board-custom-move-item .cm-type { font-size: 10.5px; padding: 2px 8px; border-radius: 6px; font-weight: 700; color: #fff; flex-shrink: 0; }
+.pokedex-board .board-custom-move-item .cm-type { font-size: 10.5px; padding: 2px 8px; border-radius: 4px; font-weight: 700; color: #fff; flex-shrink: 0; }
 .pokedex-board .board-custom-move-item .cm-name { font-size: 14px; }
 .pokedex-board .board-custom-move-item .cm-stats { font-size: 12px; margin-bottom: 2px; }
 .pokedex-board .board-custom-move-item .cm-desc { font-size: 12.5px; }
@@ -274,13 +274,13 @@
     border-top: 1px solid var(--border-light);
 }
 .bst-display .label { font-size: 12px; font-weight: 600; color: var(--text-secondary); }
-.bst-display .value { font-family: 'Inconsolata', monospace; font-size: 20px; font-weight: 800; color: var(--text-primary); }
+.bst-display .value { font-family: var(--font-sans); font-size: 20px; font-weight: 800; color: var(--text-primary); }
 
 /* ---- container breakpoints ---- */
 /* the board can't query its own width for its own padding, so this one
    follows the screen; the export renders in a desktop-sized frame and keeps
    the full padding either way */
-@media (max-width: 640px) { .pokedex-board { padding: var(--sp-4); border-radius: 14px; } }
+@media (max-width: 640px) { .pokedex-board { padding: var(--sp-4); border-radius: 9px; } }
 @container board (max-width: 480px) {
     .board-name { font-size: 26px; }
     .board-number { font-size: 16px; }

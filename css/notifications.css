@@ -37,7 +37,7 @@
         }
         .notifications-mark-all-btn {
             background: none; border: none; color: var(--accent); font-size: 12px; font-weight: 600;
-            cursor: pointer; padding: 4px 6px; border-radius: 6px;
+            cursor: pointer; padding: 4px 6px; border-radius: 4px;
         }
         .notifications-mark-all-btn:hover { background: var(--border-light); }
         .notifications-list { overflow-y: auto; flex: 1 1 auto; }
@@ -75,7 +75,7 @@
         /* ==================== header account menu ==================== */
         .header-signin-btn {
             height: var(--ctl-h); padding: 0 16px; border-radius: var(--ctl-r); border: 1px solid var(--accent);
-            background: var(--accent); color: #fff; font: 600 13px 'Exo 2', sans-serif;
+            background: var(--accent); color: #fff; font: 600 13px var(--font-sans);
             cursor: pointer; transition: background 0.2s, border-color 0.2s;
         }
         .header-signin-btn:hover { background: var(--accent-dark); border-color: var(--accent-dark); }
@@ -115,8 +115,8 @@
         .header-profile-popover-divider { height: 1px; background: var(--border-light); margin: 4px 0; }
         .header-profile-popover-item {
             width: 100%; border: none; background: transparent; color: var(--text-primary);
-            padding: 9px 8px; display: flex; align-items: center; gap: 10px; border-radius: 9px;
-            font: 600 13px 'Exo 2', sans-serif; cursor: pointer; text-align: left; transition: background 0.15s;
+            padding: 9px 8px; display: flex; align-items: center; gap: 10px; border-radius: 6px;
+            font: 600 13px var(--font-sans); cursor: pointer; text-align: left; transition: background 0.15s;
         }
         .header-profile-popover-item svg { width: 16px; height: 16px; color: var(--text-secondary); flex: 0 0 auto; }
         .header-profile-popover-item:hover { background: var(--bg-panel); }

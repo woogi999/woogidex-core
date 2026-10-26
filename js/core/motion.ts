@@ -46,10 +46,30 @@ const lowEnd = () => document.documentElement.classList.contains('low-end');
 // ==================== moving between views ====================
 
 /**
+ * The parts of a view that enter one after another: under any lone wrappers,
+ * each child, and the children of a child that holds a few blocks (a column
+ * of panels, a header row). In page order, at most 14. Nothing is measured:
+ * that would force a layout of the new content before its first frame.
+ */
+function entranceParts(root: Element): Element[] {
+    let el = root;
+    for (let depth = 0; depth < 4 && el.children.length === 1; depth++) el = el.children[0];
+    const out: Element[] = [];
+    for (const child of Array.from(el.children)) {
+        const n = child.children.length;
+        if (n > 1 && n <= 8 && out.length + n <= 14) out.push(...Array.from(child.children));
+        else out.push(child);
+        if (out.length >= 14) break;
+    }
+    return out.length ? out.slice(0, 14) : [root];
+}
+
+/**
  * A view arriving from the side it sits on: dir 1 comes in from the right
  * (the next tab, a page further right in the header, a deeper page), -1 from
  * the left, 0 rises in place. axis 'y' is for vertical lists (the regions).
- * Reduced motion keeps only the fade.
+ * Its parts arrive one after another, never all at once (entranceParts).
+ * Reduced motion keeps only the fade; .low-end moves the view as one.
  */
 export function slideIn(el: Element | null | undefined, dir: number, axis: 'x' | 'y' = 'x') {
     if (!el) return;
@@ -58,12 +78,13 @@ export function slideIn(el: Element | null | undefined, dir: number, axis: 'x' |
         return;
     }
     const d = Math.sign(dir);
-    // far enough to read as a swipe, not a nudge: a share of the window, with
-    // a floor and a cap. The window, not the panel: measuring the panel forced
-    // a layout of its new content before the first frame.
-    const reach = axis === 'x' ? Math.min(160, Math.max(96, window.innerWidth * 0.1)) : 56;
-    const from = d === 0 ? 'translateY(16px)' : axis === 'x' ? `translateX(${d * reach}px)` : `translateY(${d * reach}px)`;
-    enter(el, [{ transform: from, opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 320, easing: OUT3 });
+    // a short nudge that still says which side the view came from
+    const reach = axis === 'x' ? Math.min(36, Math.max(20, window.innerWidth * 0.022)) : 16;
+    const from = d === 0 ? 'translateY(10px)' : axis === 'x' ? `translateX(${d * reach}px)` : `translateY(${d * reach}px)`;
+    const frames = [{ transform: from, opacity: 0 }, { transform: 'none', opacity: 1 }];
+    if (lowEnd()) { enter(el, frames, { duration: 280, easing: OUT3 }); return; }
+    // "backwards" holds each part at its start until its turn comes
+    entranceParts(el).forEach((part, i) => enter(part, frames, { duration: 320, delay: i * 45, easing: OUT3, fill: 'backwards' }));
 }
 
 /** Where `next` sits against `prev` in an ordered list: 1 after, -1 before, 0 same or unknown. */
@@ -164,7 +185,8 @@ export function fadeSwap(el: Element | null | undefined, change: () => void) {
 export function staggerIn(items: Element[]) {
     if (!items.length || reducedMotion() || lowEnd()) return;
     const first = items.slice(0, 24);
-    const gap = Math.min(0.3, first.length * 0.02) / Math.max(1, first.length - 1) * 1000;
+    // never two at once: at least 25 ms apart, the whole run under half a second
+    const gap = Math.max(25, Math.min(0.45, first.length * 0.03) / Math.max(1, first.length - 1) * 1000);
     // "backwards" holds each card at its start until its turn comes
     first.forEach((el, i) => enter(el, [{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }],
         { duration: 450, delay: i * gap, easing: OUT_EXPO, fill: 'backwards' }));

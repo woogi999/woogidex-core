@@ -39,7 +39,7 @@
     max-width: 250px;
     padding: 8px 10px;
     border: 1px solid var(--border);
-    border-radius: 8px;
+    border-radius: 5px;
     background: var(--bg-card);
     color: var(--text-primary);
     box-shadow: 0 8px 24px rgba(0,0,0,.22);

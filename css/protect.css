@@ -21,12 +21,13 @@ img[data-protected],
 
 /* ---- screen capture deterrence ----
    armed while tab is hidden/unfocused (what capture tools/screen share look like);
-   only artwork blurs, rest of the page stays normal so it doesn't look broken on alt-tab */
+   only artwork hides, rest of the page stays normal so it doesn't look broken on alt-tab.
+   It fades out, never blurs: nothing on the site blurs. */
 body.protect-shielded #pokedex-board-community .board-artwork-left img,
 body.protect-shielded #community-view .card-art img,
 body.protect-shielded #community-detail-view .card-art img {
-    filter: blur(22px);
-    transition: filter .12s ease;
+    opacity: 0;
+    transition: opacity .12s ease;
 }
 
 /* ---- print / save-as-PDF ----
@@ -42,12 +43,12 @@ body.protect-shielded #community-detail-view .card-art img {
         content: 'Woogidex artwork is not available in print. Please view it on the site.';
         display: block;
         padding: 48px;
-        font: 700 16px/1.5 'Exo 2', system-ui, sans-serif;
+        font: 700 16px/1.5 var(--font-sans);
         text-align: center;
     }
 }
 
-/* Someone who has turned motion down should not get a blur transition. */
+/* Someone who has turned motion down should not get a fade. */
 .reduce-motion body.protect-shielded img { transition: none; }
 
 /* ==================== shielded artwork ====================
@@ -116,3 +117,10 @@ img.open-art { max-width: 100%; max-height: 100%; width: auto; height: auto; obj
 @media print {
     #community-detail-view:has(.is-open-mon) { display: block !important; }
 }
+
+/* ---- artwork scaling (the editor's Artwork tab, a Fakémon's artScaling) ----
+   pixel (nearest neighbour) is the default, so pixel art stays sharp;
+   smooth blends the pixels like most sites. Avatars always blend. */
+[data-scaling="pixel"] img, [data-scaling="pixel"] canvas { image-rendering: pixelated; }
+[data-scaling="smooth"] img, [data-scaling="smooth"] canvas,
+[data-scaling="smooth"] canvas.shielded-art:not(.avatar-art) { image-rendering: auto; }

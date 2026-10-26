@@ -16,8 +16,7 @@
     display: none;
     flex-direction: column;
     padding: var(--sp-4) var(--sp-3);
-    background: var(--bg-card);
-    border-right: 1px solid var(--border);
+    background: var(--bg-dark);
     overflow-y: auto;
     scrollbar-width: thin;
 }
@@ -52,11 +51,9 @@ body[data-page="collection-view"] .app-sidebar { display: flex; }
     .reduce-motion .app-sidebar { transition: none; }
 }
 
-/* "Blur & dim effects" off: strips the scrim from every overlay site-wide */
+/* "Dim effects" off: strips the scrim from every overlay site-wide */
 .no-overlay-blur .modal-overlay.active, .no-overlay-blur .overlay-dark.active, .no-overlay-blur .region-drawer-backdrop {
     background: transparent !important;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -76,7 +73,7 @@ body[data-page="collection-view"] .app-sidebar { display: flex; }
 .sidebar-section-add {
     width: 26px; height: 26px;
     display: flex; align-items: center; justify-content: center;
-    border: 0; border-radius: 6px;
+    border: 0; border-radius: 4px;
     background: transparent; color: var(--text-muted);
     cursor: pointer;
 }
@@ -100,7 +97,7 @@ body[data-page="collection-view"] .app-sidebar { display: flex; }
     padding: 8px var(--sp-3);
     border: 0; background: transparent;
     color: var(--text-secondary);
-    font: 600 13.5px 'Exo 2', sans-serif;
+    font: 600 13.5px var(--font-sans);
     text-align: left;
     cursor: pointer;
 }
@@ -109,7 +106,7 @@ body[data-page="collection-view"] .app-sidebar { display: flex; }
 .region-row-main > svg { width: 16px; height: 16px; flex: 0 0 auto; }
 .region-row-name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .region-row-count {
-    font: 700 11px 'Inconsolata', monospace;
+    font: 700 11px var(--font-sans);
     color: var(--text-muted);
     font-variant-numeric: tabular-nums;
 }
@@ -117,7 +114,7 @@ body[data-page="collection-view"] .app-sidebar { display: flex; }
     position: absolute; right: 4px;
     width: 26px; height: 26px;
     display: none; align-items: center; justify-content: center;
-    border: 0; border-radius: 6px;
+    border: 0; border-radius: 4px;
     background: var(--bg-card); color: var(--text-muted);
     cursor: pointer;
 }
@@ -155,7 +152,7 @@ body[data-page="collection-view"] .app-sidebar { display: flex; }
     border: 0; border-radius: var(--ctl-r);
     background: transparent;
     color: var(--text-secondary);
-    font: 600 12.5px 'Exo 2', sans-serif;
+    font: 600 12.5px var(--font-sans);
     text-align: left; cursor: pointer;
 }
 .region-subrow svg { width: 15px; height: 15px; }

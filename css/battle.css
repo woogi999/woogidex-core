@@ -6,7 +6,7 @@
 /* built from the site's existing tokens and primitives, so it reads as part of the same app rather than a bolted-on simulator */
 .battle-tabs { display:flex; gap:6px; margin-bottom:18px; border-bottom:1px solid var(--border); }
 .battle-tab { display:inline-flex; align-items:center; gap:7px; padding:10px 16px; border:0; border-bottom:2px solid transparent;
-    background:transparent; color:var(--text-secondary); font:600 13px 'Exo 2',sans-serif; cursor:pointer; }
+    background:transparent; color:var(--text-secondary); font:600 13px var(--font-sans); cursor:pointer; }
 .battle-tab i { width:15px; height:15px; }
 .battle-tab:hover:not(:disabled) { color:var(--text-primary); }
 .battle-tab.is-active { color:var(--text-primary); border-bottom-color:var(--accent); }
@@ -21,37 +21,37 @@
 
 /* ---- teams ---- */
 .battle-team-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:14px; }
-.battle-team-card { border-radius:14px; padding:14px; background:var(--bg-card); display:flex; flex-direction:column; gap:10px; border: 0; }
+.battle-team-card { border-radius:9px; padding:14px; background:var(--bg-card); display:flex; flex-direction:column; gap:10px; border: 0; }
 .battle-team-card-head { display:flex; justify-content:space-between; align-items:center; gap:8px; }
-.battle-team-count { font-size:11px; color:var(--text-muted); font-family:'Inconsolata',monospace; }
+.battle-team-count { font-size:11px; color:var(--text-muted); font-family:var(--font-sans); }
 .battle-team-mons { display:flex; gap:6px; flex-wrap:wrap; min-height:42px; align-items:center; }
-.battle-team-chip { width:40px; height:40px; border-radius:9px; background:var(--bg-panel); display:flex; align-items:center; justify-content:center; overflow:hidden; color:var(--text-muted); }
+.battle-team-chip { width:40px; height:40px; border-radius:6px; background:var(--bg-panel); display:flex; align-items:center; justify-content:center; overflow:hidden; color:var(--text-muted); }
 .battle-team-chip img { width:100%; height:100%; object-fit:contain; }
 .battle-team-empty { font-size:12px; color:var(--text-muted); }
 .battle-team-warn { display:flex; align-items:flex-start; gap:7px; font-size:11.5px; color:var(--warning); }
 .battle-team-warn i { width:14px; height:14px; flex-shrink:0; margin-top:1px; }
-.battle-team-warn.block { padding:12px 14px; border:1px solid var(--warning); border-radius:10px; margin-bottom:14px;
+.battle-team-warn.block { padding:12px 14px; border:1px solid var(--warning); border-radius:7px; margin-bottom:14px;
     background:color-mix(in srgb, var(--warning) 8%, transparent); }
 .battle-team-actions { display:flex; gap:6px; margin-top:auto; }
 .battle-team-actions .btn:first-child { flex:1; }
 
-.battle-team-name { flex:1; min-width:0; padding:8px 12px; border:1px solid var(--border); border-radius:9px;
-    background:var(--bg-input); color:var(--text-primary); font:700 16px 'Exo 2',sans-serif; }
+.battle-team-name { flex:1; min-width:0; padding:8px 12px; border:1px solid var(--border); border-radius:6px;
+    background:var(--bg-input); color:var(--text-primary); font:700 16px var(--font-sans); }
 
-.battle-slot { border-radius:14px; padding:14px; background:var(--bg-card); border: 0; }
+.battle-slot { border-radius:9px; padding:14px; background:var(--bg-card); border: 0; }
 .battle-slot.is-missing { outline: 1.5px solid var(--danger); outline-offset: -1.5px;  }
 .battle-slot-note { font-size:12px; color:var(--text-muted); margin-top:6px; }
 .battle-slot-head { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:12px; flex-wrap:wrap; }
 .battle-slot-mon { display:flex; align-items:center; gap:11px; min-width:0; }
-.battle-slot-mon img, .battle-slot-noart { width:52px; height:52px; border-radius:10px; background:var(--bg-panel); object-fit:contain; flex-shrink:0;
+.battle-slot-mon img, .battle-slot-noart { width:52px; height:52px; border-radius:7px; background:var(--bg-panel); object-fit:contain; flex-shrink:0;
     display:flex; align-items:center; justify-content:center; color:var(--text-muted); }
 .battle-slot-types { display:flex; gap:4px; margin-top:4px; }
 .battle-slot-tools { display:flex; gap:5px; }
 .battle-slot-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:10px; margin-bottom:12px; }
 .battle-slot-grid label { display:flex; flex-direction:column; gap:4px; font-size:11px; font-weight:700; letter-spacing:.04em; color:var(--text-muted); }
 .battle-slot-grid input, .battle-slot-grid select, .battle-move-input {
-    padding:8px 10px; border:1px solid var(--border); border-radius:8px; background:var(--bg-input);
-    color:var(--text-primary); font:400 13px 'Exo 2',sans-serif; }
+    padding:8px 10px; border:1px solid var(--border); border-radius:5px; background:var(--bg-input);
+    color:var(--text-primary); font:400 13px var(--font-sans); }
 .battle-slot-moves { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:8px; align-items:end; }
 .battle-slot-label { grid-column:1/-1; display:flex; justify-content:space-between; font-size:11px; font-weight:700; letter-spacing:.04em; color:var(--text-muted); }
 
@@ -70,13 +70,13 @@
 .battle-status-open { color:var(--success); border-color:color-mix(in srgb,var(--success) 40%,var(--border)); }
 .battle-status-busy { color:var(--warning); }
 
-.battle-bot-box, .battle-challenge-box { border-radius:14px; padding:14px; background:var(--bg-card); margin-bottom:14px; border: 0; }
+.battle-bot-box, .battle-challenge-box { border-radius:9px; padding:14px; background:var(--bg-card); margin-bottom:14px; border: 0; }
 .battle-bot-box h4, .battle-challenge-box h4 { display:flex; align-items:center; gap:7px; font-size:14px; margin-bottom:12px; }
 .battle-bot-box h4 i, .battle-challenge-box h4 i { width:16px; height:16px; color:var(--text-secondary); }
 .battle-bot-box label { display:flex; flex-direction:column; gap:4px; font-size:11px; font-weight:700;
     letter-spacing:.04em; color:var(--text-muted); margin-bottom:10px; }
-.battle-bot-box select { padding:8px 10px; border:1px solid var(--border); border-radius:8px; background:var(--bg-input);
-    color:var(--text-primary); font:400 13px 'Exo 2',sans-serif; }
+.battle-bot-box select { padding:8px 10px; border:1px solid var(--border); border-radius:5px; background:var(--bg-input);
+    color:var(--text-primary); font:400 13px var(--font-sans); }
 .battle-bot-box .btn { width:100%; justify-content:center; }
 .battle-challenge-row { display:flex; justify-content:space-between; align-items:center; gap:10px; padding:9px 0; border-top:1px solid var(--border); }
 .battle-challenge-row:first-of-type { border-top:0; }
@@ -91,13 +91,13 @@
 /* trainer rails flank the field (you left, them right); log stays far right */
 .ps-wrap { display:grid; grid-template-columns:92px minmax(0,1fr) 92px 320px; gap:14px; align-items:start; }
 
-.battle-party { display:flex; flex-direction:column; gap:8px; padding:10px 8px; border-radius:14px; background:var(--bg-card); border: 0; }
+.battle-party { display:flex; flex-direction:column; gap:8px; padding:10px 8px; border-radius:9px; background:var(--bg-card); border: 0; }
 .battle-party-head { text-align:center; line-height:1.25; }
 .battle-party-head strong { display:block; font-size:12px; color:var(--text-primary);
     overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .battle-party-head small { font-size:10px; color:var(--text-muted); }
 .battle-party-slots { display:flex; flex-direction:column; gap:6px; }
-.battle-party-slot { position:relative; aspect-ratio:1; border-radius:10px; background:var(--bg-panel); display:flex; align-items:center; justify-content:center; overflow:hidden; transition:border-color .2s ease, transform .2s ease; border: 0; }
+.battle-party-slot { position:relative; aspect-ratio:1; border-radius:7px; background:var(--bg-panel); display:flex; align-items:center; justify-content:center; overflow:hidden; transition:border-color .2s ease, transform .2s ease; border: 0; }
 .battle-party-slot img { width:100%; height:100%; object-fit:contain; }
 .battle-party-slot.is-active { outline: 1.5px solid var(--accent); outline-offset: -1.5px;  transform:scale(1.06);
     box-shadow:0 0 0 2px var(--accent-glow); }
@@ -106,13 +106,13 @@
 .battle-party-slot.is-empty { opacity:.35; }
 .battle-party-unknown { color:var(--text-muted); display:flex; }
 /* PvP opponent teams are stored without artwork on purpose; this labels a revealed mon we have no picture for */
-.battle-party-monogram { font:800 11px 'Exo 2',sans-serif; color:var(--text-secondary);
+.battle-party-monogram { font:800 11px var(--font-sans); color:var(--text-secondary);
     letter-spacing:.02em; }
 .battle-party-unknown i { width:18px; height:18px; }
 .battle-party-slot.is-empty { border-style:dashed; }
 
 /* Find Match leads the screen since the queue is the point of the lobby */
-.battle-findmatch { display:flex; align-items:center; gap:14px; flex-wrap:wrap; padding:14px 16px; margin-bottom:16px; border-radius:14px; background:var(--bg-card); border: 0; }
+.battle-findmatch { display:flex; align-items:center; gap:14px; flex-wrap:wrap; padding:14px 16px; margin-bottom:16px; border-radius:9px; background:var(--bg-card); border: 0; }
 .battle-findmatch.is-searching { border-color:var(--accent);
     box-shadow:0 0 0 2px var(--accent-glow); }
 .battle-findmatch-copy { flex:1 1 220px; min-width:0; }
@@ -138,7 +138,7 @@
 .ps-main { min-width:0; }
 
 .ps-scene { position:relative; width:100%; aspect-ratio:16/9; border:1px solid var(--border);
-    border-radius:16px; overflow:hidden; background:var(--bg-panel); }
+    border-radius:10px; overflow:hidden; background:var(--bg-panel); }
 .ps-field { position:absolute; inset:0; }
 .ps-sky { position:absolute; inset:0 0 34% 0; background:linear-gradient(#bfe3ff,#e9f5ff); }
 .ps-ground { position:absolute; inset:50% 0 0 0; background:linear-gradient(#cfeba4,#a5d072); }
@@ -396,15 +396,15 @@
 @keyframes ps-ball-y-far { from { top:11%; } to { top:52%; } }
 @keyframes ps-ball-spin-far { from { transform:scale(.55) rotate(0); } to { transform:scale(.88) rotate(720deg); } }
 
-.ps-statbar { position:absolute; width:min(46%,250px); padding:8px 10px; border-radius:11px;
+.ps-statbar { position:absolute; width:min(46%,250px); padding:8px 10px; border-radius:7px;
     background:color-mix(in srgb,var(--bg-card) 88%,transparent); border:1px solid var(--border);
     box-shadow:0 3px 10px rgba(0,0,0,.12); transition:opacity .3s ease; }
 .ps-statbar.is-hidden { opacity:0; }
 .ps-statbar-far { top:5%; left:4%; }
 .ps-statbar-near { bottom:5%; right:4%; }
 .ps-statbar-top { display:flex; align-items:center; gap:6px; margin-bottom:5px; }
-.ps-mon-name { font:700 13px 'Exo 2',sans-serif; color:var(--text-primary); }
-.ps-mon-lvl { font-size:10.5px; color:var(--text-muted); font-family:'Inconsolata',monospace; }
+.ps-mon-name { font:700 13px var(--font-sans); color:var(--text-primary); }
+.ps-mon-lvl { font-size:10.5px; color:var(--text-muted); font-family:var(--font-sans); }
 .ps-mon-status { margin-left:auto; font-size:9px; font-weight:800; padding:2px 6px; border-radius:999px;
     color:#fff; letter-spacing:.04em; }
 .ps-mon-status.is-empty { display:none; }
@@ -421,9 +421,9 @@
 .ps-hp.is-mid { background:var(--warning); }
 .ps-hp.is-low { background:var(--danger); }
 .ps-statbar-bottom { display:flex; align-items:center; gap:6px; margin-top:4px; min-height:14px; }
-.ps-hptext { font:600 10.5px 'Inconsolata',monospace; color:var(--text-muted); }
+.ps-hptext { font:600 10.5px var(--font-sans); color:var(--text-muted); }
 .ps-boosts { display:flex; gap:3px; margin-left:auto; flex-wrap:wrap; }
-.ps-boost { font-size:9px; font-weight:800; padding:1px 4px; border-radius:5px; border:1px solid var(--border); }
+.ps-boost { font-size:9px; font-weight:800; padding:1px 4px; border-radius:3px; border:1px solid var(--border); }
 .ps-boost.is-up { color:var(--success); }
 .ps-boost.is-down { color:var(--danger); }
 .ps-teamicons { display:flex; gap:3px; margin-top:6px; }
@@ -438,7 +438,7 @@
 .ps-ball.status-frz { background:#4aa8dd; }
 
 .ps-result { position:absolute; left:50%; top:4%; z-index:6; pointer-events:none; white-space:nowrap;
-    font:800 13px 'Exo 2',sans-serif; padding:2px 8px; border-radius:8px; background:rgba(0,0,0,.62);
+    font:800 13px var(--font-sans); padding:2px 8px; border-radius:5px; background:rgba(0,0,0,.62);
     animation:ps-float 1000ms ease-out forwards; }
 .ps-result.is-bad { color:#ff8a80; }
 .ps-result.is-good { color:#9be59b; }
@@ -453,10 +453,10 @@
 
 .ps-turnbox { position:absolute; top:5%; right:4%; padding:3px 9px; border-radius:999px;
     border:1px solid var(--border); background:color-mix(in srgb,var(--bg-card) 82%,transparent);
-    font:800 10px 'Exo 2',sans-serif; letter-spacing:.1em; color:var(--text-muted); }
+    font:800 10px var(--font-sans); letter-spacing:.1em; color:var(--text-muted); }
 .ps-turnbox::before { content:'Turn '; }
 .ps-movebanner { position:absolute; left:50%; top:36%; transform:translate(-50%,-50%); opacity:0;
-    pointer-events:none; font:800 17px 'Exo 2',sans-serif; color:#fff; text-shadow:0 2px 8px rgba(0,0,0,.65); }
+    pointer-events:none; font:800 17px var(--font-sans); color:#fff; text-shadow:0 2px 8px rgba(0,0,0,.65); }
 .ps-movebanner.is-show { animation:ps-banner 900ms ease-out; }
 @keyframes ps-banner {
     0% { opacity:0; transform:translate(-50%,-50%) scale(.85); }
@@ -475,15 +475,15 @@
 
 .ps-toolbar { display:flex; align-items:center; justify-content:space-between; gap:10px; margin:10px 0 12px; flex-wrap:wrap; }
 .ps-speed { display:flex; align-items:center; gap:7px; font-size:11px; font-weight:700; letter-spacing:.04em; color:var(--text-muted); }
-.ps-speed select { padding:5px 8px; border:1px solid var(--border); border-radius:8px;
-    background:var(--bg-input); color:var(--text-primary); font:400 12px 'Exo 2',sans-serif; }
+.ps-speed select { padding:5px 8px; border:1px solid var(--border); border-radius:5px;
+    background:var(--bg-input); color:var(--text-primary); font:400 12px var(--font-sans); }
 .ps-toolbar-right { display:flex; align-items:center; gap:10px; }
 .ps-anim-wait { display:flex; align-items:center; justify-content:center; gap:8px; padding:26px;
     color:var(--text-muted); font-size:13px; }
 .ps-anim-wait i { width:16px; height:16px; animation:battle-spin 1.1s linear infinite; }
 
 .ps-logwrap { display:flex; flex-direction:column; max-height:560px; overflow:hidden;
-    border:1px solid var(--border); border-radius:14px; background:var(--bg-card); }
+    border:1px solid var(--border); border-radius:9px; background:var(--bg-card); }
 
 .ps-log { flex:1; overflow-y:auto; padding:12px 14px; font-size:12.5px; line-height:1.6; }
 .ps-log > div { padding:1px 0; }
@@ -502,28 +502,28 @@
 .battle-controls { margin-bottom:18px; }
 .battle-move-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-bottom:12px; }
 .battle-move { display:flex; flex-direction:column; align-items:flex-start; gap:7px; padding:13px 15px;
-    border:1px solid var(--border); border-radius:12px; background:var(--bg-card); cursor:pointer; text-align:left;
+    border:1px solid var(--border); border-radius:8px; background:var(--bg-card); cursor:pointer; text-align:left;
     transition:border-color .15s ease, transform .15s ease, box-shadow .15s ease; }
 .battle-move:hover:not(:disabled) { border-color:var(--accent); transform:translateY(-2px); box-shadow:0 6px 18px rgba(0,0,0,.07); }
 .battle-move:disabled { opacity:.4; cursor:not-allowed; }
-.battle-move-name { font:700 14.5px 'Exo 2',sans-serif; color:var(--text-primary); }
+.battle-move-name { font:700 14.5px var(--font-sans); color:var(--text-primary); }
 .battle-move-meta { display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-size:11px; color:var(--text-muted); width:100%; }
-.battle-move-pp { margin-left:auto; font-family:'Inconsolata',monospace; }
+.battle-move-pp { margin-left:auto; font-family:var(--font-sans); }
 .battle-action-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
 .battle-waiting { display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--text-muted); }
 .battle-waiting i { width:14px; height:14px; animation:battle-spin 1.1s linear infinite; }
 @keyframes battle-spin { to { transform:rotate(360deg); } }
 
-.battle-switch-panel { border:1px solid var(--border); border-radius:14px; padding:14px; background:var(--bg-card); }
+.battle-switch-panel { border:1px solid var(--border); border-radius:9px; padding:14px; background:var(--bg-card); }
 .battle-switch-head { font-weight:700; margin-bottom:12px; }
 .battle-switch-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:10px; margin-bottom:10px; }
-.battle-switch-card { display:flex; flex-direction:column; align-items:center; gap:5px; padding:11px; border-radius:11px; background:var(--bg-panel); cursor:pointer; color:var(--text-primary); font-family:inherit; border: 0; }
+.battle-switch-card { display:flex; flex-direction:column; align-items:center; gap:5px; padding:11px; border-radius:7px; background:var(--bg-panel); cursor:pointer; color:var(--text-primary); font-family:inherit; border: 0; }
 .battle-switch-card:hover { outline: 1.5px solid var(--accent); outline-offset: -1.5px;  }
 .battle-switch-card img { width:52px; height:52px; object-fit:contain; }
 .battle-switch-card small { color:var(--text-muted); font-size:11px; }
 .battle-switch-card .battle-hp-bar { width:100%; }
 
-.battle-end { text-align:center; padding:28px 20px; border:1px solid var(--border); border-radius:16px; background:var(--bg-card); }
+.battle-end { text-align:center; padding:28px 20px; border:1px solid var(--border); border-radius:10px; background:var(--bg-card); }
 .battle-end i { width:38px; height:38px; margin-bottom:10px; }
 .battle-end.is-win i { color:var(--warning); }
 .battle-end.is-loss i { color:var(--text-muted); }
@@ -533,12 +533,12 @@
 .battle-end-actions { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
 
 .battle-conn-banner { display:flex; align-items:center; gap:8px; padding:9px 14px; margin-bottom:10px;
-  border:1px solid var(--border); border-radius:12px; background:var(--bg-card); font-size:13px; color:var(--text-secondary); }
+  border:1px solid var(--border); border-radius:8px; background:var(--bg-card); font-size:13px; color:var(--text-secondary); }
 .battle-conn-banner i { width:15px; height:15px; flex-shrink:0; }
 .battle-conn-banner.is-bad { border-color:var(--danger); color:var(--danger); }
 .battle-conn-banner span { flex:1; }
 
-.battle-timer { font-family:'Inconsolata',monospace; font-size:13px; color:var(--text-primary); }
+.battle-timer { font-family:var(--font-sans); font-size:13px; color:var(--text-primary); }
 .battle-timer.is-urgent { color:var(--danger); }
 .battle-log { max-height:260px; overflow-y:auto; padding:12px 14px; font-size:12.5px; line-height:1.65; }
 .battle-log > div { padding:1px 0; }
@@ -553,12 +553,12 @@
 .log-faint { color:var(--danger); font-weight:700; }
 .log-boost { color:var(--success); } .log-unboost { color:var(--danger); }
 .log-status { color:#9b59b6; } .log-field, .log-ability { color:var(--info); }
-.battle-log small { color:var(--text-muted); font-family:'Inconsolata',monospace; font-size:10.5px; }
+.battle-log small { color:var(--text-muted); font-family:var(--font-sans); font-size:10.5px; }
 
 /* ---- battle chat ---- */
 .ps-chatbar { display:flex; gap:6px; padding:9px 12px; border-top:1px solid var(--border); }
-.ps-chatbar input { flex:1; min-width:0; padding:8px 11px; border:1px solid var(--border); border-radius:10px;
-    background:var(--bg-input); color:var(--text-primary); font:400 12.5px 'Exo 2',sans-serif; }
+.ps-chatbar input { flex:1; min-width:0; padding:8px 11px; border:1px solid var(--border); border-radius:7px;
+    background:var(--bg-input); color:var(--text-primary); font:400 12.5px var(--font-sans); }
 .ps-chatbar input:focus { outline:none; border-color:var(--accent); }
 .battle-chat-line { padding:2px 0; color:var(--text-secondary); }
 .battle-chat-name { font-weight:800; }
@@ -566,19 +566,19 @@
 .battle-chat-line.is-foe .battle-chat-name { color:var(--danger); }
 
 /* ---- lead picker (Showdown-style "who leads?", on the battle screen) ---- */
-.battle-lead-screen { border:1px solid var(--border); border-radius:16px; background:var(--bg-card); padding:20px 22px; }
+.battle-lead-screen { border:1px solid var(--border); border-radius:10px; background:var(--bg-card); padding:20px 22px; }
 .battle-lead-hint { color:var(--text-muted); font-size:13px; margin-bottom:14px; }
 .battle-lead-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(110px,1fr)); gap:12px; margin-bottom:18px; }
 /* opponent teams are stored without artwork on purpose, so lead selection falls back to name and typing */
 .battle-lead-opp { margin:2px 0 16px; padding-top:14px; border-top:1px solid var(--border); }
-.battle-lead-opp-head { font:700 12px 'Exo 2',sans-serif; color:var(--text-muted); letter-spacing:.04em; margin-bottom:10px; }
+.battle-lead-opp-head { font:700 12px var(--font-sans); color:var(--text-muted); letter-spacing:.04em; margin-bottom:10px; }
 .battle-lead-opp-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(96px,1fr)); gap:10px; }
-.battle-lead-opp-card { display:flex; flex-direction:column; align-items:center; gap:4px; padding:8px 6px; border-radius:10px; background:var(--bg-panel); border: 0; }
+.battle-lead-opp-card { display:flex; flex-direction:column; align-items:center; gap:4px; padding:8px 6px; border-radius:7px; background:var(--bg-panel); border: 0; }
 .battle-lead-opp-card img { width:52px; height:52px; object-fit:contain; }
-.battle-lead-opp-card strong { font:700 11px 'Exo 2',sans-serif; text-align:center;
+.battle-lead-opp-card strong { font:700 11px var(--font-sans); text-align:center;
     overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100%; }
 .battle-lead-opp-types { display:flex; flex-wrap:wrap; gap:3px; justify-content:center; }
-.battle-lead-card { position:relative; display:flex; flex-direction:column; align-items:center; gap:7px; padding:15px 9px; border-radius:13px; background:var(--bg-panel); cursor:pointer; color:var(--text-primary); font-family:inherit; transition:border-color .15s ease, transform .15s ease, box-shadow .15s ease; border: 0; }
+.battle-lead-card { position:relative; display:flex; flex-direction:column; align-items:center; gap:7px; padding:15px 9px; border-radius:8px; background:var(--bg-panel); cursor:pointer; color:var(--text-primary); font-family:inherit; transition:border-color .15s ease, transform .15s ease, box-shadow .15s ease; border: 0; }
 .battle-lead-card:hover { outline: 1.5px solid var(--accent); outline-offset: -1.5px;  transform:translateY(-3px); box-shadow:0 8px 20px rgba(0,0,0,.12); }
 .battle-lead-card.is-selected { outline: 1.5px solid var(--accent); outline-offset: -1.5px;  box-shadow:0 0 0 3px var(--accent-glow); }
 .battle-lead-card img { width:64px; height:64px; object-fit:contain; }
@@ -590,17 +590,17 @@
 /* ---- Showdown-style teambuilder: slot sidebar + detail sheet ---- */
 .ps-teambuilder { display:grid; grid-template-columns:190px minmax(0,1fr); gap:16px; align-items:start; }
 .ps-tb-sidebar { display:flex; flex-direction:column; gap:8px; }
-.ps-tb-slot { display:flex; align-items:center; gap:9px; padding:8px 10px; border-radius:11px; background:var(--bg-card); cursor:pointer; color:var(--text-primary); font-family:inherit; text-align:left; transition:border-color .15s ease, box-shadow .15s ease; border: 0; }
+.ps-tb-slot { display:flex; align-items:center; gap:9px; padding:8px 10px; border-radius:7px; background:var(--bg-card); cursor:pointer; color:var(--text-primary); font-family:inherit; text-align:left; transition:border-color .15s ease, box-shadow .15s ease; border: 0; }
 .ps-tb-slot:hover { outline: 1.5px solid var(--accent); outline-offset: -1.5px;  }
 .ps-tb-slot.is-selected { outline: 1.5px solid var(--accent); outline-offset: -1.5px;  box-shadow:0 0 0 3px var(--accent-glow); }
-.ps-tb-slot-num { font:800 10px 'Inconsolata',monospace; color:var(--text-muted); width:14px; flex-shrink:0; }
+.ps-tb-slot-num { font:800 10px var(--font-sans); color:var(--text-muted); width:14px; flex-shrink:0; }
 .ps-tb-slot img { width:34px; height:34px; object-fit:contain; flex-shrink:0; }
 .ps-tb-noart { width:34px; height:34px; display:flex; align-items:center; justify-content:center;
     color:var(--text-muted); flex-shrink:0; }
 .ps-tb-noart i { width:16px; height:16px; }
 .ps-tb-slot-name { font-size:12.5px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .ps-tb-addslot { display:flex; align-items:center; justify-content:center; gap:7px; padding:10px;
-    border:1.5px dashed var(--border); border-radius:11px; background:transparent; cursor:pointer;
+    border:1.5px dashed var(--border); border-radius:7px; background:transparent; cursor:pointer;
     color:var(--text-muted); font-family:inherit; font-size:12.5px; font-weight:700;
     transition:border-color .15s ease, color .15s ease; }
 .ps-tb-addslot:hover { border-color:var(--accent); color:var(--accent); }
@@ -617,20 +617,20 @@
 .battle-picker-tab.is-active { border-color:var(--accent); background:color-mix(in srgb,var(--accent) 10%,transparent); color:var(--accent); }
 
 /* stat editor rows (mirrors the sample-set stat grid) */
-.ps-tb-stats { margin-top:14px; border-radius:12px; background:var(--bg-panel); padding:12px 14px; border: 0; }
+.ps-tb-stats { margin-top:14px; border-radius:8px; background:var(--bg-panel); padding:12px 14px; border: 0; }
 .ps-tb-stats-header { display:grid; grid-template-columns:96px 44px 70px 1fr 60px 55px; gap:8px;
     font-size:10.5px; font-weight:800; letter-spacing:.05em; color:var(--text-muted);
     text-align:center; margin-bottom:4px; }
 .ps-tb-stats-header span:first-child { text-align:left; }
 .ps-tb-stat-row { display:grid; grid-template-columns:96px 44px 70px 1fr 60px 55px; gap:8px; align-items:center;
-    padding:5px 4px; border-radius:7px; transition:background .15s; }
+    padding:5px 4px; border-radius:5px; transition:background .15s; }
 .ps-tb-stat-row.stat-boosted { background:rgba(204,68,68,.07); }
 .ps-tb-stat-row.stat-reduced { background:rgba(68,102,204,.07); }
 .ps-tb-stat-name { display:flex; flex-direction:column; gap:3px; font-size:13px; font-weight:700; color:var(--text-primary); }
 .ps-tb-nature-btns { display:flex; gap:4px; }
-.ps-tb-stat-base { font-size:13px; font-weight:600; color:var(--text-muted); font-family:'Inconsolata',monospace; text-align:center; }
-.ps-tb-ev-input, .ps-tb-iv-input { width:100%; padding:5px 6px; border:1px solid var(--border); border-radius:6px;
-    background:var(--bg-input); color:var(--text-primary); font:600 12px 'Inconsolata',monospace; text-align:center; }
+.ps-tb-stat-base { font-size:13px; font-weight:600; color:var(--text-muted); font-family:var(--font-sans); text-align:center; }
+.ps-tb-ev-input, .ps-tb-iv-input { width:100%; padding:5px 6px; border:1px solid var(--border); border-radius:4px;
+    background:var(--bg-input); color:var(--text-primary); font:600 12px var(--font-sans); text-align:center; }
 .ps-tb-ev-track { position:relative; width:100%; height:14px; display:flex; align-items:center; }
 .ps-tb-ev-track::before { content:''; position:absolute; left:0; top:50%; transform:translateY(-50%);
     width:100%; height:6px; background:var(--bg-dark,#00000022); border-radius:3px; }
@@ -643,17 +643,17 @@
     border-radius:50%; background:#333; cursor:pointer; border:2px solid white; box-shadow:0 1px 4px rgba(0,0,0,.25); margin-top:-2px; }
 .ps-tb-ev-track input[type="range"]::-moz-range-thumb { width:15px; height:15px; border-radius:50%;
     background:#333; cursor:pointer; border:2px solid white; box-shadow:0 1px 4px rgba(0,0,0,.25); }
-.ps-tb-stat-calc { font-size:13px; font-weight:800; color:var(--text-primary); font-family:'Inconsolata',monospace; text-align:center; }
+.ps-tb-stat-calc { font-size:13px; font-weight:800; color:var(--text-primary); font-family:var(--font-sans); text-align:center; }
 .ps-tb-ev-total { margin-top:8px; font-size:11.5px; font-weight:700; color:var(--text-muted); text-align:right; }
 .ps-tb-ev-total.is-over { color:var(--danger); }
 
 /* import/export box */
-.ps-tb-io { margin-top:14px; border-radius:12px; background:var(--bg-panel); padding:11px 14px; border: 0; }
+.ps-tb-io { margin-top:14px; border-radius:8px; background:var(--bg-panel); padding:11px 14px; border: 0; }
 .ps-tb-io summary { cursor:pointer; font-size:12.5px; font-weight:700; color:var(--text-secondary);
     display:flex; align-items:center; gap:7px; list-style:none; }
 .ps-tb-io summary i { width:14px; height:14px; }
-.ps-tb-io textarea { width:100%; margin-top:10px; padding:10px 12px; border:1px solid var(--border); border-radius:9px;
-    background:var(--bg-input); color:var(--text-primary); font:400 12px 'Inconsolata',monospace;
+.ps-tb-io textarea { width:100%; margin-top:10px; padding:10px 12px; border:1px solid var(--border); border-radius:6px;
+    background:var(--bg-input); color:var(--text-primary); font:400 12px var(--font-sans);
     line-height:1.55; resize:vertical; min-height:150px; }
 .ps-tb-io textarea:focus { outline:none; border-color:var(--accent); }
 .ps-tb-io-actions { display:flex; gap:8px; margin-top:9px; justify-content:flex-end; }
@@ -703,7 +703,7 @@
     margin-bottom: -1px;
     border-bottom: 2px solid transparent;
     color: var(--text-secondary);
-    font: 600 13.5px 'Exo 2', sans-serif;
+    font: 600 13.5px var(--font-sans);
     white-space: nowrap;
 }
 .battle-tab svg { width: 16px; height: 16px; }
@@ -722,7 +722,7 @@
 .battle-team-card { padding: var(--sp-4); transition: border-color .15s ease, box-shadow .15s ease; }
 .battle-team-card:hover { border-color: var(--border-strong); box-shadow: var(--shadow-md); }
 .battle-team-grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--sp-4); }
-.battle-team-chip { width: 44px; height: 44px; border-radius: 10px; }
+.battle-team-chip { width: 44px; height: 44px; border-radius: 7px; }
 
 .battle-empty {
     padding: 64px 20px;

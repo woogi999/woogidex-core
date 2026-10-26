@@ -152,6 +152,12 @@ function changed(immediate = false) {
     api.autoSave?.(immediate);
 }
 
+/** How the artwork scales: 'pixel' keeps pixel art sharp (the default), 'smooth' blends like most sites. */
+export function setArtScaling(value: 'pixel' | 'smooth') {
+    state.artScaling = value === 'smooth' ? 'smooth' : 'pixel';
+    changed(true);
+}
+
 function extraSet(id: string): ArtSet | undefined {
     return (state.artSets || []).find((s: ArtSet) => s.id === id);
 }

@@ -24,7 +24,7 @@
 @media (max-width: 768px) {
     .sample-set-card {
         padding: clamp(10px, 2.5vw, 16px);
-        border-radius: 10px;
+        border-radius: 7px;
         margin-bottom: 10px;
     }
 

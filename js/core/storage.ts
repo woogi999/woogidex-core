@@ -692,6 +692,8 @@ function normalizeCollections() {
                 shinyArtCredit: state.shinyArtCredit || null,
                 artDescription: state.artDescription || null,
                 shinyArtDescription: state.shinyArtDescription || null,
+                // pixel is the default: only smooth is written down
+                ...(state.artScaling === 'smooth' ? { artScaling: 'smooth' as const } : {}),
                 // only when there are some, so plain records stay as they were
                 ...(state.artSets?.length ? { artSets: JSON.parse(JSON.stringify(state.artSets)) } : {}),
                 evolutionGraph: state.evolutionGraph ? JSON.parse(JSON.stringify(state.evolutionGraph)) : null,

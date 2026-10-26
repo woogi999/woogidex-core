@@ -25,6 +25,8 @@ export interface BoardModel {
     sets: Array<{ name: string; text: string }>;
     artwork: string; shinyArtwork: string; cry: string; artCredit: string;
     artMode: 'normal' | 'shiny';
+    /** how the artwork scales (css/protect.css): sprite and icon sets are always pixel */
+    artScaling: 'pixel' | 'smooth';
     /** every artwork set with a picture in it, the main one first (js/editor/art-sets.ts) */
     gallery: Array<{ id: string; kind: ArtKind; title: string; images: ArtImage[] }>;
     /** the set shown, and which of its concept images */
@@ -125,7 +127,8 @@ function BoardArt({ m, renderArt, onToggleShiny }: { m: BoardModel; renderArt?: 
                     </div>
                 )}
                 {/* keyed by what shows, so a switch replays the crossfade (css/pokedex-board.css) */}
-                <div key={`${set?.id}:${shiny}:${index}:${side}`} className={`board-artwork-image${ART_KINDS[kind].pixel ? ' board-art-pixel' : ''}`}>{body}</div>
+                <div key={`${set?.id}:${shiny}:${index}:${side}`} className={`board-artwork-image${ART_KINDS[kind].pixel ? ' board-art-pixel' : ''}`}
+                    data-scaling={ART_KINDS[kind].pixel ? 'pixel' : m.artScaling}>{body}</div>
             </div>
             {kind === 'concept' && set && set.images.length > 1 && (
                 <div className="board-art-thumbs" role="group" aria-label="Concept art">

@@ -146,7 +146,7 @@ export function FakemonCard({ f, inFolder }: { f: Fakemon; inFolder: boolean }) 
     const showDate = api.getShowCollectionCardDate?.() !== false;
     return (
         <div className={className} {...fakemonDrag(f.id)} {...menu} aria-label={f.name} data-entry-kind="fakemon" data-entry-id={f.id}>
-            <div className="card-art"><FakemonArt f={f} /><CloudBadge f={f} /><span className="card-number">{f.number || '#???'}</span>{f.pinned && <PinMark />}<StatusBadge status={statusOf(f)} /></div>
+            <div className="card-art" data-scaling={f.artScaling === 'smooth' ? 'smooth' : 'pixel'}><FakemonArt f={f} /><CloudBadge f={f} /><span className="card-number">{f.number || '#???'}</span>{f.pinned && <PinMark />}<StatusBadge status={statusOf(f)} /></div>
             <div className="card-body">
                 <div className="card-name" title={f.name}>{f.name}</div>
                 <div className="card-meta-row">

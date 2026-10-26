@@ -127,7 +127,7 @@ const BOOLEAN_SETTINGS = {
         apply: (enabled) => document.documentElement.classList.toggle('reduce-motion', enabled)
     },
     OverlayBlur: {
-        storageKey: 'woogidex-overlay-blur', defaultValue: !isLowEndDevice(),
+        storageKey: 'woogidex-overlay-blur', defaultValue: true,
         apply: (enabled) => document.documentElement.classList.toggle('no-overlay-blur', !enabled)
     },
     ConfirmBeforeDelete: {

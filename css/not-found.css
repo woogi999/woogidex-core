@@ -100,10 +100,10 @@
 }
 
 .not-found-path {
-    font-family: 'Inconsolata', monospace;
+    font-family: var(--font-mono);
     font-size: 0.85em;
     padding: 1px 6px;
-    border-radius: 6px;
+    border-radius: 4px;
     background: var(--bg-panel);
     border: 1px solid var(--border);
     color: var(--text-primary);

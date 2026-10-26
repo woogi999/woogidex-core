@@ -36,7 +36,7 @@
     padding: 0 var(--sp-2) 0 var(--sp-4);
     background: var(--bg-card);
     border: 1px solid var(--border);
-    border-radius: 999px;
+    border-radius: var(--ctl-r);
     color: var(--text-muted);
     transition: border-color .15s ease, box-shadow .15s ease;
 }
@@ -80,15 +80,15 @@
     gap: var(--sp-3);
     width: 100%;
     padding: var(--sp-3) var(--sp-4) var(--sp-3) var(--sp-3);
-    background: var(--bg-card);
-    border: 1px solid var(--border);
+    background: var(--bg-panel);
+    border: 0;
     border-radius: var(--panel-r);
     font: inherit;
     color: inherit;
     text-align: left;
 }
 button.st-identity { cursor: pointer; transition: border-color .15s ease, background .15s ease; }
-button.st-identity:hover { border-color: var(--border-strong); }
+button.st-identity:hover { background: color-mix(in srgb, var(--text-primary) 6%, var(--bg-panel)); }
 .st-identity.is-guest { flex-wrap: wrap; }
 .st-identity.is-guest .btn { width: 100%; }
 .st-identity-avatar {
@@ -158,10 +158,13 @@ button.st-identity:hover { border-color: var(--border-strong); }
 .st-group-head h3 { font-size: 16px; font-weight: 800; letter-spacing: -0.01em; }
 .st-group-head p { margin-top: 3px; font-size: 13px; line-height: 1.5; color: var(--text-secondary); max-width: 68ch; }
 
+/* a group's rows: no box, hairlines between the rows */
 .st-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--panel-r);
+    background: transparent;
+    border: 0;
+    border-top: 1px solid var(--border-light);
+    border-bottom: 1px solid var(--border-light);
+    border-radius: 0;
     overflow: hidden;
 }
 
@@ -241,26 +244,26 @@ label.st-row:hover { background: color-mix(in srgb, var(--bg-panel) 60%, var(--b
     flex-direction: column;
     gap: var(--sp-3);
     padding: var(--sp-3);
-    background: var(--bg-card);
-    border: 1px solid var(--border);
+    background: transparent;
+    border: 0;
     border-radius: var(--panel-r);
     font: inherit;
     color: inherit;
     text-align: left;
     cursor: pointer;
-    transition: border-color .15s ease, box-shadow .15s ease;
+    transition: background-color .15s ease, box-shadow .15s ease;
 }
-.st-theme:hover { border-color: var(--border-strong); }
-.st-theme.is-selected { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+.st-theme:hover { background: var(--bg-panel); }
+.st-theme.is-selected { background: var(--accent-soft); }
 
 /* each preview is drawn in its own theme's colours, whatever the page is in */
-.st-theme[data-preview="light"] { --mk-page: #f5f3ef; --mk-card: #fefdfc; --mk-line: #e6e2da; --mk-ink: #c9c3b6; }
-.st-theme[data-preview="dark"] { --mk-page: #121214; --mk-card: #1f1f23; --mk-line: #2e2e33; --mk-ink: #45454c; }
+.st-theme[data-preview="light"] { --mk-page: #fefdfc; --mk-card: #f3f1ec; --mk-line: #efede9; --mk-ink: #c9c3b6; }
+.st-theme[data-preview="dark"] { --mk-page: #1b1b1e; --mk-card: #242428; --mk-line: #26262a; --mk-ink: #45454c; }
 .st-theme-art {
     display: flex;
     flex-direction: column;
     aspect-ratio: 16 / 9;
-    border-radius: 10px;
+    border-radius: 7px;
     overflow: hidden;
     background: var(--mk-page);
     border: 1px solid var(--mk-line);
@@ -269,8 +272,7 @@ label.st-row:hover { background: color-mix(in srgb, var(--bg-panel) 60%, var(--b
     display: flex; align-items: center; justify-content: space-between;
     flex: 0 0 15%;
     padding: 0 7%;
-    background: var(--mk-card);
-    border-bottom: 1px solid var(--mk-line);
+    background: var(--mk-page);
 }
 .mk-logo { width: 16%; height: 34%; border-radius: 3px; background: var(--accent); }
 .mk-pill { width: 11%; height: 40%; border-radius: 999px; background: var(--accent); opacity: .85; }
@@ -279,8 +281,7 @@ label.st-row:hover { background: color-mix(in srgb, var(--bg-panel) 60%, var(--b
     flex: 0 0 21%;
     display: flex; flex-direction: column; gap: 9%;
     padding: 6% 4%;
-    background: var(--mk-card);
-    border-right: 1px solid var(--mk-line);
+    background: var(--mk-page);
 }
 .mk-side span { height: 7%; min-height: 3px; border-radius: 2px; background: var(--mk-ink); }
 .mk-side span:first-child { background: var(--accent); opacity: .7; }
@@ -288,9 +289,8 @@ label.st-row:hover { background: color-mix(in srgb, var(--bg-panel) 60%, var(--b
 .mk-card {
     display: flex; flex-direction: column; gap: 6px;
     padding: 6%;
-    border-radius: 4px;
-    background: var(--mk-card);
-    border: 1px solid var(--mk-line);
+    border-radius: 3px;
+    background: transparent;
 }
 .mk-art { aspect-ratio: 1; border-radius: 3px; background: color-mix(in srgb, var(--accent) 22%, var(--mk-card)); }
 .mk-line { height: 3px; border-radius: 2px; background: var(--mk-ink); }
@@ -341,7 +341,7 @@ label.st-row:hover { background: color-mix(in srgb, var(--bg-panel) 60%, var(--b
     margin-bottom: var(--sp-3);
     padding: 4px var(--sp-3);
     border: 0;
-    border-radius: 999px;
+    border-radius: var(--ctl-r);
     background: var(--accent-soft);
     color: var(--st-accent-ink);
     font: inherit;
@@ -388,3 +388,14 @@ label.st-row:hover { background: color-mix(in srgb, var(--bg-panel) 60%, var(--b
 /* notifications paused: the per-kind switches stay visible but read as off */
 .st-group.is-muted .st-card { opacity: .55; }
 .st-switch input:disabled { cursor: not-allowed; }
+
+/* ---- Settings > About (js/app/pages/SettingsAbout.tsx in web): credits as role over name ---- */
+.st-about { color: var(--text-secondary); font-size: 14px; line-height: 1.6; }
+.st-about p { max-width: 68ch; padding: 0 2px; }
+.st-about p + p { margin-top: var(--sp-3); }
+.st-about-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: var(--sp-4) var(--sp-5); padding: 0 2px; }
+.st-about-list dt { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted); }
+.st-about-list dd { margin-top: 2px; font-size: 16px; font-weight: 800; color: var(--text-primary); }
+.st-about-link { color: inherit; text-decoration: none; }
+.st-about-link:hover { color: var(--accent); text-decoration: underline; }
+.st-about-foot { font-size: 12px; color: var(--text-muted); }

@@ -5,13 +5,6 @@
    Linked last so these win.
    ==================== */
 
-/* backdrop blur re-samples everything behind the element on every frame
-   that changes; on a cheap phone that's the single biggest source of jank */
-.low-end *, .low-end *::before, .low-end *::after {
-    -webkit-backdrop-filter: none !important;
-    backdrop-filter: none !important;
-}
-
 /* purely decorative loops: they keep the page repainting while idle,
    which also drains the battery */
 .low-end .notification-dot,

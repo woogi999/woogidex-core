@@ -23,7 +23,7 @@ img.emoji.emoji-jumbo { width: 3em; height: 3em; vertical-align: middle; }
 }
 .emoji-autocomplete-head { font-size: 11px; color: var(--text-muted); padding: 2px 6px 6px; }
 .emoji-autocomplete button {
-    display: flex; align-items: center; gap: 8px; padding: 5px 8px; border: 0; border-radius: 8px;
+    display: flex; align-items: center; gap: 8px; padding: 5px 8px; border: 0; border-radius: 5px;
     background: transparent; color: var(--text-primary); font: inherit; font-size: 13px; text-align: left; cursor: pointer;
 }
 .emoji-autocomplete button.active { background: var(--accent-soft); color: var(--accent); }
@@ -31,7 +31,7 @@ img.emoji.emoji-jumbo { width: 3em; height: 3em; vertical-align: middle; }
 .emoji-button-wrap { position: relative; }
 .emoji-button {
     display: inline-flex; align-items: center; justify-content: center; gap: 2px;
-    min-width: 32px; height: 32px; padding: 0 6px; border-radius: 8px; border: 0;
+    min-width: 32px; height: 32px; padding: 0 6px; border-radius: 5px; border: 0;
     background: transparent; color: var(--text-secondary); cursor: pointer;
 }
 .emoji-button:hover { background: var(--bg-panel); color: var(--accent); }
@@ -51,13 +51,13 @@ img.emoji.emoji-jumbo { width: 3em; height: 3em; vertical-align: middle; }
 .emoji-picker-searchrow .emoji-picker-search { flex: 1; min-width: 0; }
 /* the skin tone chooser: a hand in the current tone, opening a row of six */
 .emoji-tone-button {
-    flex: 0 0 auto; width: 36px; height: 36px; border: 1px solid var(--border); border-radius: 10px;
+    flex: 0 0 auto; width: 36px; height: 36px; border: 1px solid var(--border); border-radius: 7px;
     background: var(--bg-card); display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
 }
 .emoji-tone-button:hover, .emoji-tone-button[aria-expanded="true"] { background: var(--bg-panel); border-color: var(--border-strong); }
-.emoji-tone-row { display: flex; justify-content: space-between; gap: 4px; padding: 4px; border-radius: 10px; background: var(--bg-panel); }
+.emoji-tone-row { display: flex; justify-content: space-between; gap: 4px; padding: 4px; border-radius: 7px; background: var(--bg-panel); }
 .emoji-tone-option {
-    width: 38px; height: 34px; border: 0; border-radius: 8px; background: transparent; cursor: pointer;
+    width: 38px; height: 34px; border: 0; border-radius: 5px; background: transparent; cursor: pointer;
     display: inline-flex; align-items: center; justify-content: center;
 }
 .emoji-tone-option:hover { background: var(--bg-card); }
@@ -66,7 +66,7 @@ img.emoji.emoji-jumbo { width: 3em; height: 3em; vertical-align: middle; }
 .emoji-picker-tabs::-webkit-scrollbar { display: none; }
 .emoji-picker-tabs > button { flex: 0 0 auto; }
 .emoji-picker-tabs button {
-    width: 34px; height: 30px; border: 0; border-radius: 8px; background: transparent; color: var(--text-secondary);
+    width: 34px; height: 30px; border: 0; border-radius: 5px; background: transparent; color: var(--text-secondary);
     display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
 }
 .emoji-picker-tabs button.active { background: var(--accent-soft); color: var(--accent); }
@@ -80,7 +80,7 @@ img.emoji.emoji-jumbo { width: 3em; height: 3em; vertical-align: middle; }
     padding: 3px; scrollbar-gutter: stable;
 }
 .emoji-picker-cell {
-    aspect-ratio: 1; border: 0; border-radius: 8px; background: transparent; cursor: pointer;
+    aspect-ratio: 1; border: 0; border-radius: 5px; background: transparent; cursor: pointer;
     display: flex; align-items: center; justify-content: center;
 }
 .emoji-picker-cell:hover { background: var(--bg-panel); transform: scale(1.08); }
@@ -98,13 +98,13 @@ img.emoji.emoji-jumbo { width: 3em; height: 3em; vertical-align: middle; }
 .rich-text ul, .rich-text ol { margin: 0 0 .6em; padding-left: 1.4em; }
 .rich-text li + li { margin-top: .2em; }
 .rich-text blockquote { margin: 0 0 .6em; padding: .1em 0 .1em .9em; border-left: 1px solid var(--border-strong); color: var(--text-secondary); }
-.rich-text code { padding: .1em .35em; border-radius: 5px; background: var(--bg-panel); font-family: 'Inconsolata', monospace; font-size: .92em; }
-.rich-text pre { margin: 0 0 .7em; padding: .7em .9em; border-radius: 8px; background: var(--bg-panel); overflow-x: auto; }
+.rich-text code { padding: .1em .35em; border-radius: 3px; background: var(--bg-panel); font-family: var(--font-mono); font-size: .92em; }
+.rich-text pre { margin: 0 0 .7em; padding: .7em .9em; border-radius: 5px; background: var(--bg-panel); overflow-x: auto; }
 .rich-text pre code { padding: 0; background: none; white-space: pre; }
 .rich-text hr { border: 0; border-top: 1px solid var(--border); margin: 1em 0; }
 .rich-text del { color: var(--text-muted); }
 /* ||spoiler||: hidden until clicked or tabbed to */
-.rich-text .rt-spoiler { border-radius: 4px; background: var(--text-primary); color: transparent; cursor: pointer; transition: background .15s ease, color .15s ease; }
+.rich-text .rt-spoiler { border-radius: 3px; background: var(--text-primary); color: transparent; cursor: pointer; transition: background .15s ease, color .15s ease; }
 .rich-text .rt-spoiler img { visibility: hidden; }
 .rich-text .rt-spoiler:focus, .rich-text .rt-spoiler:focus-within { background: var(--bg-panel); color: inherit; outline: none; }
 .rich-text .rt-spoiler:focus img { visibility: visible; }
@@ -141,7 +141,7 @@ img.emoji.emoji-jumbo { width: 3em; height: 3em; vertical-align: middle; }
 .format-bar-sep { width: 1px; height: 18px; margin: 0 4px; background: var(--border-strong); }
 .format-btn {
     display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 30px; height: 30px; padding: 0 6px;
-    border: 0; border-radius: 6px; background: none; color: var(--text-secondary); font: inherit; font-size: 12px; font-weight: 700; cursor: pointer;
+    border: 0; border-radius: 4px; background: none; color: var(--text-secondary); font: inherit; font-size: 12px; font-weight: 700; cursor: pointer;
 }
 .format-btn:hover { background: var(--bg-card); color: var(--text-primary); }
 .format-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }

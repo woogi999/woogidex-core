@@ -6,7 +6,7 @@ import { api } from '../../core/app.ts';
 import { registerDialog, type DialogProps } from '../dialogs.tsx';
 import { Modal } from '../components/Modal.tsx';
 
-const selectStyle: React.CSSProperties = { padding: '8px 10px', border: '1px solid var(--border)', borderRadius: 8, fontFamily: "'Exo 2',sans-serif", fontSize: 13 };
+const selectStyle: React.CSSProperties = { padding: '8px 10px', border: '1px solid var(--border)', borderRadius: 8, fontFamily: 'var(--font-sans)', fontSize: 13 };
 
 function CollectionImportDialog({ close }: DialogProps) {
     const [file, setFile] = useState<File | null>(null);

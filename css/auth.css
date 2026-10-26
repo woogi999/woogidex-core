@@ -19,7 +19,7 @@
     font-size: 0.95rem;
     color: var(--text-secondary, #666);
 }
-.auth-brand img { border-radius: 6px; flex-shrink: 0; }
+.auth-brand img { border-radius: 4px; flex-shrink: 0; }
 .auth-brand strong { color: var(--text-primary, #111); }
 .auth-modal-error {
     color: var(--danger, #ef4444);
@@ -90,7 +90,7 @@
     color: var(--text-primary);
     background: var(--bg-elevated, var(--bg-secondary));
     border: 1px solid var(--border);
-    border-radius: 10px;
+    border-radius: 7px;
     cursor: pointer;
     transition: border-color .15s, background .15s, transform .05s;
 }
@@ -132,7 +132,7 @@
     flex: 0 0 34px;
     width: 34px;
     height: 34px;
-    border-radius: 9px;
+    border-radius: 6px;
     display: flex;
     align-items: center;
     justify-content: center;

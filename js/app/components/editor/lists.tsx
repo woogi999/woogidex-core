@@ -242,7 +242,7 @@ function CategoryDropdown({ value, onPick }: { value: string; onPick: (c: string
     );
 }
 
-const selectStyle: React.CSSProperties = { padding: '8px 10px', border: '1px solid var(--border)', borderRadius: 8, fontFamily: "'Exo 2',sans-serif", fontSize: 13 };
+const selectStyle: React.CSSProperties = { padding: '8px 10px', border: '1px solid var(--border)', borderRadius: 8, fontFamily: 'var(--font-sans)', fontSize: 13 };
 
 export function LearnsetFilters() {
     const f = api.getLearnsetFilters();
@@ -309,7 +309,7 @@ export function AddMoveRow() {
             </select>
             {method === 'level' && (
                 <input ref={levelInput} type="number" placeholder="Lv" min={1} max={100} aria-label="Level" value={level} onChange={e => setLevel(e.target.value)}
-                    style={{ ...selectStyle, width: 64, fontFamily: "'Inconsolata',monospace" }} />
+                    style={{ ...selectStyle, width: 64, fontFamily: 'var(--font-sans)' }} />
             )}
             <button className="btn btn-secondary btn-sm" type="button" onClick={() => {
                 if (add(text)) { setText(''); setMethod('none'); setLevel(''); }
@@ -348,8 +348,8 @@ export function LearnsetChart() {
                                 offset += dash;
                                 return circle;
                             })}
-                            <text x={size / 2} y={size / 2 - 3} textAnchor="middle" fontSize="24" fontWeight="800" fill="var(--text-primary)" fontFamily="'Exo 2',sans-serif">{total}</text>
-                            <text x={size / 2} y={size / 2 + 15} textAnchor="middle" fontSize="10" fill="var(--text-muted)" fontFamily="'Exo 2',sans-serif">move{total === 1 ? '' : 's'}</text>
+                            <text x={size / 2} y={size / 2 - 3} textAnchor="middle" fontSize="24" fontWeight="800" fill="var(--text-primary)">{total}</text>
+                            <text x={size / 2} y={size / 2 + 15} textAnchor="middle" fontSize="10" fill="var(--text-muted)">move{total === 1 ? '' : 's'}</text>
                         </svg>
                         <div className="learnset-chart-legend">
                             {segments.map(s => (

@@ -20,7 +20,7 @@
             padding: var(--sp-5) var(--sp-6) var(--sp-6);
             background: var(--bg-card);
             border: 1px solid var(--border);
-            border-radius: 16px;
+            border-radius: 10px;
             box-shadow: var(--shadow-lg);
             transform: translateY(6px) scale(.985);
             transition: transform .18s cubic-bezier(.2,.8,.2,1);
@@ -28,7 +28,7 @@
         .modal-overlay.active .modal { transform: none; }
         .reduce-motion .modal,
         .reduce-motion .modal-overlay.active .modal { transition: opacity .15s ease; transform: none; }
-        @media (max-width: 640px) { .modal { padding: var(--sp-4); border-radius: 14px; } }
+        @media (max-width: 640px) { .modal { padding: var(--sp-4); border-radius: 9px; } }
 
         .modal-header {
             display: flex; justify-content: space-between; align-items: center; gap: var(--sp-3);
@@ -67,7 +67,7 @@
         .gender-bar .female { background: #ec4899; }
         .gender-bar .genderless { background: #888; }
         .color-options { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
-        .color-option { width: 32px; height: 32px; border-radius: 8px; cursor: pointer; border: 2px solid transparent; transition: var(--t-ui); }
+        .color-option { width: 32px; height: 32px; border-radius: 5px; cursor: pointer; border: 2px solid transparent; transition: var(--t-ui); }
         .color-option:hover { transform: scale(1.1); }
         .color-option.selected { border-color: white; box-shadow: 0 0 0 2px #333; }
         .color-option.folder-color-none { background: var(--bg-panel); border: 2px dashed var(--border); display: flex; align-items: center; justify-content: center; color: var(--text-muted); }
@@ -82,7 +82,7 @@
         .file-upload-btn {
             display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px;
             background: var(--bg-panel); border: 1px dashed var(--border-strong); border-radius: var(--ctl-r);
-            color: var(--text-secondary); font-family: 'Exo 2', sans-serif; font-size: 14px;
+            color: var(--text-secondary); font-family: var(--font-sans); font-size: 14px;
             cursor: pointer; transition: var(--t-ui); width: 100%; justify-content: center;
         }
 
@@ -91,7 +91,7 @@
         .recovery-row { display: flex; align-items: center; gap: 10px; padding: 9px 6px; border-bottom: 1px solid var(--border-light); cursor: pointer; }
         .recovery-row:hover { background: var(--bg-panel); }
         .recovery-row input[type="checkbox"] { width: 16px; height: 16px; flex: 0 0 auto; }
-        .recovery-thumb { width: 36px; height: 36px; border-radius: 8px; object-fit: contain; background: var(--bg-panel); flex: 0 0 auto; }
+        .recovery-thumb { width: 36px; height: 36px; border-radius: 5px; object-fit: contain; background: var(--bg-panel); flex: 0 0 auto; }
         .recovery-thumb-empty { display: flex; align-items: center; justify-content: center; color: var(--text-muted); }
         .recovery-row-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; color: var(--text-secondary); }
         .recovery-row-text strong { color: var(--text-primary); }
@@ -193,17 +193,17 @@
 .ctx-menu {
     position: fixed; z-index: 21000; min-width: 220px; max-width: min(300px, calc(100vw - 16px));
     max-height: calc(100vh - 16px); overflow-y: auto; overscroll-behavior: contain;
-    padding: 5px; border: 1px solid var(--border); border-radius: 12px;
+    padding: 5px; border: 1px solid var(--border); border-radius: 8px;
     background: var(--bg-card); box-shadow: var(--shadow-lg);
-    font-family: 'Exo 2', sans-serif;
+    font-family: var(--font-sans);
 }
 .ctx-head { display: flex; flex-direction: column; gap: 1px; padding: 7px 10px 8px; margin-bottom: 4px; border-bottom: 1px solid var(--border-light); }
 .ctx-head strong { font-size: 13.5px; font-weight: 800; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ctx-head span { font-size: 11.5px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ctx-item {
     display: flex; align-items: center; gap: 9px; width: 100%; height: 32px; padding: 0 9px 0 6px;
-    border: 0; border-radius: 7px; background: none; color: var(--text-primary);
-    font: 600 13px 'Exo 2', sans-serif; text-align: left; cursor: pointer;
+    border: 0; border-radius: 5px; background: none; color: var(--text-primary);
+    font: 600 13px var(--font-sans); text-align: left; cursor: pointer;
     transition: background-color var(--dur-fast) ease, color var(--dur-fast) ease;
 }
 .ctx-item:hover, .ctx-item:focus-visible { background: var(--bg-panel); outline: none; }
@@ -212,7 +212,7 @@
 .ctx-icon { width: 22px; display: inline-flex; justify-content: center; color: var(--text-secondary); flex: 0 0 auto; }
 .ctx-item:hover .ctx-icon { color: var(--text-primary); }
 .ctx-label { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ctx-hint { font: 600 11px 'Exo 2', sans-serif; color: var(--text-muted); background: none; border: 0; padding: 0; }
+.ctx-hint { font: 600 11px var(--font-sans); color: var(--text-muted); background: none; border: 0; padding: 0; }
 .ctx-item.danger, .ctx-item.danger .ctx-icon { color: var(--danger); }
 .ctx-item.danger:hover { background: color-mix(in srgb, var(--danger) 10%, var(--bg-card)); }
 .ctx-caret { color: var(--text-muted); transition: transform var(--dur) var(--ease-out); }
@@ -227,26 +227,25 @@
 .qs-layer {
     position: fixed; inset: 0; z-index: 20500; display: flex; justify-content: center; align-items: flex-start;
     padding: min(14vh, 120px) 16px 16px; background: rgba(17, 17, 20, .38);
-    backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
 }
-.no-overlay-blur .qs-layer { backdrop-filter: none; -webkit-backdrop-filter: none; }
+.no-overlay-blur .qs-layer { background: transparent; }
 body.quick-search-open { overflow: hidden; }
 .qs-panel {
     width: min(640px, 100%); max-height: min(560px, calc(100vh - 2 * min(14vh, 120px)));
     display: flex; flex-direction: column; overflow: hidden;
-    border: 1px solid var(--border); border-radius: 16px; background: var(--bg-card); box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border); border-radius: 10px; background: var(--bg-card); box-shadow: var(--shadow-lg);
     transform-origin: 50% 0;
 }
 .qs-field { display: flex; align-items: center; gap: 10px; padding: 0 14px; border-bottom: 1px solid var(--border-light); color: var(--text-muted); }
 .qs-field input {
     flex: 1; min-width: 0; height: 56px; border: 0; outline: none; background: none; padding: 0;
-    color: var(--text-primary); font: 600 17px 'Exo 2', sans-serif; box-shadow: none;
+    color: var(--text-primary); font: 600 17px var(--font-sans); box-shadow: none;
 }
 .qs-field input::-webkit-search-cancel-button { display: none; }
 .qs-panel kbd, .qs-esc {
     display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 5px;
-    border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 5px; background: var(--bg-panel);
-    font: 700 10.5px 'Exo 2', sans-serif; color: var(--text-secondary);
+    border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 3px; background: var(--bg-panel);
+    font: 700 10.5px var(--font-sans); color: var(--text-secondary);
 }
 .qs-esc { cursor: pointer; }
 .qs-results { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 6px; }
@@ -259,12 +258,24 @@ body.quick-search-open { overflow: hidden; }
     .qs-foot span { display: none; }
 }
 
-/* ==================== blur behind overlays ====================
-   dialogs, the editor sheet's scrim and the phone's region drawer blur the
-   page behind them, as quick search does. "Blur & dim effects" off
-   (.no-overlay-blur, css/sidebar.css) and .low-end (css/perf.css) remove it. */
-.modal-overlay.active, .region-drawer-backdrop {
-    -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
+/* ==================== dim behind overlays ====================
+   dialogs, the editor sheet and the phone's region drawer dim the page
+   behind them. Nothing on the site blurs. "Dim effects" off
+   (.no-overlay-blur, css/sidebar.css) takes the dim away too. */
+.no-overlay-blur #editor-view::before { background: transparent; }
+
+/* ==================== remove background (js/app/dialogs/removeBackground.tsx) ==================== */
+.bg-remove-modal { max-width: 720px; }
+.bg-remove-compare { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3); margin: var(--sp-3) 0; }
+.bg-remove-compare figure { margin: 0; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.bg-remove-compare figcaption { font-size: 12px; font-weight: 700; color: var(--text-secondary); }
+/* a checker board shows what is now transparent */
+.bg-remove-stage {
+    aspect-ratio: 1; display: flex; align-items: center; justify-content: center; overflow: hidden;
+    border-radius: var(--card-r);
+    background: repeating-conic-gradient(var(--bg-panel) 0 25%, var(--bg-card) 0 50%) 0 0 / 16px 16px;
 }
-#editor-view::before { -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
-.no-overlay-blur #editor-view::before { background: transparent; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.bg-remove-stage img, .bg-remove-stage canvas { max-width: 100%; max-height: 100%; object-fit: contain; image-rendering: pixelated; }
+.bg-remove-controls input[type="range"] { width: 100%; }
+.bg-remove-check { display: inline-flex !important; align-items: center; gap: 8px; margin-top: var(--sp-2); font-size: 13px !important; cursor: pointer; }
+@media (max-width: 560px) { .bg-remove-compare { grid-template-columns: 1fr; } }

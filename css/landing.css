@@ -119,14 +119,14 @@ body[data-page="landing-view"] { background: var(--bg-card); }
     gap: 9px;
     height: 52px;
     padding: 0 24px;
-    font: 700 16px/1 'Exo 2', sans-serif;
+    font: 700 16px/1 var(--font-sans);
     color: #fff;
     text-shadow: 0 1px 1px rgba(51, 53, 111, 0.45);
     background:
         radial-gradient(rgba(255, 220, 252, 0.35) 0.7px, transparent 1px) 0 0 / 4px 4px,
         linear-gradient(#ee9cf0, #c98af7 55%, #a87cff);
     border: 2px solid #4f5291;
-    border-radius: 14px;
+    border-radius: 9px;
     box-shadow: 3px 4px 0 #33356f;
     cursor: pointer;
     transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
@@ -279,7 +279,7 @@ body:not([data-page="landing-view"]) .lp-scroll { display: none; }
 .lp-foot-col ul { list-style: none; display: flex; flex-direction: column; gap: var(--sp-2); }
 .lp-foot-col button {
     padding: 2px 0;
-    font: 600 13px 'Exo 2', sans-serif;
+    font: 600 13px var(--font-sans);
     color: var(--text-secondary);
     text-align: left;
     background: none;
@@ -288,7 +288,7 @@ body:not([data-page="landing-view"]) .lp-scroll { display: none; }
     text-underline-offset: 3px;
 }
 .lp-foot-col button:hover { color: var(--text-primary); text-decoration: underline; }
-.lp-foot-col button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.lp-foot-col button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
 .lp-foot-bar {
     max-width: calc(1080px + 2 * var(--sp-6));
     margin: 0 auto;

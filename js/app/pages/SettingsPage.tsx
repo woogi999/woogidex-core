@@ -29,11 +29,11 @@ const CORE_SECTIONS: Section[] = [
             {
                 id: 'effects', title: 'Motion & effects',
                 desc: () => isLowEndDevice()
-                    ? `This device looks low-powered, so blur${LANDING_PAGE ? " and the front page's paint smudge" : ''} start${LANDING_PAGE ? '' : 's'} off and flat sprites start on to keep things smooth. Change them whenever you like.`
+                    ? `This device looks low-powered, so ${LANDING_PAGE ? "the front page's paint smudge starts off and " : ''}flat sprites start on to keep things smooth. Change them whenever you like.`
                     : null,
                 items: [
                     { id: 'motion', setting: 'ReduceMotion', label: 'Reduce motion', desc: 'Turn off animations and transitions across the site.' },
-                    { id: 'blur', setting: 'OverlayBlur', label: 'Blur & dim effects', desc: 'Darken and blur the page behind the sidebar, modals, and other overlays.' },
+                    { id: 'blur', setting: 'OverlayBlur', label: 'Dim effects', desc: 'Darken the page behind the sidebar, modals, and other overlays.' },
                     { id: 'sprites', setting: 'Use2DSprites', label: 'Use 2D sprites', desc: 'Show flat sprites instead of animated 3D models. Lighter on older phones.' },
                     // the landing page's setting shows once the landing page does (js/core/flags.ts)
                     ...(!LANDING_PAGE ? [] : [{ id: 'smudge', setting: 'LandingSmudge', label: 'Paint smudge on the front page', desc: 'Your cursor picks up colors and smears paint across the landing page. Starts off on phones, tablets and low-powered devices, since it draws every frame.' }])
@@ -334,7 +334,7 @@ function SearchResults({ query, sections, onOpen }: { query: string; sections: S
 // ---- appearance: theme ----
 
 const THEMES = [
-    { dark: false, label: 'Light', note: 'Warm paper. Easy to read in daylight.' },
+    { dark: false, label: 'Light', note: 'Bright and clean. Easy to read in daylight.' },
     { dark: true, label: 'Dark', note: 'Easy on the eyes at night.' }
 ];
 

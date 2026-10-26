@@ -11,7 +11,7 @@ import { Icon } from '../components/Icon.tsx';
 import { CategoryIcon } from '../components/editor/lists.tsx';
 
 const catClass = (c?: string) => (c === 'Physical' ? 'cat-physical' : c === 'Special' ? 'cat-special' : 'cat-status');
-const selectStyle: React.CSSProperties = { padding: '8px 10px', border: '1px solid var(--border)', borderRadius: 8, fontFamily: "'Exo 2',sans-serif", fontSize: 13 };
+const selectStyle: React.CSSProperties = { padding: '8px 10px', border: '1px solid var(--border)', borderRadius: 8, fontFamily: 'var(--font-sans)', fontSize: 13 };
 
 // ---- Import / Export Moves ----
 

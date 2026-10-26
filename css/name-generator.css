@@ -7,7 +7,7 @@
 .name-input-row input { flex: 1; min-width: 0; }
 .name-roll-btn {
     flex-shrink: 0; display: flex; align-items: center; justify-content: center;
-    width: 40px; border: 1px solid var(--border); border-radius: 9px;
+    width: 40px; border: 1px solid var(--border); border-radius: 6px;
     background: var(--bg-input); color: var(--text-secondary); cursor: pointer;
     transition: border-color .15s ease, color .15s ease, transform .15s ease, background .15s ease;
 }
@@ -18,25 +18,25 @@
 .name-roll-popover {
     /* above modals and the editor sheet it opens from */
     z-index: 12900; width: 220px; max-width: calc(100vw - 16px);
-    background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px;
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px;
     box-shadow: 0 12px 28px rgba(0,0,0,.18); padding: 8px; animation: fadeInUp .18s ease both;
 }
 .name-roll-popover-head {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 2px 4px 6px; font: 700 10px/1 'Inconsolata', monospace;
+    padding: 2px 4px 6px; font: 700 10px/1 var(--font-sans);
     letter-spacing: .08em; color: var(--text-muted);
 }
 .name-roll-reroll {
     display: flex; align-items: center; justify-content: center; width: 24px; height: 24px;
-    border: none; border-radius: 7px; background: transparent; color: var(--text-secondary); cursor: pointer;
+    border: none; border-radius: 5px; background: transparent; color: var(--text-secondary); cursor: pointer;
     transition: background .15s ease, color .15s ease, transform .15s ease;
 }
 .name-roll-reroll:hover { background: var(--bg-input); color: var(--accent); transform: rotate(20deg); }
 .name-roll-reroll svg { width: 14px; height: 14px; }
 .name-roll-list { display: flex; flex-direction: column; gap: 3px; }
 .name-roll-option {
-    text-align: left; padding: 7px 9px; border: none; border-radius: 8px;
-    background: transparent; color: var(--text-primary); font: 600 13px 'Exo 2', sans-serif;
+    text-align: left; padding: 7px 9px; border: none; border-radius: 5px;
+    background: transparent; color: var(--text-primary); font: 600 13px var(--font-sans);
     cursor: pointer; transition: background .12s ease, padding-left .12s ease;
 }
 .name-roll-option:hover { background: var(--bg-input); padding-left: 12px; color: var(--accent); }

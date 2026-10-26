@@ -8,9 +8,20 @@
    surface -- a panel never contains another bordered card.
    ==================== */
 
+/* ==================== type ====================
+   BDO Grotesk (Lokal Container, SIL Open Font License 1.1: public/fonts/README.md),
+   self-hosted as one variable font, weights 300 to 900. Inconsolata is only
+   for code and text people copy (--font-mono). */
+@font-face { font-family: 'BDO Grotesk'; font-style: normal; font-weight: 300 900; font-display: swap; src: url('/fonts/BDOGrotesk-VF.woff2') format('woff2'); }
+
 :root {
+    /* --- type --- */
+    --font-sans: 'BDO Grotesk', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    /* code and text people copy (exports, links, codes) only; numbers use --font-sans */
+    --font-mono: 'Inconsolata', ui-monospace, Consolas, monospace;
+
     /* --- surfaces (warm neutral, unchanged palette) --- */
-    --bg-dark: #f5f3ef;        /* the page */
+    --bg-dark: #fefdfc;        /* the page: the same surface as the header and sidebar */
     --bg-card: #fefdfc;        /* panels, cards, the header and sidebar */
     --bg-panel: #f3f1ec;       /* wells inside a surface: inputs at rest, hovers, image beds */
     --bg-input: #fefdfc;
@@ -50,7 +61,7 @@
     /* --- control metrics: one height for every toolbar control --- */
     --ctl-h: 36px;
     --ctl-h-sm: 30px;
-    --ctl-r: 8px;
+    --ctl-r: 6px;
 
     /* --- motion (js/core/motion.ts runs the sequences) --- */
     --ease-out: cubic-bezier(.16, 1, .3, 1);
@@ -62,8 +73,8 @@
     --t-ui: color 140ms ease, background-color 140ms ease, border-color 140ms ease, box-shadow 220ms cubic-bezier(.16, 1, .3, 1), opacity 140ms ease, transform 220ms cubic-bezier(.16, 1, .3, 1), filter 140ms ease;
 
     /* --- radii --- */
-    --panel-r: 14px;
-    --card-r: 12px;
+    --panel-r: 10px;
+    --card-r: 8px;
 
     /* --- shell --- */
     --header-h: 52px;
@@ -71,7 +82,7 @@
     --shell-max: 1480px;
 }
 [data-theme="dark"] {
-    --bg-dark: #121214;
+    --bg-dark: #1b1b1e;
     --bg-card: #1b1b1e;
     --bg-panel: #242428;
     --bg-input: #19191c;
@@ -94,11 +105,12 @@
 /* ==================== reset ==================== */
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
-    font-family: 'Exo 2', sans-serif;
+    font-family: var(--font-sans);
     background: var(--bg-dark);
     color: var(--text-primary);
     min-height: 100vh;
-    overflow-x: hidden;
+    /* clip, not hidden: hidden makes the body a scroll box and breaks every position: sticky */
+    overflow-x: clip;
     -webkit-font-smoothing: antialiased;
 }
 h1, h2, h3, h4 { color: var(--text-primary); line-height: 1.25; }
@@ -142,8 +154,8 @@ body[data-page="not-found-view"] #main-content { padding-top: 0; }
     align-items: center;
     gap: 12px;
     padding: 0 var(--sp-4);
-    background: var(--bg-card);
-    border-bottom: 1px solid var(--border);
+    /* one surface with the page: no rule under the header */
+    background: var(--bg-dark);
 }
 .header-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .header-actions { display: flex; gap: 8px; align-items: center; justify-content: flex-end; }

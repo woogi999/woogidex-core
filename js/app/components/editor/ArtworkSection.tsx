@@ -8,13 +8,14 @@ import { api, state } from '../../../core/app.ts';
 import {
     ART_ACCEPT, ART_KIND_ORDER, ART_KINDS, MAIN_ART_SET, MAX_CONCEPT_IMAGES, MAX_DESCRIPTION,
     addArtSet, addConceptFiles, artImage, artSetTitle, editorArtSets, fillArtSetCredits, makeMainArtSet, moveArtSet,
-    removeArtImage, removeArtSet, renameArtSet, setArtImageFile, setArtImageText,
+    removeArtImage, removeArtSet, renameArtSet, setArtImageFile, setArtImageText, setArtScaling,
     type ArtImage, type ArtKind, type ArtSet
 } from '../../../editor/art-sets.ts';
 import { Icon } from '../Icon.tsx';
 import { CommitInput } from '../CommitInput.tsx';
 import { useClickAway } from './fields.tsx';
 import { Presence } from '../Presence.tsx';
+import { removeBackgroundThen } from '../../dialogs/removeBackground.tsx';
 
 const KIND_ICON: Record<ArtKind, string> = { official: 'photo', sprites: 'squares-2x2', icon: 'face-smile', concept: 'pencil' };
 
@@ -47,7 +48,8 @@ function SlotTile({ set, label, slot, image, index, pixel, size }: {
     const drop = useDrop(files => setArtImageFile(set.id, slot, files[0], index));
     const off = !!(size && dims && (dims[0] !== size[0] || dims[1] !== size[1]));
     return (
-        <div className={`art-slot${image ? ' filled' : ''}${drop.over ? ' drag-over' : ''}${pixel ? ' pixel' : ''}`}>
+        <div className={`art-slot${image ? ' filled' : ''}${drop.over ? ' drag-over' : ''}${pixel ? ' pixel' : ''}`}
+            data-scaling={pixel ? 'pixel' : state.artScaling}>
             <button type="button" className="art-slot-drop" {...drop.props} onClick={() => input.current?.click()}
                 aria-label={image ? `Replace ${label}` : `Upload ${label}`} title={image ? 'Click or drop to replace' : 'Click or drop an image'}>
                 {image
@@ -60,6 +62,11 @@ function SlotTile({ set, label, slot, image, index, pixel, size }: {
                 <span className="art-slot-label">{label}</span>
                 {image && dims && <span className={`art-slot-size${off ? ' off' : ''}`} title={off ? `${size![0]} × ${size![1]} recommended` : undefined}>{dims[0]} × {dims[1]}</span>}
                 <Presence show={!!image} inline className="art-slot-remove-wrap">
+                    {/* on the device, no upload: js/editor/bg-remove.ts */}
+                    <button type="button" className="art-slot-remove" aria-label={`Remove the background of ${label}`} title="Remove background"
+                        onClick={() => image && removeBackgroundThen(image.src, file => setArtImageFile(set.id, slot, file, index))}>
+                        <Icon name="scissors" size={14} />
+                    </button>
                     <button type="button" className="art-slot-remove" onClick={() => removeArtImage(set.id, slot, index)} aria-label={`Remove ${label}`} title="Remove">
                         <Icon name="trash" size={14} />
                     </button>
@@ -199,6 +206,23 @@ function CryField() {
     );
 }
 
+/** Sharp (nearest neighbour, keeps pixel art crisp) or smooth (anti-aliased, like most sites). */
+function ScalingPicker() {
+    const value = state.artScaling === 'smooth' ? 'smooth' : 'pixel';
+    return (
+        <div className="art-scaling">
+            <span className="art-scaling-label">Scaling</span>
+            <div className="segmented" role="radiogroup" aria-label="Artwork scaling">
+                {([['pixel', 'Sharp', 'Keeps pixel art crisp when it grows'], ['smooth', 'Smooth', 'Blends the pixels, like most sites']] as const).map(([key, label, hint]) => (
+                    <button key={key} type="button" role="radio" aria-checked={value === key} className={value === key ? 'active' : ''} title={hint}
+                        onClick={() => setArtScaling(key)}>{label}</button>
+                ))}
+            </div>
+            <span className="field-hint">{value === 'pixel' ? 'Sharp: best for pixel art.' : 'Smooth: best for painted or drawn art.'}</span>
+        </div>
+    );
+}
+
 export function ArtworkSection() {
     const sets = editorArtSets();
     return (
@@ -207,6 +231,7 @@ export function ArtworkSection() {
                 <p className="field-hint art-rule">Every image must be drawn by a person. AI-generated images are not allowed on Woogidex.</p>
                 <AddSetMenu />
             </div>
+            <ScalingPicker />
             <div className="art-sets-stack">
                 {sets.map(set => <SetBlock key={set.id} set={set} sets={sets} />)}
             </div>

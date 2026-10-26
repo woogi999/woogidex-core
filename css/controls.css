@@ -10,7 +10,7 @@
     display: inline-flex; align-items: center; justify-content: center; gap: var(--sp-2);
     border: 1px solid transparent;
     border-radius: var(--ctl-r);
-    font-family: 'Exo 2', sans-serif; font-weight: 600; font-size: 13px;
+    font-family: var(--font-sans); font-weight: 600; font-size: 13px;
     line-height: 1; white-space: nowrap;
     cursor: pointer;
     transition: background .12s ease, border-color .12s ease, color .12s ease, box-shadow .12s ease;
@@ -36,7 +36,7 @@
    still wins without !important */
 :where(input[type="text"], input[type="number"], input[type="email"], input[type="password"],
        input[type="search"], input[type="url"], input[type="datetime-local"], input[type="date"], input[type="time"], input:not([type]), select, textarea) {
-    font-family: 'Exo 2', sans-serif;
+    font-family: var(--font-sans);
     font-size: 13px;
     color: var(--text-primary);
     background: var(--bg-input);
@@ -74,16 +74,23 @@
 @media (max-width: 768px) { .form-row, .form-row-3 { grid-template-columns: 1fr; } }
 
 /* ==================== surfaces ====================
-   the one surface level. Anything inside a panel separates with spacing and
-   hairline dividers, never another bordered box. */
-.panel, .panel-lite {
+   one surface: the page. A panel is a group of content with no box around
+   it; groups part with spacing and hairline dividers. .panel-lite is a
+   tinted well (a fill, never an outline). */
+.panel {
     position: relative;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+}
+.panel-lite {
+    position: relative;
+    background: var(--bg-panel);
+    border: 0;
     border-radius: var(--panel-r);
     padding: var(--sp-5);
 }
-@media (max-width: 640px) { .panel { padding: var(--sp-4); } }
 .main-layout { display: grid; grid-template-columns: 1fr; gap: var(--sp-5); align-items: start; }
 
 /* ==================== tabs ====================
@@ -102,7 +109,7 @@
     border: 0;
     background: transparent;
     color: var(--text-secondary);
-    font: 600 13px 'Exo 2', sans-serif;
+    font: 600 13px var(--font-sans);
     white-space: nowrap;
     cursor: pointer;
 }
@@ -124,7 +131,7 @@
     display: inline-flex; align-items: center; justify-content: center;
     box-sizing: border-box;
     font-weight: 700; color: #fff; white-space: nowrap;
-    border-radius: 6px;
+    border-radius: 4px;
 }
 .type-badge { min-width: 72px; padding: 4px 12px; font-size: 12px; letter-spacing: .02em; }
 .type-pill { min-width: 54px; padding: 2px 8px; font-size: 10.5px; letter-spacing: .02em; }
@@ -162,7 +169,7 @@
 .stat-bar-fill.spa { background: #4466cc; }
 .stat-bar-fill.spd { background: #44aa44; }
 .stat-bar-fill.spe { background: #cc4488; }
-.stat-value { width: 36px; text-align: right; font-family: 'Inconsolata', monospace; font-weight: 700; font-size: 13px; }
+.stat-value { width: 36px; text-align: right; font-family: var(--font-sans); font-weight: 700; font-size: 13px; }
 
 /* ==================== share view ==================== */
 

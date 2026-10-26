@@ -65,6 +65,8 @@ export interface Fakemon extends Filed {
     shinyArtCredit?: string | null;
     artDescription?: string | null;
     shinyArtDescription?: string | null;
+    /** 'smooth' scales the artwork anti-aliased; missing means 'pixel' (nearest neighbour) */
+    artScaling?: 'pixel' | 'smooth';
     /** artwork sets beyond the main Official Artwork (js/editor/art-sets.ts) */
     artSets?: import('../editor/art-sets.ts').ArtSet[];
     evolutionGraph?: any;

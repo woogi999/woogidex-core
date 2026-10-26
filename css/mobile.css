@@ -42,8 +42,6 @@
         gap: 6px;
         border-radius: calc(var(--card-r) - 1px) calc(var(--card-r) - 1px) 0 0;
         background: color-mix(in srgb, var(--bg-card) 86%, transparent);
-        -webkit-backdrop-filter: blur(4px);
-        backdrop-filter: blur(4px);
     }
     .collection-card .card-actions.open button:not(.card-actions-toggle),
     .collection-card .card-actions.open .collection-card-export-wrap {

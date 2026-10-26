@@ -13,7 +13,7 @@
 .community-card { cursor: pointer; position: relative; }
 .community-unpublish-btn {
     position: absolute; top: 8px; right: 8px; z-index: 2;
-    width: 26px; height: 26px; border-radius: 8px; border: 1px solid var(--border);
+    width: 26px; height: 26px; border-radius: 5px; border: 1px solid var(--border);
     background: var(--bg-card); color: var(--text-secondary, #888);
     display: flex; align-items: center; justify-content: center;
     cursor: pointer; opacity: 0; transition: opacity 0.2s, background 0.2s, color 0.2s, border-color 0.2s;
@@ -53,7 +53,7 @@
     display: inline-block;
     margin: 4px 0 6px;
     padding: 2px 7px;
-    border-radius: 20px;
+    border-radius: 13px;
     border: 1px solid var(--border);
     background: var(--bg-panel);
     color: var(--text-secondary);
@@ -109,12 +109,12 @@
 }
 
 /* Pokemon cry upload / preview controls */
-.cry-upload-zone { position:relative; min-height:78px; display:flex; align-items:center; justify-content:center; border:1px dashed var(--border); border-radius:10px; background:var(--bg-input); color:var(--text-secondary); cursor:pointer; transition:border-color .15s ease, background .15s ease; overflow:hidden; }
+.cry-upload-zone { position:relative; min-height:78px; display:flex; align-items:center; justify-content:center; border:1px dashed var(--border); border-radius:7px; background:var(--bg-input); color:var(--text-secondary); cursor:pointer; transition:border-color .15s ease, background .15s ease; overflow:hidden; }
 .cry-upload-zone:hover { border-color:var(--accent); background:var(--bg-panel); }
 .cry-upload-zone input[type="file"] { display:none; }
 .cry-upload-content { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:14px 60px 14px 14px; text-align:center; pointer-events:none; }
-.cry-upload-content span { font:600 12px 'Exo 2',sans-serif; color:var(--text-primary); }
-.cry-upload-content small { font:500 10px 'Exo 2',sans-serif; color:var(--text-muted); }
+.cry-upload-content span { font:600 12px var(--font-sans); color:var(--text-primary); }
+.cry-upload-content small { font:500 10px var(--font-sans); color:var(--text-muted); }
 .cry-remove-btn { right:8px; bottom:8px; }
 .board-artwork-mode { flex-direction:column; gap:6px; }
 .auth-terms-check { display:flex; align-items:flex-start; gap:8px; font-size:12px; line-height:1.45; color:var(--text-secondary); cursor:pointer; }
@@ -126,7 +126,7 @@
 .policy-body p { margin-bottom:12px; }
 
 /* policy and rules modals */
-.policy-modal { width:min(620px, calc(100vw - 28px)); max-height:min(82vh, 760px); overflow:hidden; border-radius:16px; }
+.policy-modal { width:min(620px, calc(100vw - 28px)); max-height:min(82vh, 760px); overflow:hidden; border-radius:10px; }
 .policy-modal .modal-header { padding:18px 20px; background:var(--bg-card); border-bottom:1px solid var(--border-light); }
 .policy-modal .modal-body { max-height:calc(82vh - 78px); overflow-y:auto; padding:20px; }
 /* only strip body padding when the sticky footer is present (it supplies its own); Credits modal has no footer and still needs body padding */
@@ -137,13 +137,13 @@
 .policy-body p { margin:0 0 14px; }
 .policy-body ul { margin:10px 0 18px; padding-left:20px; display:flex; flex-direction:column; gap:9px; }
 .policy-body li::marker { color:var(--accent); }
-.auth-terms-row { margin:4px 0 14px; padding:11px 12px; background:var(--bg-panel); border-radius:10px; border: 0; }
+.auth-terms-row { margin:4px 0 14px; padding:11px 12px; background:var(--bg-panel); border-radius:7px; border: 0; }
 .auth-terms-check { align-items:flex-start; }
 .auth-terms-check input { width:16px; height:16px; flex:0 0 16px; cursor:pointer; }
 .inline-link-btn { display:inline; vertical-align:baseline; }
 
 /* shared consent-panel style, used by both the Community Rules agreement */
-.policy-check-row { padding:12px; border-radius:10px; background:var(--bg-panel); border: 0; }
+.policy-check-row { padding:12px; border-radius:7px; background:var(--bg-panel); border: 0; }
 .policy-check-row .auth-terms-check { color:var(--text-primary); }
 @media (max-width:640px) {
     .policy-modal { width:calc(100vw - 20px); max-height:88vh; }
@@ -151,7 +151,7 @@
 }
 
 /* account policy and community rules usability fixes */
-.auth-signup-note { margin: 2px 0 14px; padding: 11px 12px; border-radius: 10px; background: var(--bg-panel); color: var(--text-secondary); font-size: 11px; line-height: 1.5; border: 0; }
+.auth-signup-note { margin: 2px 0 14px; padding: 11px 12px; border-radius: 7px; background: var(--bg-panel); color: var(--text-secondary); font-size: 11px; line-height: 1.5; border: 0; }
 .auth-signup-note strong { color: var(--text-primary); }
 .policy-modal { display:flex; flex-direction:column; }
 .policy-modal .modal-header { flex:0 0 auto; }
@@ -180,7 +180,7 @@
    original listing, unchanged, with a shelf-and-hero layer in front of it.
    ==================== */
 
-.community-landing-card { display: flex; flex-direction: column; gap: 6px; padding: 12px; text-align: left; cursor: pointer; border-radius: 12px; background: var(--bg-card); color: var(--text-primary); transition: transform .15s ease, border-color .15s ease; border: 0; }
+.community-landing-card { display: flex; flex-direction: column; gap: 6px; padding: 12px; text-align: left; cursor: pointer; border-radius: 8px; background: var(--bg-card); color: var(--text-primary); transition: transform .15s ease, border-color .15s ease; border: 0; }
 
 .community-landing-card:hover {
     transform: translateY(-2px);
@@ -192,7 +192,7 @@
     align-items: center;
     justify-content: center;
     aspect-ratio: 1;
-    border-radius: 10px;
+    border-radius: 7px;
     background: var(--bg-panel);
     overflow: hidden;
 }
@@ -257,76 +257,6 @@
 .collection-title-row .collection-header-actions { display: flex; align-items: center; gap: var(--sp-2); margin-left: auto; }
 .collection-title-row .collection-header-actions .btn svg { width: 16px; height: 16px; }
 
-/* ---- my uploads ---- */
-.community-uploads-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-top: 14px;
-}
-
-.community-upload-row { display: flex; align-items: center; gap: 12px; padding: 10px; background: transparent; border: 0; border-bottom: 1px solid var(--border-light); border-radius: 0; }
-
-.community-upload-art {
-    flex: 0 0 56px;
-    width: 56px;
-    height: 56px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 10px;
-    background: var(--bg-panel);
-    overflow: hidden;
-}
-
-.community-upload-art img {
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
-}
-
-.community-upload-info {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-    min-width: 0;
-    flex: 1;
-}
-
-.community-upload-info strong {
-    font-size: 14px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.community-upload-info > span {
-    font-size: 11px;
-    color: var(--text-muted);
-}
-
-.community-upload-stats {
-    display: flex;
-    gap: 12px;
-}
-
-.community-upload-stats span {
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-}
-
-.community-upload-actions {
-    display: flex;
-    gap: 6px;
-    flex-shrink: 0;
-}
-
-@media (max-width: 600px) {
-    .community-upload-row { flex-wrap: wrap; }
-    .community-upload-actions { width: 100%; }
-}
-
 /* ---- the hub's contest shelf ---- */
 
 .community-contest-card {
@@ -337,7 +267,7 @@
     text-align: left;
     cursor: pointer;
     border: 1px solid var(--accent);
-    border-radius: 12px;
+    border-radius: 8px;
     background: var(--accent-glow);
     color: var(--text-primary);
     transition: transform .15s ease;
@@ -414,7 +344,7 @@ button.community-detail-stat:hover { color: #ef4444; }
 button.community-detail-stat:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 3px;
-    border-radius: 6px;
+    border-radius: 4px;
 }
 
 /* ==================== Community Hub, flat ====================
@@ -422,9 +352,11 @@ button.community-detail-stat:focus-visible {
    the open one beside it -- no card around any of it. */
 .hub {
     display: grid;
-    grid-template-columns: 210px minmax(0, 1fr);
-    gap: var(--sp-6);
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: var(--sp-7);
     align-items: start;
+    max-width: 1340px;
+    margin: 0 auto;
 }
 .hub-nav {
     position: sticky;
@@ -444,7 +376,7 @@ button.community-detail-stat:focus-visible {
     border-radius: var(--ctl-r);
     background: transparent;
     color: var(--text-secondary);
-    font: 700 14px 'Exo 2', sans-serif;
+    font: 700 14px var(--font-sans);
     text-align: left;
     white-space: nowrap;
     cursor: pointer;
@@ -455,10 +387,10 @@ button.community-detail-stat:focus-visible {
 [data-theme="dark"] .hub-nav-item.active { color: #b9a8ff; }
 .hub-nav-item:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .hub-main { min-width: 0; }
-/* with the sidebar taking room, the feed's side rail drops under it sooner */
-@media (max-width: 1300px) {
-    .hub .feed-layout { grid-template-columns: minmax(0, 470px); justify-content: start; }
-    .hub .feed-rail { position: static; }
+/* the feed column holds 680px; the rail goes when the screen cannot fit it */
+.hub .feed-layout { grid-template-columns: minmax(0, 680px) 320px; justify-content: space-between; }
+@media (max-width: 1240px) {
+    .hub .feed-layout { grid-template-columns: minmax(0, 680px) 280px; gap: var(--sp-6); }
 }
 /* phones and small tablets: the sections become a scrolling row of chips */
 @media (max-width: 900px) {
@@ -470,7 +402,7 @@ button.community-detail-stat:focus-visible {
         min-width: 0; flex: 1;
     }
     .hub-nav-list::-webkit-scrollbar { display: none; }
-    .hub-nav-item { flex: 0 0 auto; height: 36px; padding: 0 var(--sp-3); border-radius: 999px; }
+    .hub-nav-item { flex: 0 0 auto; height: 36px; padding: 0 var(--sp-3); border-radius: var(--ctl-r); }
     .hub .feed-layout { justify-content: center; }
 }
 @media (max-width: 520px) {
@@ -490,12 +422,12 @@ button.community-detail-stat:focus-visible {
 .community-landing-card {
     padding: 0; gap: 0;
     min-width: 0;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
+    background: transparent;
+    border: 0;
     border-radius: var(--card-r);
     overflow: hidden;
     font: inherit;
-    transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+    transition: background-color .15s ease, transform .15s ease;
 }
 .community-landing-card:hover {
     outline: none;
@@ -509,7 +441,7 @@ button.community-detail-stat:focus-visible {
 .community-landing-name { font-weight: 700; font-size: 15px; }
 .community-landing-foot { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-top: 6px; min-width: 0; }
 .community-landing-types { flex-wrap: nowrap; min-width: 0; overflow: hidden; }
-.community-landing-types .type-badge { min-width: 0; padding: 2px 7px; font-size: 10.5px; border-radius: 5px; }
+.community-landing-types .type-badge { min-width: 0; padding: 2px 7px; font-size: 10.5px; border-radius: 3px; }
 .community-landing-stats { flex: none; gap: 8px; }
 .community-landing-card.skel-card { padding: 0; }
 .community-landing-card.skel-card .skel-text { margin: var(--sp-3); }

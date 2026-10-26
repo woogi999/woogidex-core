@@ -48,6 +48,8 @@ export interface AppState {
     shinyArtCredit?: string | null;
     artDescription?: string | null;
     shinyArtDescription?: string | null;
+    /** how the artwork scales: 'pixel' (nearest neighbour, the default) or 'smooth' (anti-aliased) */
+    artScaling: 'pixel' | 'smooth';
     /** the editor's artwork sets beyond the main one (js/editor/art-sets.ts) */
     artSets: any[];
     /** the set open on the editor's Artwork tab */
@@ -111,6 +113,7 @@ export const state: AppState = {
     shinyArtCredit: null,
     artDescription: null,
     shinyArtDescription: null,
+    artScaling: 'pixel',
     artSets: [],
     artworkMode: 'normal',
     previewArtworkMode: 'normal',

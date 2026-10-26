@@ -60,8 +60,8 @@
     padding: 6px 10px;
     background: var(--bg-input);
     border: 1px solid var(--border);
-    border-radius: 8px;
-    font-family: 'Exo 2', sans-serif;
+    border-radius: 5px;
+    font-family: var(--font-sans);
     font-size: 14px;
     font-weight: 600;
     color: var(--text-primary);
@@ -80,8 +80,8 @@
     padding: 6px 10px;
     background: var(--bg-input);
     border: 1px solid var(--border);
-    border-radius: 8px;
-    font-family: 'Exo 2', sans-serif;
+    border-radius: 5px;
+    font-family: var(--font-sans);
     font-size: 13px;
     color: var(--text-secondary);
 }
@@ -92,7 +92,7 @@
 .ability-label {
     font-size: 10px;
     padding: 2px 8px;
-    border-radius: 10px;
+    border-radius: 7px;
     font-weight: 700;
     letter-spacing: 0.5px;
 }
@@ -107,7 +107,7 @@
 .ability-remove {
     width: 28px;
     height: 28px;
-    border-radius: 6px;
+    border-radius: 4px;
     border: none;
     background: transparent;
     color: var(--text-muted);
@@ -131,7 +131,7 @@
 .board-ability-role {
     font-size: 9px;
     padding: 2px 7px;
-    border-radius: 10px;
+    border-radius: 7px;
     font-weight: 700;
     letter-spacing: .5px;
 }
@@ -156,11 +156,11 @@
     margin-top: 16px;
     padding: 14px;
     border: 1px solid rgba(184, 134, 11, 0.45);
-    border-radius: 12px;
+    border-radius: 8px;
     background: rgba(184, 134, 11, 0.05);
 }
 .custom-move-showcase-list { display: flex; flex-direction: column; gap: 8px; }
-.custom-move-showcase-card { padding: 12px 14px; border-radius: 10px; background: var(--bg-card); cursor: pointer; transition: var(--t-ui); border: 0; }
+.custom-move-showcase-card { padding: 12px 14px; border-radius: 7px; background: var(--bg-card); cursor: pointer; transition: var(--t-ui); border: 0; }
 .custom-move-showcase-card:hover { background: var(--bg-panel); transform: translateX(3px); }
 .custom-move-showcase-header { display:flex; align-items:center; gap:9px; }
 .custom-move-showcase-name { flex:1; font-weight:700; font-size:14px; color:var(--text-primary); }
@@ -168,7 +168,7 @@
 .custom-move-showcase-stats { margin-top:5px; font-size:12px; color:var(--text-secondary); }
 .custom-move-showcase-desc { margin-top:6px; font-size:12px; line-height:1.45; color:var(--text-secondary); }
 .custom-move-showcase-flags { display:flex; flex-wrap:wrap; gap:5px; margin-top:7px; }
-.custom-move-showcase-flags span { font-size:10px; padding:2px 6px; border-radius:5px; background:var(--bg-panel); color:var(--text-muted); }
+.custom-move-showcase-flags span { font-size:10px; padding:2px 6px; border-radius:3px; background:var(--bg-panel); color:var(--text-muted); }
 
 /* ==================== Browse Abilities modal ====================
    a flat, divided list (no cards inside the modal), grouped like the
@@ -184,7 +184,7 @@
     font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted);
     border-bottom: 1px solid var(--border);
 }
-.ab-group-header span { font-family: 'Inconsolata', monospace; font-weight: 400; letter-spacing: 0; }
+.ab-group-header span { font-family: var(--font-sans); font-weight: 400; letter-spacing: 0; }
 .ability-browser-row {
     display: flex; flex-direction: column; gap: 3px; width: 100%;
     padding: 10px 8px; border: 0; border-bottom: 1px solid var(--border-light); border-radius: 0;

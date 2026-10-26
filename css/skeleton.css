@@ -17,15 +17,15 @@
     background-size: 480px 100%;
     background-repeat: no-repeat;
     animation: skel-shimmer 1.5s ease-in-out infinite;
-    border-radius: 6px;
+    border-radius: 4px;
     color: transparent !important;
     border-color: transparent !important;
     box-shadow: none !important;
 }
-.skel-text { display: block; height: 0.85em; border-radius: 4px; }
+.skel-text { display: block; height: 0.85em; border-radius: 3px; }
 .skel-text + .skel-text { margin-top: 6px; }
 .skel-circle { border-radius: 50%; flex-shrink: 0; }
-.skel-pill { display: inline-block; height: 20px; width: 52px; border-radius: 20px; }
+.skel-pill { display: inline-block; height: 20px; width: 52px; border-radius: 13px; }
 .skel-card, .skel-card * { cursor: default !important; pointer-events: none !important; }
 .skel-card:hover { transform: none !important; box-shadow: none !important; }
 .skel-card .card-actions, .skel-card .community-unpublish-btn { display: none !important; }

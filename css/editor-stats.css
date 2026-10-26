@@ -8,7 +8,7 @@
         .type-dropdown-trigger {
             width: 100%; min-height: var(--ctl-h); padding: 4px var(--sp-3); background: var(--bg-input);
             border: 1px solid var(--border-strong); border-radius: var(--ctl-r);
-            color: var(--text-primary); font-family: 'Exo 2', sans-serif;
+            color: var(--text-primary); font-family: var(--font-sans);
             font-size: 13px; white-space: nowrap; cursor: pointer; transition: border-color .15s ease;
             display: flex; align-items: center; justify-content: space-between;
             text-align: left;
@@ -20,14 +20,14 @@
         .type-dropdown.open .type-dropdown-trigger .type-dropdown-arrow { transform: rotate(180deg); }
         .type-dropdown-menu {
             position: absolute; top: calc(100% + 4px); left: 0; right: 0;
-            background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px;
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px;
             max-height: 280px; overflow-y: auto; z-index: 200;
             box-shadow: 0 8px 30px rgba(0,0,0,0.15); display: none; padding: 6px;
         }
         .type-dropdown.open .type-dropdown-menu { display: block; }
         .type-dropdown-option {
             display: flex; align-items: center; gap: 10px; padding: 8px 12px;
-            border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600;
+            border-radius: 5px; cursor: pointer; font-size: 14px; font-weight: 600;
             transition: background 0.15s; color: var(--text-primary);
         }
         .type-dropdown-option:hover { background: var(--bg-panel); }
@@ -38,7 +38,7 @@
         .cat-dropdown-trigger {
             width: 100%; min-height: var(--ctl-h); padding: 4px var(--sp-3); background: var(--bg-input);
             border: 1px solid var(--border-strong); border-radius: var(--ctl-r);
-            color: var(--text-primary); font-family: 'Exo 2', sans-serif;
+            color: var(--text-primary); font-family: var(--font-sans);
             font-size: 13px; white-space: nowrap; cursor: pointer; transition: border-color .15s ease;
             display: flex; align-items: center; justify-content: space-between;
             text-align: left;
@@ -50,14 +50,14 @@
         .cat-dropdown.open .cat-dropdown-trigger .cat-dropdown-arrow { transform: rotate(180deg); }
         .cat-dropdown-menu {
             position: absolute; top: calc(100% + 4px); left: 0; right: 0;
-            background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px;
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px;
             max-height: 280px; overflow-y: auto; z-index: 200;
             box-shadow: 0 8px 30px rgba(0,0,0,0.15); display: none; padding: 6px;
         }
         .cat-dropdown.open .cat-dropdown-menu { display: block; }
         .cat-dropdown-option {
             display: flex; align-items: center; gap: 10px; padding: 8px 12px;
-            border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600;
+            border-radius: 5px; cursor: pointer; font-size: 14px; font-weight: 600;
             transition: background 0.15s; color: var(--text-primary);
         }
         .cat-dropdown-option:hover { background: var(--bg-panel); }
@@ -91,7 +91,7 @@
             padding: 8px 10px;
             background: var(--bg-input);
             border: 1px solid var(--border);
-            border-radius: 8px;
+            border-radius: 5px;
             font-size: 13px;
             font-weight: 600;
             color: var(--text-primary);
@@ -107,8 +107,8 @@
             padding: 8px 8px;
             background: var(--bg-input);
             border: 1px solid var(--border);
-            border-radius: 8px;
-            font-family: 'Inconsolata', monospace;
+            border-radius: 5px;
+            font-family: var(--font-sans);
             font-size: 13px;
             font-weight: 700;
             text-align: center;
@@ -201,8 +201,8 @@
             padding: 6px 8px;
             background: var(--bg-input);
             border: 1px solid var(--border);
-            border-radius: 8px;
-            font-family: 'Inconsolata', monospace;
+            border-radius: 5px;
+            font-family: var(--font-sans);
             font-size: 14px;
             font-weight: 700;
             text-align: center;
@@ -218,7 +218,7 @@
         .editor-stat-calc {
             width: 44px;
             text-align: right;
-            font-family: 'Inconsolata', monospace;
+            font-family: var(--font-sans);
             font-weight: 700;
             font-size: 14px;
             color: var(--text-muted);
@@ -260,7 +260,7 @@
         .bulk-card .bulk-value {
             font-size: 22px;
             font-weight: 800;
-            font-family: 'Inconsolata', monospace;
+            font-family: var(--font-sans);
             color: var(--text-primary);
             margin-bottom: 8px;
         }
@@ -311,11 +311,11 @@
     padding: 10px 12px;
     background: var(--bg-panel);
     border: 1px solid var(--border);
-    border-top-right-radius: 10px;
-    border-bottom-right-radius: 10px;
+    border-top-right-radius: 7px;
+    border-bottom-right-radius: 7px;
     border-left: 1px solid var(--border-light);
     color: var(--text-primary);
-    font-family: 'Exo 2', sans-serif;
+    font-family: var(--font-sans);
     font-size: 13px;
     font-weight: 600;
     cursor: pointer;

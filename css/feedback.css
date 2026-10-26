@@ -8,7 +8,7 @@
     min-height: 64px; padding: var(--sp-2);
     border: 1px solid var(--border-strong); border-radius: var(--card-r);
     background: var(--bg-card); color: var(--text-secondary);
-    font: 600 13px 'Exo 2', sans-serif; cursor: pointer;
+    font: 600 13px var(--font-sans); cursor: pointer;
     transition: border-color .12s ease, background .12s ease, color .12s ease;
 }
 .feedback-kind svg { width: 20px; height: 20px; }
@@ -46,7 +46,7 @@
 .feedback-item-head strong { flex: 1; min-width: 0; font-size: 14px; overflow-wrap: anywhere; }
 .feedback-item-kind {
     width: 26px; height: 26px; flex: 0 0 auto;
-    display: flex; align-items: center; justify-content: center; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center; border-radius: 5px;
     background: var(--bg-panel); color: var(--text-secondary);
 }
 .feedback-item-kind svg { width: 14px; height: 14px; }

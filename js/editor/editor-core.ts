@@ -40,6 +40,7 @@ function resetEditor() {
             state.shinyArtCredit = null;
             state.artDescription = null;
             state.shinyArtDescription = null;
+            state.artScaling = 'pixel';
             state.artSets = [];
             state.artTab = MAIN_ART_SET;
             state.previewArtSet = MAIN_ART_SET;
@@ -131,6 +132,7 @@ function resetEditor() {
             state.shinyArtCredit = fakemon.shinyArtCredit || null;
             state.artDescription = fakemon.artDescription || null;
             state.shinyArtDescription = fakemon.shinyArtDescription || null;
+            state.artScaling = fakemon.artScaling === 'smooth' ? 'smooth' : 'pixel';
             state.artSets = cleanArtSets(fakemon.artSets);
             state.artTab = MAIN_ART_SET;
             state.previewArtSet = MAIN_ART_SET;
@@ -645,6 +647,7 @@ function boardModel() {
         artwork: state.artworkData || '', shinyArtwork: state.shinyArtworkData || '', cry: state.cryData || '',
         artCredit: state.artCredit || '',
         artMode: state.previewArtworkMode === 'shiny' ? 'shiny' : 'normal',
+        artScaling: state.artScaling === 'smooth' ? 'smooth' : 'pixel',
         gallery: gallery.map(set => ({ id: set.id, kind: set.kind, title: artSetTitle(set, sets), images: set.images })),
         artSet: state.previewArtSet || MAIN_ART_SET,
         artIndex: state.previewArtIndex || 0

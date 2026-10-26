@@ -15,18 +15,18 @@
 .collection-card {
     position: relative;
     display: flex; flex-direction: column;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
+    background: transparent;
+    border: 0;
     border-radius: var(--card-r);
     cursor: pointer;
-    transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+    transition: box-shadow .15s ease, transform .15s ease, background-color .15s ease;
 }
+/* no box at rest: the art bed is the card's shape; a hover lifts a fill under it */
 .collection-card:hover {
-    border-color: var(--border-strong);
-    box-shadow: var(--shadow-md);
+    background: var(--bg-panel);
     transform: translateY(-2px);
 }
-.collection-card.pinned { border-color: var(--accent); }
+.collection-card.pinned { box-shadow: inset 0 0 0 2px var(--accent); }
 .collection-card[draggable="true"] { cursor: grab; }
 .collection-card[draggable="true"]:active { cursor: grabbing; }
 
@@ -36,7 +36,7 @@
     display: flex; align-items: center; justify-content: center;
     padding: var(--sp-3);
     background: var(--bg-panel);
-    border-radius: calc(var(--card-r) - 1px) calc(var(--card-r) - 1px) 0 0;
+    border-radius: var(--card-r);
     overflow: hidden;
 }
 .collection-card .card-art img { width: 100%; height: 100%; object-fit: contain; }
@@ -48,7 +48,7 @@
 /* the dex number sits on the art like a page corner */
 .collection-card .card-art .card-number {
     position: absolute; top: 8px; right: 10px;
-    font-family: 'Inconsolata', monospace;
+    font-family: var(--font-sans);
     font-size: 12px; font-weight: 700; font-style: italic;
     color: var(--text-muted);
     pointer-events: none;
@@ -60,25 +60,25 @@
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .collection-card .card-meta-row { display: flex; align-items: baseline; gap: var(--sp-2); min-width: 0; }
-.collection-card .card-bst { font-family: 'Inconsolata', monospace; font-size: 11px; font-weight: 700; color: var(--text-secondary); }
+.collection-card .card-bst { font-family: var(--font-sans); font-size: 11px; font-weight: 700; color: var(--text-secondary); }
 .collection-card .card-bst em { font-style: normal; font-size: 9px; letter-spacing: .06em; color: var(--text-muted); margin-right: 3px; }
 .collection-card .card-date { font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .collection-card .card-date::before { content: "·"; margin-right: var(--sp-2); }
 .collection-card .card-types { display: flex; gap: var(--sp-1); flex-wrap: wrap; margin-top: 4px; }
-.collection-card .card-types .type-badge { min-width: 56px; padding: 2px 8px; font-size: 10.5px; border-radius: 5px; }
+.collection-card .card-types .type-badge { min-width: 56px; padding: 2px 8px; font-size: 10.5px; border-radius: 3px; }
 
 /* folders: same card, an icon where the art goes */
 .folder-card .card-art.folder-card-art { color: var(--accent); }
-.folder-card.drag-over { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+.folder-card.drag-over { box-shadow: 0 0 0 2px var(--accent); }
 
-/* "Add new ..." -- the first tile of every library; a dashed outline of a
-   card, so it reads as a slot to fill rather than something you made */
+/* "Add new ..." -- the first tile of every library; a soft fill with a plus,
+   so it reads as a slot to fill rather than something you made */
 /* doubled class: css/library.css (later in the cascade) sets the library
    card's solid border and fill */
 .collection-add-card.collection-add-card {
     font: inherit; color: var(--text-secondary); text-align: left;
-    background: transparent;
-    border: 1.5px dashed var(--border-strong);
+    background: var(--bg-panel);
+    border: 0;
 }
 .collection-add-card.collection-add-card:hover,
 .collection-add-card.collection-add-card:focus-visible {
@@ -90,6 +90,7 @@
     outline: none;
 }
 .collection-card.collection-add-card .card-art { background: transparent; }
+.collection-add-card.collection-add-card .collection-add-icon { background: var(--bg-card); }
 .collection-add-card .card-name { color: inherit; }
 .collection-add-icon {
     display: flex; align-items: center; justify-content: center;
@@ -125,7 +126,7 @@
 
 @media (max-width: 640px) { .collection-grid:not(.collection-list) .library-emblem .item-icon-sheet { --item-icon-scale: 1.6; } }
 .collection-card .card-art .library-tile-corner {
-    font-family: 'Exo 2', sans-serif; font-style: normal;
+    font-family: var(--font-sans); font-style: normal;
     font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase;
 }
 .library-tile .card-meta-row { gap: var(--sp-3); }
@@ -140,7 +141,7 @@
 .library-tag {
     display: inline-flex; align-items: center;
     padding: 2px 8px;
-    border-radius: 5px;
+    border-radius: 3px;
     background: var(--bg-panel);
     color: var(--text-secondary);
     font-size: 10.5px; font-weight: 700;
@@ -186,7 +187,7 @@
 .segmented button {
     width: calc(var(--ctl-h) - 6px); height: calc(var(--ctl-h) - 6px);
     display: flex; align-items: center; justify-content: center;
-    border: 0; border-radius: 6px; background: transparent; color: var(--text-muted); cursor: pointer;
+    border: 0; border-radius: 4px; background: transparent; color: var(--text-muted); cursor: pointer;
 }
 .segmented button svg { width: 16px; height: 16px; }
 .segmented button:hover { color: var(--text-primary); }
@@ -218,7 +219,7 @@
 /* the export menu's rows sit inside .card-actions but aren't its square icon buttons */
 .collection-card .card-actions .collection-card-export-menu button {
     display: block; width: 100%; height: auto; flex: none;
-    padding: 9px 12px; border: 0; border-radius: 7px; box-shadow: none;
+    padding: 9px 12px; border: 0; border-radius: 5px; box-shadow: none;
     background: transparent; color: var(--text-primary); text-align: left;
 }
 .collection-card .card-actions .collection-card-export-menu button:hover { background: var(--bg-panel); border-color: transparent; color: var(--text-primary); }
@@ -245,7 +246,7 @@
     position: fixed; top: -200px; left: -400px; z-index: -1;
     display: flex; align-items: center; gap: 10px; max-width: 220px; padding: 6px 14px 6px 6px;
     border: 1px solid var(--accent); border-radius: 999px; background: var(--bg-card);
-    box-shadow: var(--shadow-lg); font: 700 13px 'Exo 2', sans-serif; color: var(--text-primary);
+    box-shadow: var(--shadow-lg); font: 700 13px var(--font-sans); color: var(--text-primary);
 }
 .drag-chip-art { width: 40px; height: 40px; flex: 0 0 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: var(--bg-panel); overflow: hidden; }
 .drag-chip-art img { width: 100%; height: 100%; object-fit: contain; }
@@ -255,7 +256,7 @@
 /* where a card can go wakes up while one is held */
 body.card-dragging .folder-card:not(.is-drag-source) { border-style: dashed; border-color: var(--accent); }
 /* the address takes cards too: a part of it lights up as a place to drop */
-.breadcrumb-drop { border-radius: 8px; padding: 0 6px; margin: 0 -6px; transition: background-color var(--dur-fast) ease, box-shadow var(--dur-fast) ease; }
+.breadcrumb-drop { border-radius: 5px; padding: 0 6px; margin: 0 -6px; transition: background-color var(--dur-fast) ease, box-shadow var(--dur-fast) ease; }
 body.card-dragging .breadcrumb-drop { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--accent) 45%, transparent); }
 .breadcrumb-drop.drag-over { background: var(--accent-soft); box-shadow: inset 0 0 0 2px var(--accent); }
 body.card-dragging .folder-card .folder-card-art svg { transition: transform var(--dur) var(--ease-out); }
@@ -283,18 +284,18 @@ body.card-dragging .region-row { transition: background-color var(--dur-fast) ea
     display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px 2px 6px; border-radius: 999px;
     background: color-mix(in srgb, var(--status) 12%, var(--bg-card)); color: var(--status);
     border: 1px solid color-mix(in srgb, var(--status) 30%, transparent);
-    font: 700 10.5px 'Exo 2', sans-serif; letter-spacing: .02em; white-space: nowrap;
+    font: 700 10.5px var(--font-sans); letter-spacing: .02em; white-space: nowrap;
 }
 .collection-card .card-art > .status-badge { position: absolute; top: 7px; left: 7px; z-index: 2; }
 .status-badge .status-icon { flex: 0 0 auto; }
-.status-picker button { width: auto; padding: 0 12px; gap: 6px; font: 600 13px 'Exo 2', sans-serif; }
+.status-picker button { width: auto; padding: 0 12px; gap: 6px; font: 600 13px var(--font-sans); }
 .status-picker button.active { background: color-mix(in srgb, var(--status) 12%, var(--bg-card)); color: var(--status); }
 .editor-status { gap: 6px; }
 
 /* tags */
 .tag-chip {
     display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px;
-    background: var(--bg-panel); color: var(--text-secondary); font: 600 11.5px 'Exo 2', sans-serif; white-space: nowrap;
+    background: var(--bg-panel); color: var(--text-secondary); font: 600 11.5px var(--font-sans); white-space: nowrap;
 }
 .tag-chip b { font-weight: 700; color: var(--text-muted); font-variant-numeric: tabular-nums; }
 .tag-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: calc(-1 * var(--sp-2)) 0 var(--sp-4); }
@@ -310,8 +311,8 @@ body.card-dragging .region-row { transition: background-color var(--dur-fast) ea
 .shelf-toggle { display: inline-flex; align-items: center; gap: 8px; padding: 0; border: 0; background: none; color: var(--text-primary); cursor: pointer; }
 .shelf-chev { color: var(--text-muted); transition: transform var(--dur) var(--ease-out); }
 .shelf.is-closed .shelf-chev { transform: rotate(-90deg); }
-.shelf-title { font: 800 16px 'Exo 2', sans-serif; }
-.shelf-count { min-width: 22px; padding: 1px 7px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font: 700 12px 'Exo 2', sans-serif; text-align: center; }
+.shelf-title { font: 800 16px var(--font-sans); }
+.shelf-count { min-width: 22px; padding: 1px 7px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font: 700 12px var(--font-sans); text-align: center; }
 .shelf-head .link-btn { margin-left: auto; font-size: 13px; }
 /* the grid's own cards, in one row that scrolls sideways */
 .shelf .collection-grid.shelf-strip {
@@ -325,17 +326,17 @@ body.card-dragging .region-row { transition: background-color var(--dur-fast) ea
    js/app/components/collection/CollectionTable.tsx, after Showdown's dex
    search: dense rows, the art as an icon, each number with its small label
    above it. Every tab uses the same frame. */
-.dex-table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--panel-r); background: var(--bg-card); }
+.dex-table-wrap { overflow-x: auto; border: 0; border-radius: 0; background: transparent; }
 .dex-table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
 .dex-table thead th {
     position: sticky; top: 0; z-index: 1; padding: 7px 6px; text-align: left; white-space: nowrap;
-    background: var(--bg-panel); color: var(--text-muted); font: 700 10.5px 'Exo 2', sans-serif; letter-spacing: .05em; text-transform: uppercase;
+    background: var(--bg-panel); color: var(--text-muted); font: 700 10.5px var(--font-sans); letter-spacing: .05em; text-transform: uppercase;
     border-bottom: 1px solid var(--border);
 }
 .dex-table thead th.col-stat { text-align: center; }
 .table-sort { display: inline-flex; align-items: center; gap: 3px; padding: 0; border: 0; background: none; color: inherit; font: inherit; letter-spacing: inherit; text-transform: inherit; cursor: pointer; }
 .table-sort:hover, .table-sort.active { color: var(--text-primary); }
-.table-sort:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.table-sort:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
 
 .dex-row { cursor: pointer; }
 .dex-row td { height: 42px; padding: 3px 6px; border-bottom: 1px solid var(--border-light); white-space: nowrap; vertical-align: middle; }
@@ -348,7 +349,7 @@ body.card-dragging .region-row { transition: background-color var(--dur-fast) ea
 
 .dex-table .col-icon { width: 46px; padding-left: 8px; }
 .dex-art {
-    width: 36px !important; height: 36px; flex: 0 0 36px; padding: 0 !important; border-radius: 8px !important; aspect-ratio: auto !important;
+    width: 36px !important; height: 36px; flex: 0 0 36px; padding: 0 !important; border-radius: 5px !important; aspect-ratio: auto !important;
     display: flex; align-items: center; justify-content: center; background: var(--bg-panel); overflow: hidden; color: var(--text-muted);
 }
 .dex-art img { width: 100%; height: 100%; object-fit: contain; }
@@ -357,7 +358,7 @@ body.card-dragging .region-row { transition: background-color var(--dur-fast) ea
 .dex-art .type-emblem img { width: 60%; height: 60%; }
 .dex-art .library-emblem .item-icon-sheet { --item-icon-scale: 1.3; }
 
-.dex-table .col-num { width: 44px; font-family: 'Inconsolata', monospace; font-size: 12px; color: var(--text-muted); }
+.dex-table .col-num { width: 44px; font-family: var(--font-sans); font-size: 12px; color: var(--text-muted); }
 .dex-table .col-name { min-width: 150px; }
 .dex-name { display: inline-flex; align-items: center; gap: 6px; max-width: 280px; min-width: 0; }
 .dex-name-text { font-weight: 700; overflow: hidden; text-overflow: ellipsis; }
@@ -383,7 +384,7 @@ body.card-dragging .region-row { transition: background-color var(--dur-fast) ea
 
 /* a number and its label, stacked: Showdown's stat cells */
 .dex-table td.col-stat { min-width: 36px; text-align: center; font-size: 12.5px; line-height: 1.15; }
-.dex-table td.col-stat em { display: block; font: 600 9px 'Exo 2', sans-serif; font-style: normal; letter-spacing: .02em; color: var(--text-muted); white-space: nowrap; }
+.dex-table td.col-stat em { display: block; font: 600 9px var(--font-sans); font-style: normal; letter-spacing: .02em; color: var(--text-muted); white-space: nowrap; }
 .dex-table td.col-bst { font-weight: 800; }
 
 .dex-table .col-desc { width: 100%; min-width: 200px; white-space: normal; }
