@@ -120,7 +120,6 @@
 .board-artwork-shiny-toggle.active { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
 
 /* pixel art (sprites, icons) keeps its hard edges when scaled up */
-.board-art-pixel img, .board-art-pixel canvas { image-rendering: pixelated; }
 .board-art-icon .board-artwork-image { padding: 30%; }
 /* set switcher, concept thumbnails and credits under the frame */
 .board-art-sets, .board-art-thumbs { display: flex; flex-wrap: wrap; gap: 4px; }

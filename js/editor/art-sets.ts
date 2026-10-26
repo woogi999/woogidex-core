@@ -18,7 +18,16 @@ import { notify } from '../app/store.ts';
 
 export type ArtKind = 'official' | 'sprites' | 'icon' | 'concept';
 export interface ArtImage { slot: string; src: string; credit?: string; description?: string; }
-export interface ArtSet { id: string; kind: ArtKind; label?: string; images: ArtImage[]; }
+export type ArtScaling = 'pixel' | 'smooth';
+/**
+ * scaling: how the set's images grow. 'pixel' (nearest neighbour, keeps pixel
+ * art sharp) is the default and is not stored; 'smooth' is anti-aliased.
+ * The main set keeps it in the record's artScaling.
+ */
+export interface ArtSet { id: string; kind: ArtKind; label?: string; scaling?: 'smooth'; images: ArtImage[]; }
+
+/** A set's scaling, with the default filled in. */
+export const setScaling = (set: Pick<ArtSet, 'scaling'> | undefined): ArtScaling => (set?.scaling === 'smooth' ? 'smooth' : 'pixel');
 
 interface KindInfo {
     title: string;
@@ -91,13 +100,13 @@ export function cleanArtSets(raw: unknown): ArtSet[] {
         if (id === MAIN_ART_SET || ids.has(id)) id = newSetId();
         ids.add(id);
         const label = cleanText((s as any).label, MAX_LABEL);
-        out.push({ id, kind, ...(label ? { label } : {}), images });
+        out.push({ id, kind, ...(label ? { label } : {}), ...((s as any).scaling === 'smooth' ? { scaling: 'smooth' as const } : {}), images });
     }
     return out;
 }
 
 /** The main Official Artwork set, from the record's old fields. */
-export function mainArtSet(rec: { artwork?: any; shinyArtwork?: any; artCredit?: any; shinyArtCredit?: any; artDescription?: any; shinyArtDescription?: any }): ArtSet {
+export function mainArtSet(rec: { artwork?: any; shinyArtwork?: any; artCredit?: any; shinyArtCredit?: any; artDescription?: any; shinyArtDescription?: any; artScaling?: any }): ArtSet {
     const images: ArtImage[] = [];
     const add = (slot: string, src: unknown, credit: unknown, note: unknown) => {
         if (typeof src !== 'string' || !src) return;
@@ -107,7 +116,7 @@ export function mainArtSet(rec: { artwork?: any; shinyArtwork?: any; artCredit?:
     };
     add('normal', rec.artwork, rec.artCredit, rec.artDescription);
     add('shiny', rec.shinyArtwork, rec.shinyArtCredit, rec.shinyArtDescription);
-    return { id: MAIN_ART_SET, kind: 'official', images };
+    return { id: MAIN_ART_SET, kind: 'official', ...(rec.artScaling === 'smooth' ? { scaling: 'smooth' as const } : {}), images };
 }
 
 /** Every set of a record: the main one first. */
@@ -132,7 +141,8 @@ export function editorArtSets(): ArtSet[] {
     return [mainArtSet({
         artwork: state.artworkData, shinyArtwork: state.shinyArtworkData,
         artCredit: state.artCredit, shinyArtCredit: state.shinyArtCredit,
-        artDescription: state.artDescription, shinyArtDescription: state.shinyArtDescription
+        artDescription: state.artDescription, shinyArtDescription: state.shinyArtDescription,
+        artScaling: state.artScaling
     }), ...(state.artSets || [])];
 }
 
@@ -152,9 +162,17 @@ function changed(immediate = false) {
     api.autoSave?.(immediate);
 }
 
-/** How the artwork scales: 'pixel' keeps pixel art sharp (the default), 'smooth' blends like most sites. */
-export function setArtScaling(value: 'pixel' | 'smooth') {
-    state.artScaling = value === 'smooth' ? 'smooth' : 'pixel';
+/** How one set's images scale: 'pixel' keeps pixel art sharp (the default), 'smooth' blends like most sites. */
+export function setArtScaling(setId: string, value: ArtScaling) {
+    const smooth = value === 'smooth';
+    if (setId === MAIN_ART_SET) {
+        state.artScaling = smooth ? 'smooth' : 'pixel';
+    } else {
+        const set = extraSet(setId);
+        if (!set) return;
+        if (smooth) set.scaling = 'smooth'; else delete set.scaling;
+        state.artSets = [...state.artSets];
+    }
     changed(true);
 }
 

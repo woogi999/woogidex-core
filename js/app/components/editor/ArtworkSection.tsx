@@ -8,7 +8,7 @@ import { api, state } from '../../../core/app.ts';
 import {
     ART_ACCEPT, ART_KIND_ORDER, ART_KINDS, MAIN_ART_SET, MAX_CONCEPT_IMAGES, MAX_DESCRIPTION,
     addArtSet, addConceptFiles, artImage, artSetTitle, editorArtSets, fillArtSetCredits, makeMainArtSet, moveArtSet,
-    removeArtImage, removeArtSet, renameArtSet, setArtImageFile, setArtImageText, setArtScaling,
+    removeArtImage, removeArtSet, renameArtSet, setArtImageFile, setArtImageText, setArtScaling, setScaling,
     type ArtImage, type ArtKind, type ArtSet
 } from '../../../editor/art-sets.ts';
 import { Icon } from '../Icon.tsx';
@@ -49,7 +49,7 @@ function SlotTile({ set, label, slot, image, index, pixel, size }: {
     const off = !!(size && dims && (dims[0] !== size[0] || dims[1] !== size[1]));
     return (
         <div className={`art-slot${image ? ' filled' : ''}${drop.over ? ' drag-over' : ''}${pixel ? ' pixel' : ''}`}
-            data-scaling={pixel ? 'pixel' : state.artScaling}>
+            data-scaling={setScaling(set)}>
             <button type="button" className="art-slot-drop" {...drop.props} onClick={() => input.current?.click()}
                 aria-label={image ? `Replace ${label}` : `Upload ${label}`} title={image ? 'Click or drop to replace' : 'Click or drop an image'}>
                 {image
@@ -166,6 +166,7 @@ function SetBlock({ set, sets }: { set: ArtSet; sets: ArtSet[] }) {
                     : <CommitInput type="text" className="art-set-label" maxLength={40} aria-label="Set name"
                         placeholder={artSetTitle({ ...set, label: '' }, sets)} value={set.label || ''} onCommit={v => renameArtSet(set.id, v)} />}
                 <p className="art-set-hint">{main ? 'Shows on your cards, the Pokédex board and in battles. ' : ''}{info.hint}</p>
+                <ScalingSwitch set={set} />
                 {!main && (
                     <div className="art-set-actions">
                         {set.kind === 'official' && (
@@ -206,19 +207,25 @@ function CryField() {
     );
 }
 
-/** Sharp (nearest neighbour, keeps pixel art crisp) or smooth (anti-aliased, like most sites). */
-function ScalingPicker() {
-    const value = state.artScaling === 'smooth' ? 'smooth' : 'pixel';
+/**
+ * One set's scaling: Sharp (nearest neighbour, keeps pixel art crisp, the
+ * default) or Smooth (anti-aliased, like most sites). Two equal halves that
+ * fill the side column, so it stays easy to tap on a phone.
+ */
+function ScalingSwitch({ set }: { set: ArtSet }) {
+    const value = setScaling(set);
     return (
-        <div className="art-scaling">
+        <div className="art-scaling" role="radiogroup" aria-label={`Scaling for ${set.label || 'this set'}`}>
             <span className="art-scaling-label">Scaling</span>
-            <div className="segmented" role="radiogroup" aria-label="Artwork scaling">
-                {([['pixel', 'Sharp', 'Keeps pixel art crisp when it grows'], ['smooth', 'Smooth', 'Blends the pixels, like most sites']] as const).map(([key, label, hint]) => (
-                    <button key={key} type="button" role="radio" aria-checked={value === key} className={value === key ? 'active' : ''} title={hint}
-                        onClick={() => setArtScaling(key)}>{label}</button>
+            <div className="art-scaling-options">
+                {([['pixel', 'Sharp', 'Best for pixel art'], ['smooth', 'Smooth', 'Best for painted art']] as const).map(([key, label, hint]) => (
+                    <button key={key} type="button" role="radio" aria-checked={value === key} className={value === key ? 'active' : ''}
+                        onClick={() => setArtScaling(set.id, key)}>
+                        <strong>{label}</strong>
+                        <small>{hint}</small>
+                    </button>
                 ))}
             </div>
-            <span className="field-hint">{value === 'pixel' ? 'Sharp: best for pixel art.' : 'Smooth: best for painted or drawn art.'}</span>
         </div>
     );
 }
@@ -231,7 +238,6 @@ export function ArtworkSection() {
                 <p className="field-hint art-rule">Every image must be drawn by a person. AI-generated images are not allowed on Woogidex.</p>
                 <AddSetMenu />
             </div>
-            <ScalingPicker />
             <div className="art-sets-stack">
                 {sets.map(set => <SetBlock key={set.id} set={set} sets={sets} />)}
             </div>

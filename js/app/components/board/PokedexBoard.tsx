@@ -11,7 +11,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { api } from '../../../core/app.ts';
 import { Icon } from '../Icon.tsx';
-import { ART_KINDS, setPreviewArtIndex, setPreviewArtSet, type ArtImage, type ArtKind } from '../../../editor/art-sets.ts';
+import { setPreviewArtIndex, setPreviewArtSet, type ArtImage, type ArtKind } from '../../../editor/art-sets.ts';
 
 export interface BoardModel {
     name: string; species: string; type1: string; type2: string; number: string;
@@ -25,10 +25,10 @@ export interface BoardModel {
     sets: Array<{ name: string; text: string }>;
     artwork: string; shinyArtwork: string; cry: string; artCredit: string;
     artMode: 'normal' | 'shiny';
-    /** how the artwork scales (css/protect.css): sprite and icon sets are always pixel */
+    /** how the main artwork scales (css/protect.css); each gallery set has its own */
     artScaling: 'pixel' | 'smooth';
     /** every artwork set with a picture in it, the main one first (js/editor/art-sets.ts) */
-    gallery: Array<{ id: string; kind: ArtKind; title: string; images: ArtImage[] }>;
+    gallery: Array<{ id: string; kind: ArtKind; title: string; scaling: 'pixel' | 'smooth'; images: ArtImage[] }>;
     /** the set shown, and which of its concept images */
     artSet: string;
     artIndex: number;
@@ -127,8 +127,7 @@ function BoardArt({ m, renderArt, onToggleShiny }: { m: BoardModel; renderArt?: 
                     </div>
                 )}
                 {/* keyed by what shows, so a switch replays the crossfade (css/pokedex-board.css) */}
-                <div key={`${set?.id}:${shiny}:${index}:${side}`} className={`board-artwork-image${ART_KINDS[kind].pixel ? ' board-art-pixel' : ''}`}
-                    data-scaling={ART_KINDS[kind].pixel ? 'pixel' : m.artScaling}>{body}</div>
+                <div key={`${set?.id}:${shiny}:${index}:${side}`} className="board-artwork-image" data-scaling={set?.scaling || m.artScaling}>{body}</div>
             </div>
             {kind === 'concept' && set && set.images.length > 1 && (
                 <div className="board-art-thumbs" role="group" aria-label="Concept art">

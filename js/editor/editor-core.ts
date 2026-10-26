@@ -9,7 +9,7 @@ import type { StatBlock } from '../app/types.ts';
 import { blankForm, clampBaseStat, eggGroupsText, form, formFromFakemon, genderRatioText, heightDisplay, setForm, STAT_KEYS, weightDisplay } from './draft.ts';
 import { notify, notifySync } from '../app/store.ts';
 import { flushSync } from 'react-dom';
-import { artSetTitle, cleanArtSets, editorArtSets, MAIN_ART_SET } from './art-sets.ts';
+import { artSetTitle, setScaling, cleanArtSets, editorArtSets, MAIN_ART_SET } from './art-sets.ts';
 // PokeAPI never rewrites a species entry, so a month is conservative.
 const POKEAPI_CACHE = { cacheName: 'woogidex-pokeapi-v1', maxAgeMs: 30 * 86400000 };
 // ==================== editor logic ====================
@@ -648,7 +648,7 @@ function boardModel() {
         artCredit: state.artCredit || '',
         artMode: state.previewArtworkMode === 'shiny' ? 'shiny' : 'normal',
         artScaling: state.artScaling === 'smooth' ? 'smooth' : 'pixel',
-        gallery: gallery.map(set => ({ id: set.id, kind: set.kind, title: artSetTitle(set, sets), images: set.images })),
+        gallery: gallery.map(set => ({ id: set.id, kind: set.kind, title: artSetTitle(set, sets), scaling: setScaling(set), images: set.images })),
         artSet: state.previewArtSet || MAIN_ART_SET,
         artIndex: state.previewArtIndex || 0
     };
